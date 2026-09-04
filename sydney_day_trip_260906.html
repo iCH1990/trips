@@ -77,8 +77,26 @@
             place-items: center;
             margin-top: 1px;
         }
-        .stop-title { font-size: 13px; font-weight: 650; color: var(--ink); }
+        .stop-title { font-size: 14px; font-weight: 650; color: var(--ink); }
         .stop-meta { margin-top: 2px; font-size: 12px; color: var(--muted); line-height: 1.4; }
+        .activities {
+            list-style: none;
+            margin: 0 0 10px 19px;
+            padding: 2px 0 2px 14px;
+            border-left: 2px solid var(--line);
+        }
+        .activity {
+            display: grid;
+            grid-template-columns: 84px 1fr;
+            gap: 8px;
+            padding: 4px 0;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+        .activity-time { color: var(--accent); font-variant-numeric: tabular-nums; }
+        .activity-text { color: var(--muted); }
+        .activities--popup { margin: 8px 0 0 0; padding-left: 12px; }
+        .activities--popup .activity { grid-template-columns: 80px 1fr; }
         .hint { margin: 10px 0 0; font-size: 11px; color: #718096; }
         .toggle {
             display: none;
@@ -148,14 +166,78 @@
     <div id="map" role="application" aria-label="一日游路线地图"></div>
 
     <script>
+        // 一级为目的地，二级为该目的地内的具体活动。
         const waypoints = [
-            { name: "Park Hyatt Sydney", time: "09:00 出发 · 约 20:45 返抵", desc: "The Rocks 岩石区，行程起点与终点", lat: -33.8573, lng: 151.2093 },
-            { name: "Harry's on Green Lane", time: "10:30–12:00", desc: "Bowral Brunch · 21 Banyette Street", lat: -34.4811, lng: 150.4175 },
-            { name: "Fitzroy Falls", time: "12:30–13:45", desc: "徒步观瀑布与峡谷", lat: -34.6462, lng: 150.4789 },
-            { name: "Kangaroo Valley", time: "13:45–14:45", desc: "Hampden Bridge 悬索桥", lat: -34.7333, lng: 150.5333 },
-            { name: "Kiama Blowhole", time: "14:45–15:45", desc: "海边喷水洞与灯塔", lat: -34.6719, lng: 150.8631 },
-            { name: "南天寺", time: "15:45–17:00", desc: "南半球最大寺庙，17:00 关门", lat: -34.4772, lng: 150.8522 },
-            { name: "Me-Gal · Taronga", time: "19:00–20:30", desc: "Taronga 晚餐，俯瞰悉尼港", lat: -33.8435, lng: 151.2438 }
+            {
+                name: "Park Hyatt Sydney",
+                time: "09:00 出发 · 约 20:45 返抵",
+                lat: -33.8573,
+                lng: 151.2093,
+                activities: [
+                    { time: "09:00", text: "The Rocks 岩石区取车出发" },
+                    { time: "20:45", text: "晚餐后返抵酒店" }
+                ]
+            },
+            {
+                name: "Bowral",
+                time: "10:30–12:00",
+                lat: -34.4811,
+                lng: 150.4175,
+                activities: [
+                    { time: "10:30–11:00", text: "Green Lane 与 Dirty Janes 小镇漫步" },
+                    { time: "11:00–12:00", text: "Harry's on Green Lane Brunch · 21 Banyette St" }
+                ]
+            },
+            {
+                name: "Fitzroy Falls",
+                time: "12:30–13:45",
+                lat: -34.6462,
+                lng: 150.4789,
+                activities: [
+                    { time: "12:30–12:50", text: "游客中心与瀑布观景台" },
+                    { time: "12:50–13:45", text: "East Rim 步道徒步观峡谷" }
+                ]
+            },
+            {
+                name: "Kangaroo Valley",
+                time: "13:45–14:45",
+                lat: -34.7333,
+                lng: 150.5333,
+                activities: [
+                    { time: "13:45–14:15", text: "Hampden Bridge 悬索桥" },
+                    { time: "14:15–14:45", text: "小镇咖啡与馅饼" }
+                ]
+            },
+            {
+                name: "Kiama",
+                time: "14:45–15:45",
+                lat: -34.6719,
+                lng: 150.8631,
+                activities: [
+                    { time: "14:45–15:15", text: "Kiama Blowhole 海边喷水洞" },
+                    { time: "15:15–15:45", text: "灯塔与海岸步道" }
+                ]
+            },
+            {
+                name: "南天寺",
+                time: "15:45–17:00",
+                lat: -34.4772,
+                lng: 150.8522,
+                activities: [
+                    { time: "15:45–16:20", text: "大雄宝殿与万佛塔" },
+                    { time: "16:20–17:00", text: "园林与茶室（17:00 关门）" }
+                ]
+            },
+            {
+                name: "Taronga",
+                time: "19:00–20:30",
+                lat: -33.8435,
+                lng: 151.2438,
+                activities: [
+                    { time: "19:00–20:30", text: "Me-Gal 晚餐，俯瞰悉尼港" },
+                    { time: "20:30", text: "驱车返回 Park Hyatt" }
+                ]
+            }
         ];
 
         // 返程绕经 Grand Pacific Drive 上的海崖大桥，OSRM 会把它作为必经点。
@@ -219,9 +301,18 @@
                 })
             }).addTo(map);
 
+            const activityRows = stop.activities
+                .map((item) => `
+                    <li class="activity">
+                        <span class="activity-time">${escapeHtml(item.time)}</span>
+                        <span class="activity-text">${escapeHtml(item.text)}</span>
+                    </li>`)
+                .join("");
+
             marker.bindPopup(
                 `<p class="popup-title">${number}. ${escapeHtml(stop.name)}</p>
-                 <p class="popup-desc">${escapeHtml(stop.time)}<br>${escapeHtml(stop.desc)}</p>`
+                 <p class="popup-desc">${escapeHtml(stop.time)}</p>
+                 <ul class="activities activities--popup">${activityRows}</ul>`
             );
             marker.on("click", () => setActive(index, false));
             markers.push(marker);
@@ -232,9 +323,10 @@
                     <span class="badge">${number}</span>
                     <span>
                         <span class="stop-title">${escapeHtml(stop.name)}</span>
-                        <span class="stop-meta">${escapeHtml(stop.time)} · ${escapeHtml(stop.desc)}</span>
+                        <span class="stop-meta">${escapeHtml(stop.time)}</span>
                     </span>
-                </button>`;
+                </button>
+                <ul class="activities">${activityRows}</ul>`;
             itineraryEl.appendChild(item);
         });
 
