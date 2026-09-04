@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>Jason's Trip</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Jason 的自驾行程安排，公开分享给可能用得上的人。">
+    <style>
+        :root {
+            --ink: #1a365d;
+            --muted: #4a5568;
+            --line: #e2e8f0;
+            --accent: #2b6cb0;
+            --bg: #f7fafc;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+        }
+        main {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 48px 20px 64px;
+        }
+        .kicker {
+            margin: 0;
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 650;
+        }
+        h1 { margin: 8px 0 0; font-size: 32px; line-height: 1.2; }
+        .intro {
+            margin: 14px 0 0;
+            max-width: 38em;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.7;
+        }
+        .trips {
+            display: grid;
+            gap: 14px;
+            margin: 28px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+        a.trip {
+            display: block;
+            padding: 18px 18px 16px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: #fff;
+            color: inherit;
+            text-decoration: none;
+        }
+        a.trip:hover, a.trip:focus-visible {
+            border-color: #bee3f8;
+            outline: none;
+        }
+        .trip-date {
+            margin: 0;
+            font-size: 12px;
+            color: var(--accent);
+            font-weight: 650;
+        }
+        .trip h2 {
+            margin: 6px 0 0;
+            font-size: 18px;
+            line-height: 1.35;
+        }
+        .trip p {
+            margin: 8px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        footer {
+            margin: 36px 0 0;
+            color: #718096;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <p class="kicker">Personal itineraries</p>
+        <h1>Jason's Trip</h1>
+        <p class="intro">这里放的是我自己的行程安排：开车去哪、停多久、晚上住哪。写给自己用，也公开出来，如果有人路线相近，可以直接拿去参考。</p>
+        <ul class="trips">
+            <li>
+                <a class="trip" href="sydney_day_trip_260906.html">
+                    <p class="trip-date">2026.09.06 · 一日游</p>
+                    <h2>悉尼南部高地与南海岸</h2>
+                    <p>Park Hyatt 出发，经 Bowral、Fitzroy Falls、Kangaroo Valley，再到 Gerringong 与 Kiama，晚上回 Taronga 吃晚餐。</p>
+                </a>
+            </li>
+            <li>
+                <a class="trip" href="dubbo_trip_261031_261104.html">
+                    <p class="trip-date">2026.10.31–11.04 · 五日自驾</p>
+                    <h2>Chatswood → Dubbo</h2>
+                    <p>去程走蓝山和 Mudgee，Dubbo 看动物园与市区，11 月 3 日住 Zoofari Lodge，返程经 Orange、Bathurst 回 Chatswood。</p>
+                </a>
+            </li>
+        </ul>
+        <footer>托管在 GitHub Pages。时间与路况会变，出发前请再核对开放时间和预订。</footer>
+    </main>
+</body>
+</html>
