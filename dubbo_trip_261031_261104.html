@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>Chatswood → Dubbo 五日自驾</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --ink: #17324d;
+            --muted: #52657a;
+            --line: #dce5ec;
+            --accent: #27756d;
+            --accent-soft: #e6f4f1;
+            --warm: #b45f24;
+            --warm-soft: #fff0df;
+            --stay: #6b4ea0;
+            --stay-soft: #f0eafa;
+            --panel: rgba(255, 255, 255, 0.97);
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            height: 100%;
+            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        }
+        button { font: inherit; }
+        #map { width: 100%; height: 100%; }
+        .info-panel {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            width: min(400px, calc(100vw - 32px));
+            max-height: calc(100vh - 32px);
+            overflow: auto;
+            padding: 17px 18px 15px;
+            border-radius: 14px;
+            background: var(--panel);
+            box-shadow: 0 10px 32px rgba(15, 35, 55, 0.18);
+            backdrop-filter: blur(8px);
+        }
+        h1 { margin: 0; color: var(--ink); font-size: 19px; line-height: 1.35; }
+        .subtitle { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+        .stats { display: flex; flex-wrap: wrap; gap: 7px; margin: 11px 0; }
+        .stat {
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #edf3f7;
+            color: var(--ink);
+            font-size: 11px;
+        }
+        .day-tabs {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 4px;
+            margin: 8px 0 10px;
+        }
+        .day-tab {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 7px 3px;
+            background: #fff;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 11px;
+            line-height: 1.25;
+        }
+        .day-tab:hover, .day-tab:focus-visible { border-color: var(--accent); outline: none; }
+        .day-tab.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+        .day-summary {
+            margin: 0 0 8px;
+            padding: 9px 10px;
+            border-left: 3px solid var(--accent);
+            border-radius: 5px;
+            background: #f5f9fb;
+        }
+        .day-title { margin: 0; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .day-meta { margin: 3px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+        .itinerary { margin: 0; padding: 0; list-style: none; }
+        .stop-wrap + .stop-wrap { border-top: 1px solid var(--line); }
+        .stop {
+            display: grid;
+            grid-template-columns: 28px 1fr;
+            gap: 9px;
+            width: 100%;
+            padding: 10px 5px 6px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+        .stop:hover, .stop:focus-visible, .stop.is-active { background: var(--accent-soft); outline: none; }
+        .badge, .num-marker {
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+        }
+        .badge { width: 26px; height: 26px; margin-top: 1px; font-size: 12px; }
+        .num-marker {
+            width: 29px;
+            height: 29px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.27);
+            font-size: 12px;
+        }
+        .badge.is-stay, .num-marker.is-stay { background: var(--stay); }
+        .badge.is-highlight, .num-marker.is-highlight { background: var(--warm); }
+        .stop-title { color: var(--ink); font-size: 14px; font-weight: 650; }
+        .stop-meta { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+        .tag {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: var(--warm-soft);
+            color: var(--warm);
+            font-size: 10px;
+            font-weight: 700;
+            vertical-align: 1px;
+        }
+        .tag--stay { background: var(--stay-soft); color: var(--stay); }
+        .activities {
+            margin: 0 0 9px 19px;
+            padding: 2px 0 3px 14px;
+            border-left: 2px solid var(--line);
+            list-style: none;
+        }
+        .activity {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 7px;
+            padding: 3px 0;
+            font-size: 11.5px;
+            line-height: 1.45;
+        }
+        .activity-time { color: var(--accent); font-variant-numeric: tabular-nums; }
+        .activity-text { color: var(--muted); }
+        .note {
+            display: block;
+            margin-top: 4px;
+            color: var(--warm);
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        .hint { margin: 10px 0 0; color: #6c7d8e; font-size: 11px; line-height: 1.5; }
+        .popup-title { margin: 0 0 4px; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .popup-meta { margin: 0; color: var(--muted); font-size: 12px; }
+        .activities--popup { margin: 7px 0 0; padding-left: 10px; }
+        .leaflet-popup-content { margin: 10px 13px; min-width: 235px; }
+        .toggle {
+            display: none;
+            width: 100%;
+            margin-bottom: 8px;
+            padding: 8px;
+            border: 0;
+            border-radius: 8px;
+            background: #edf3f7;
+            cursor: pointer;
+        }
+        @media (max-width: 680px) {
+            .info-panel { top: auto; right: 10px; bottom: 10px; left: 10px; width: auto; max-height: 52vh; }
+            .toggle { display: block; }
+            .info-panel.is-collapsed .stats,
+            .info-panel.is-collapsed .day-tabs,
+            .info-panel.is-collapsed .day-summary,
+            .info-panel.is-collapsed .itinerary,
+            .info-panel.is-collapsed .hint { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="info-panel" id="panel">
+        <button class="toggle" id="togglePanel" type="button" aria-expanded="true">收起行程</button>
+        <h1>Chatswood → Dubbo 五日自驾</h1>
+        <p class="subtitle">2026.10.31–11.04 · 蓝山、Mudgee、Wellington、Dubbo · 点击日期切换路线</p>
+        <div class="stats">
+            <span class="stat">5 天 4 晚</span>
+            <span class="stat">约 870 km</span>
+            <span class="stat">11/3 Zoofari Lodge</span>
+            <span class="stat" id="routeStat">正在规划当日路线…</span>
+        </div>
+        <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+        <section class="day-summary" id="daySummary"></section>
+        <ol class="itinerary" id="itinerary"></ol>
+        <p class="hint">驾驶时间按 OSRM 常规路况估算，不含停车与拥堵。Zoofari Lodge 的专属导览时间以入住当天发放的行程为准；洞穴、住宿及热门餐厅建议提前预订。</p>
+    </aside>
+    <div id="map" role="application" aria-label="Chatswood 至 Dubbo 五日自驾地图"></div>
+
+    <script>
+        const days = [
+            {
+                date: "10/31",
+                weekday: "周六",
+                title: "Chatswood → 蓝山 → Mudgee",
+                meta: "约 280 km · 驾驶约 4 小时 20 分 · 宿 Mudgee",
+                color: "#27756d",
+                stops: [
+                    {
+                        name: "Chatswood",
+                        time: "08:00 出发",
+                        lat: -33.7969, lng: 151.1833,
+                        activities: [
+                            { time: "08:00", text: "加满油后出发，经 M2 / M7 / M4 前往蓝山" }
+                        ]
+                    },
+                    {
+                        name: "Echo Point · Three Sisters",
+                        time: "09:45–10:35",
+                        drive: "驾驶约 1 小时 45 分",
+                        lat: -33.7321, lng: 150.3121,
+                        activities: [
+                            { time: "09:45–10:10", text: "三姐妹峰观景台" },
+                            { time: "10:10–10:35", text: "咖啡、洗手间与短走" }
+                        ]
+                    },
+                    {
+                        name: "Lithgow",
+                        time: "11:30–12:20",
+                        drive: "驾驶约 55 分钟",
+                        lat: -33.4801, lng: 150.1580,
+                        activities: [
+                            { time: "11:30–12:20", text: "午餐与休息；之后走 Castlereagh Highway" }
+                        ]
+                    },
+                    {
+                        name: "Mudgee",
+                        time: "14:05 后",
+                        drive: "驾驶约 1 小时 45 分",
+                        kind: "stay",
+                        lat: -32.5907, lng: 149.5878,
+                        activities: [
+                            { time: "14:05–16:30", text: "入住市中心酒店；Lawson Park 河边散步或逛镇中心" },
+                            { time: "18:00", text: "Mudgee 市区晚餐（周六建议订位）" }
+                        ],
+                        note: "住宿建议选 Mudgee CBD，第二天出城方便；具体酒店可按预算预订。"
+                    }
+                ]
+            },
+            {
+                date: "11/1",
+                weekday: "周日",
+                title: "Mudgee → Wellington Caves → Dubbo",
+                meta: "约 160 km · 驾驶约 2 小时 20 分 · 宿 Dubbo",
+                color: "#2f6f9f",
+                stops: [
+                    {
+                        name: "Mudgee",
+                        time: "08:30–10:15",
+                        lat: -32.5907, lng: 149.5878,
+                        activities: [
+                            { time: "08:30–09:30", text: "早餐与退房" },
+                            { time: "09:30–10:15", text: "市区历史街区或当地食品采购" }
+                        ]
+                    },
+                    {
+                        name: "Wellington Caves",
+                        time: "11:40–14:30",
+                        drive: "驾驶约 1 小时 25 分",
+                        kind: "highlight",
+                        lat: -32.6213, lng: 148.9410,
+                        activities: [
+                            { time: "11:40–12:20", text: "Visitor Experience Centre 午餐" },
+                            { time: "12:30–14:00", text: "预约 Cathedral Cave 或 Gaden Cave 导览" },
+                            { time: "14:00–14:30", text: "Ancient Landscapes 展览 / Fossil Lab" }
+                        ],
+                        note: "开放约 09:00–16:15；洞穴只能跟导览，务必按实际场次提前订票。"
+                    },
+                    {
+                        name: "Dubbo CBD",
+                        time: "15:25 后",
+                        drive: "驾驶约 55 分钟",
+                        kind: "stay",
+                        lat: -32.2569, lng: 148.6011,
+                        activities: [
+                            { time: "15:25–17:00", text: "入住 Dubbo 市区酒店，Macquarie River 河边散步" },
+                            { time: "18:00", text: "市中心晚餐" }
+                        ],
+                        note: "建议连续住 11/1、11/2 两晚，11/3 再换到动物园内。"
+                    }
+                ]
+            },
+            {
+                date: "11/2",
+                weekday: "周一",
+                title: "Dubbo 城市文化日",
+                meta: "市区短途 · Old Dubbo Gaol、RFDS、日落散步 · 宿 Dubbo",
+                color: "#7c5b9f",
+                stops: [
+                    {
+                        name: "Old Dubbo Gaol",
+                        time: "09:00–11:15",
+                        kind: "highlight",
+                        lat: -32.2498, lng: 148.6015,
+                        activities: [
+                            { time: "09:00–10:30", text: "牢房、展览与历史庭院" },
+                            { time: "10:30–11:15", text: "看当天 theatrical display / guided talk" }
+                        ],
+                        note: "官方通常每日 09:00–17:00，现场表演时间以当天公告为准。"
+                    },
+                    {
+                        name: "Dubbo CBD",
+                        time: "11:15–13:15",
+                        lat: -32.2569, lng: 148.6011,
+                        activities: [
+                            { time: "11:15–12:00", text: "Macquarie Street 与本地店铺" },
+                            { time: "12:00–13:15", text: "市中心午餐" }
+                        ]
+                    },
+                    {
+                        name: "Royal Flying Doctor Visitor Experience",
+                        time: "13:30–15:15",
+                        drive: "驾驶约 10 分钟",
+                        kind: "highlight",
+                        lat: -32.2157, lng: 148.5748,
+                        activities: [
+                            { time: "13:30–15:15", text: "互动展览，了解皇家飞行医生服务" }
+                        ],
+                        note: "地址：21 Judy Jakins Dr；周一通常 09:00–17:00。"
+                    },
+                    {
+                        name: "Tracker Riley Cycleway",
+                        time: "16:00–17:30",
+                        lat: -32.2526, lng: 148.5947,
+                        activities: [
+                            { time: "16:00–17:30", text: "Macquarie River 河边步道，按体力散步或骑行" },
+                            { time: "18:00", text: "晚餐后早休息，为次日动物园留体力" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "11/3",
+                weekday: "周二",
+                title: "动物园全天 + Zoofari Lodge",
+                meta: "Taronga Western Plains Zoo · 14:00–15:00 入住园内",
+                color: "#b45f24",
+                stops: [
+                    {
+                        name: "Dubbo 酒店",
+                        time: "08:00–08:45",
+                        lat: -32.2569, lng: 148.6011,
+                        activities: [
+                            { time: "08:00–08:45", text: "早餐、退房；行李直接放车内" }
+                        ]
+                    },
+                    {
+                        name: "Taronga Western Plains Zoo",
+                        time: "09:00–13:30",
+                        drive: "驾驶约 15 分钟",
+                        kind: "highlight",
+                        lat: -32.2725, lng: 148.5800,
+                        activities: [
+                            { time: "09:00–11:30", text: "自驾或步行探索 6 km 环线，优先看当天 keeper talks" },
+                            { time: "11:30–12:15", text: "园内午餐" },
+                            { time: "12:15–13:30", text: "补看上午错过的展区，再前往 lodge 专用入口" }
+                        ]
+                    },
+                    {
+                        name: "Zoofari Lodge",
+                        time: "14:00 入住—翌日 10:00",
+                        drive: "从主园入口约 10 分钟",
+                        kind: "stay",
+                        lat: -32.2815, lng: 148.5915,
+                        activities: [
+                            { time: "14:00–15:00", text: "Main House 办理入住，领取专属行程" },
+                            { time: "下午", text: "专属 safari 导览 / 动物体验（以现场安排为准）" },
+                            { time: "晚上", text: "住宿套餐所含晚餐及夜间体验" }
+                        ],
+                        note: "Zoofari 包含 1 晚住宿、2 日动物园门票、专属导览、晚餐、早餐及次日自行车。专用入口在 Obley Rd，需使用邮件中的闸门 PIN。"
+                    }
+                ]
+            },
+            {
+                date: "11/4",
+                weekday: "周三",
+                title: "晨间 Safari → Orange → Bathurst → Chatswood",
+                meta: "约 400 km · 驾驶约 6 小时 · 预计 20:30–21:00 到家",
+                color: "#4f6d7a",
+                stops: [
+                    {
+                        name: "Zoofari Lodge",
+                        time: "清晨–10:00",
+                        kind: "stay",
+                        lat: -32.2815, lng: 148.5915,
+                        activities: [
+                            { time: "清晨", text: "专属 sunrise safari（准确时间入住时确认）" },
+                            { time: "早餐", text: "Main House 早餐" },
+                            { time: "10:00", text: "退房" }
+                        ]
+                    },
+                    {
+                        name: "Taronga Western Plains Zoo",
+                        time: "10:00–11:30",
+                        kind: "highlight",
+                        lat: -32.2725, lng: 148.5800,
+                        activities: [
+                            { time: "10:00–11:30", text: "使用套餐所含自行车，补看喜欢的动物展区" },
+                            { time: "11:30", text: "最晚离园，开始返程" }
+                        ],
+                        note: "返程较长；若当天疲劳，可取消骑行并提前出发。"
+                    },
+                    {
+                        name: "Orange",
+                        time: "13:35–14:35",
+                        drive: "驾驶约 2 小时",
+                        lat: -33.2830, lng: 149.1000,
+                        activities: [
+                            { time: "13:35–14:20", text: "市中心午餐" },
+                            { time: "14:20–14:35", text: "Cook Park 短走、加油" }
+                        ]
+                    },
+                    {
+                        name: "Mount Panorama · Bathurst",
+                        time: "15:30–16:10",
+                        drive: "驾驶约 55 分钟",
+                        kind: "highlight",
+                        lat: -33.4456, lng: 149.5561,
+                        activities: [
+                            { time: "15:30–16:10", text: "按限速自驾赛道一圈，在观景处短停" }
+                        ]
+                    },
+                    {
+                        name: "Chatswood",
+                        time: "20:30–21:00 抵达",
+                        drive: "驾驶约 3 小时 10 分，另留晚餐与休息",
+                        lat: -33.7969, lng: 151.1833,
+                        activities: [
+                            { time: "途中", text: "蓝山或 Penrith 安排 30–40 分钟晚餐 / 休息" },
+                            { time: "约 21:00", text: "回到 Chatswood，行程结束" }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const map = L.map("map", { zoomControl: true }).setView([-33.2, 149.7], 7);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        const tabsEl = document.getElementById("dayTabs");
+        const summaryEl = document.getElementById("daySummary");
+        const itineraryEl = document.getElementById("itinerary");
+        const routeStatEl = document.getElementById("routeStat");
+        let routeLine = null;
+        let markers = [];
+        let activeDay = 0;
+
+        days.forEach((day, index) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "day-tab";
+            button.innerHTML = `${escapeHtml(day.date)}<br>${escapeHtml(day.weekday)}`;
+            button.addEventListener("click", () => renderDay(index));
+            tabsEl.appendChild(button);
+        });
+
+        document.getElementById("togglePanel").addEventListener("click", () => {
+            const panel = document.getElementById("panel");
+            const collapsed = panel.classList.toggle("is-collapsed");
+            const button = document.getElementById("togglePanel");
+            button.textContent = collapsed ? "展开行程" : "收起行程";
+            button.setAttribute("aria-expanded", String(!collapsed));
+        });
+
+        itineraryEl.addEventListener("click", (event) => {
+            const button = event.target.closest(".stop");
+            if (!button) return;
+            const index = Number(button.dataset.index);
+            document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+            map.flyTo(markers[index].getLatLng(), 11, { duration: 0.7 });
+            markers[index].openPopup();
+        });
+
+        async function renderDay(dayIndex) {
+            activeDay = dayIndex;
+            const day = days[dayIndex];
+            document.querySelectorAll(".day-tab").forEach((tab, index) => {
+                tab.classList.toggle("is-active", index === dayIndex);
+            });
+            summaryEl.innerHTML = `
+                <p class="day-title">${escapeHtml(day.date)} ${escapeHtml(day.weekday)} · ${escapeHtml(day.title)}</p>
+                <p class="day-meta">${escapeHtml(day.meta)}</p>`;
+            itineraryEl.innerHTML = "";
+            markers.forEach((marker) => marker.remove());
+            markers = [];
+            if (routeLine) routeLine.remove();
+
+            const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
+            routeLine = L.polyline(coords, {
+                color: day.color,
+                weight: 4,
+                opacity: 0.82,
+                dashArray: "8, 8"
+            }).addTo(map);
+
+            day.stops.forEach((stop, index) => {
+                const number = index + 1;
+                const kindClass = stop.kind ? ` is-${stop.kind}` : "";
+                const label = stop.kind === "stay"
+                    ? '<span class="tag tag--stay">住宿</span>'
+                    : stop.kind === "highlight"
+                        ? '<span class="tag">重点</span>'
+                        : "";
+                const activityRows = stop.activities.map((activity) => `
+                    <li class="activity">
+                        <span class="activity-time">${escapeHtml(activity.time)}</span>
+                        <span class="activity-text">${escapeHtml(activity.text)}</span>
+                    </li>`).join("");
+                const meta = [stop.drive, stop.time].filter(Boolean).join(" · ");
+                const note = stop.note ? `<span class="note">${escapeHtml(stop.note)}</span>` : "";
+
+                const marker = L.marker([stop.lat, stop.lng], {
+                    icon: L.divIcon({
+                        className: "",
+                        html: `<div class="num-marker${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</div>`,
+                        iconSize: [29, 29],
+                        iconAnchor: [14, 14],
+                        popupAnchor: [0, -16]
+                    })
+                }).addTo(map);
+                marker.bindPopup(`
+                    <p class="popup-title">${number}. ${escapeHtml(stop.name)}${label}</p>
+                    <p class="popup-meta">${escapeHtml(meta)}</p>
+                    ${note}
+                    <ul class="activities activities--popup">${activityRows}</ul>`);
+                marker.on("click", () => {
+                    document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+                });
+                markers.push(marker);
+
+                const item = document.createElement("li");
+                item.className = "stop-wrap";
+                item.innerHTML = `
+                    <button class="stop" type="button" data-index="${index}">
+                        <span class="badge${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</span>
+                        <span>
+                            <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
+                            <span class="stop-meta">${escapeHtml(meta)}</span>
+                            ${note}
+                        </span>
+                    </button>
+                    <ul class="activities">${activityRows}</ul>`;
+                itineraryEl.appendChild(item);
+            });
+
+            map.fitBounds(routeLine.getBounds().pad(0.18));
+            await loadRoute(day, coords, dayIndex);
+        }
+
+        async function loadRoute(day, coords, expectedDay) {
+            routeStatEl.textContent = "正在规划当日路线…";
+            const path = coords.map(([lat, lng]) => `${lng},${lat}`).join(";");
+            const url = `https://router.project-osrm.org/route/v1/driving/${path}?overview=full&geometries=geojson`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("route request failed");
+                const data = await response.json();
+                if (activeDay !== expectedDay) return;
+                const route = data.routes && data.routes[0];
+                if (!route) throw new Error("no route returned");
+                routeLine.setLatLngs(route.geometry.coordinates.map(([lng, lat]) => [lat, lng]));
+                routeLine.setStyle({ dashArray: null });
+                const km = Math.round(route.distance / 1000);
+                const minutes = Math.round(route.duration / 60);
+                const time = minutes >= 60
+                    ? `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分`
+                    : `${minutes} 分`;
+                routeStatEl.textContent = `当日 ${km} km · ${time}`;
+                map.fitBounds(routeLine.getBounds().pad(0.15));
+            } catch (error) {
+                if (activeDay === expectedDay) routeStatEl.textContent = "路线暂不可用，显示直线示意";
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        renderDay(0);
+    </script>
+</body>
+</html>
