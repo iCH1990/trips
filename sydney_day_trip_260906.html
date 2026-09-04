@@ -175,12 +175,12 @@
         <h1>悉尼南部高地与南海岸一日游</h1>
         <p class="subtitle">09:00 出发 · 约 20:45 返抵 Park Hyatt · 点击站点可定位</p>
         <div class="stats" id="stats">
-            <span class="stat">6 站 + 南天寺可选</span>
+            <span class="stat">6 站 + 2 可选</span>
             <span class="stat" id="routeStat">正在规划去程…</span>
             <span class="stat" id="returnStat">正在规划返程…</span>
         </div>
         <ol class="itinerary" id="itinerary"></ol>
-        <p class="hint">蓝线为去程。南天寺为可选项，视大家体力与时间；赶不上 17:00 关门则从 Kiama 经海崖大桥到 Taronga 的 Me-Gal 晚餐，再回 Park Hyatt。</p>
+        <p class="hint">蓝线为去程。Gerringong 海边公路观景与南天寺均为可选，视体力与时间，二者宜二选一或都跳过；返程经海崖大桥到 Taronga 的 Me-Gal 晚餐，再回 Park Hyatt。</p>
     </div>
     <div id="map" role="application" aria-label="一日游路线地图"></div>
 
@@ -239,15 +239,27 @@
                 ]
             },
             {
-                name: "南天寺",
-                time: "可选 · 15:45–17:00",
+                name: "Gerringong",
+                time: "可选 · 15:45–16:15",
                 optional: true,
-                note: "视大家体力与时间；赶不上 17:00 关门则从 Kiama 直接返程",
+                note: "视体力与时间；Kiama 往南约 15 分钟。若还要赶南天寺建议跳过",
+                lat: -34.7468,
+                lng: 150.8339,
+                activities: [
+                    { time: "15:45–16:00", text: "Tasman Drive 海边公路观景" },
+                    { time: "16:00–16:15", text: "Headland 观景台打卡 Werri Beach" }
+                ]
+            },
+            {
+                name: "南天寺",
+                time: "可选 · 16:15–17:00",
+                optional: true,
+                note: "视大家体力与时间；与 Gerringong 宜二选一，赶不上 17:00 关门则从 Kiama 直接返程",
                 lat: -34.4772,
                 lng: 150.8522,
                 activities: [
-                    { time: "15:45–16:20", text: "大雄宝殿与万佛塔" },
-                    { time: "16:20–17:00", text: "园林与茶室（17:00 关门）" }
+                    { time: "16:15–16:35", text: "大雄宝殿与万佛塔" },
+                    { time: "16:35–17:00", text: "园林与茶室（17:00 关门）" }
                 ]
             },
             {
