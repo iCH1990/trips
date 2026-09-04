@@ -180,7 +180,7 @@
             <span class="stat" id="returnStat">正在规划返程…</span>
         </div>
         <ol class="itinerary" id="itinerary"></ol>
-        <p class="hint">蓝线为去程。Gerringong 海边公路观景与南天寺均为可选，视体力与时间，二者宜二选一或都跳过；返程经海崖大桥到 Taronga 的 Me-Gal 晚餐，再回 Park Hyatt。</p>
+        <p class="hint">蓝线为去程。袋鼠谷出海先到 Gerringong 再北上 Kiama。Gerringong 海边公路观景与南天寺均为可选，视体力与时间；返程经海崖大桥到 Taronga 的 Me-Gal 晚餐，再回 Park Hyatt。</p>
     </div>
     <div id="map" role="application" aria-label="一日游路线地图"></div>
 
@@ -229,32 +229,33 @@
                 ]
             },
             {
-                name: "Kiama",
-                time: "14:45–15:45",
-                lat: -34.6719,
-                lng: 150.8631,
-                activities: [
-                    { time: "14:45–15:15", text: "Kiama Blowhole 海边喷水洞" },
-                    { time: "15:15–15:45", text: "灯塔与海岸步道" }
-                ]
-            },
-            {
                 name: "Gerringong",
-                time: "可选 · 15:45–16:15",
+                time: "可选 · 14:45–15:15",
                 optional: true,
-                note: "视体力与时间；Kiama 往南约 15 分钟。若还要赶南天寺建议跳过",
+                note: "袋鼠谷出海顺路；跳过则直去 Kiama",
                 lat: -34.7468,
                 lng: 150.8339,
                 activities: [
-                    { time: "15:45–16:00", text: "Tasman Drive 海边公路观景" },
-                    { time: "16:00–16:15", text: "Headland 观景台打卡 Werri Beach" }
+                    { time: "14:45–15:00", text: "Tasman Drive 海边公路观景" },
+                    { time: "15:00–15:15", text: "Headland 观景台打卡 Werri Beach" }
+                ]
+            },
+            {
+                name: "Kiama",
+                time: "15:15–16:15",
+                note: "若跳过 Gerringong 可提前至 14:45",
+                lat: -34.6719,
+                lng: 150.8631,
+                activities: [
+                    { time: "15:15–15:45", text: "Kiama Blowhole 海边喷水洞" },
+                    { time: "15:45–16:15", text: "灯塔与海岸步道" }
                 ]
             },
             {
                 name: "南天寺",
                 time: "可选 · 16:15–17:00",
                 optional: true,
-                note: "视大家体力与时间；与 Gerringong 宜二选一，赶不上 17:00 关门则从 Kiama 直接返程",
+                note: "视大家体力与时间；赶不上 17:00 关门则从 Kiama 直接返程",
                 lat: -34.4772,
                 lng: 150.8522,
                 activities: [
