@@ -173,14 +173,14 @@
     <div class="info-panel" id="panel">
         <button class="toggle" id="togglePanel" type="button" aria-expanded="true">收起行程</button>
         <h1>悉尼南部高地与南海岸一日游</h1>
-        <p class="subtitle">09:00 出发 · 约 20:45 返抵 Park Hyatt · 点击站点可定位</p>
+        <p class="subtitle">09:00 出发 · 约 21:50 返抵 Park Hyatt · 时段含开车时间 · 点击站点可定位</p>
         <div class="stats" id="stats">
             <span class="stat">6 站 + 2 可选</span>
             <span class="stat" id="routeStat">正在规划去程…</span>
             <span class="stat" id="returnStat">正在规划返程…</span>
         </div>
         <ol class="itinerary" id="itinerary"></ol>
-        <p class="hint">蓝线为去程。袋鼠谷出海先到 Gerringong 再北上 Kiama。Gerringong 海边公路观景与南天寺均为可选，视体力与时间；返程经海崖大桥到 Taronga 的 Me-Gal 晚餐，再回 Park Hyatt。</p>
+        <p class="hint">蓝线为去程。时段按 OSRM 估算。晚餐改到 20:00 后，Bowral 与 Fitzroy Falls 可走得更慢。南岸约 17:45 前离开，经海崖大桥赶上 Me-Gal。南天寺 17:00 关门，高地放慢后更难赶上，需压缩袋鼠谷并跳过 Gerringong。</p>
     </div>
     <div id="map" role="application" aria-label="一日游路线地图"></div>
 
@@ -189,88 +189,95 @@
         const waypoints = [
             {
                 name: "Park Hyatt Sydney",
-                time: "09:00 出发 · 约 20:45 返抵",
+                time: "09:00 出发 · 约 21:50 返抵",
                 lat: -33.8573,
                 lng: 151.2093,
                 activities: [
                     { time: "09:00", text: "The Rocks 岩石区取车出发" },
-                    { time: "20:45", text: "晚餐后返抵酒店" }
+                    { time: "21:50", text: "晚餐后返抵酒店（开车约 20 分钟）" }
                 ]
             },
             {
                 name: "Bowral",
-                time: "10:30–12:00",
+                time: "10:45–12:20",
+                drive: "开车约 1 小时 50 分",
                 lat: -34.4811,
                 lng: 150.4175,
                 activities: [
-                    { time: "10:30–11:00", text: "Green Lane 与 Dirty Janes 小镇漫步" },
-                    { time: "11:00–12:00", text: "Harry's on Green Lane Brunch · 21 Banyette St" }
+                    { time: "10:45–11:20", text: "Green Lane 与 Dirty Janes 小镇漫步" },
+                    { time: "11:20–12:20", text: "Harry's on Green Lane Brunch · 21 Banyette St" }
                 ]
             },
             {
                 name: "Fitzroy Falls",
-                time: "12:30–13:45",
+                time: "12:45–14:20",
+                drive: "开车约 25 分钟",
                 lat: -34.6462,
                 lng: 150.4789,
                 activities: [
-                    { time: "12:30–12:50", text: "游客中心与瀑布观景台" },
-                    { time: "12:50–13:45", text: "East Rim 步道徒步观峡谷" }
+                    { time: "12:45–13:10", text: "游客中心与瀑布观景台" },
+                    { time: "13:10–14:20", text: "East Rim 步道观峡谷（约 1 小时，不必走完整环线）" }
                 ]
             },
             {
                 name: "Kangaroo Valley",
-                time: "13:45–14:45",
+                time: "14:45–15:50",
+                drive: "开车约 25 分钟",
                 lat: -34.7333,
                 lng: 150.5333,
                 activities: [
-                    { time: "13:45–14:05", text: "Hampden Bridge 悬索桥" },
-                    { time: "14:05–14:30", text: "Bendeela 营地看袋鼠" },
-                    { time: "14:30–14:45", text: "小镇咖啡与馅饼" }
+                    { time: "14:45–15:10", text: "Hampden Bridge 悬索桥" },
+                    { time: "15:10–15:35", text: "Bendeela 营地看袋鼠" },
+                    { time: "15:35–15:50", text: "The Kangaroo Valley Bakehouse 馅饼与咖啡 · 150 Moss Vale Rd（店内可坐，约 16:00 关门）" }
                 ]
             },
             {
                 name: "Gerringong",
-                time: "可选 · 14:45–15:15",
+                time: "16:30–16:55",
+                drive: "开车约 40 分钟",
                 optional: true,
-                note: "袋鼠谷出海顺路；跳过则直去 Kiama",
+                note: "袋鼠谷出海顺路打卡。若赶南天寺请跳过，直去 Kiama",
                 lat: -34.7468,
                 lng: 150.8339,
                 activities: [
-                    { time: "14:45–15:00", text: "Tasman Drive 海边公路观景" },
-                    { time: "15:00–15:15", text: "Headland 观景台打卡 Werri Beach" }
+                    { time: "16:30–16:40", text: "Tasman Drive 海边公路观景" },
+                    { time: "16:40–16:55", text: "Headland 观景台打卡 Werri Beach" }
                 ]
             },
             {
                 name: "Kiama",
-                time: "15:15–16:15",
-                note: "若跳过 Gerringong 可提前至 14:45",
+                time: "17:10–17:45",
+                drive: "开车约 15 分钟",
+                note: "跳过 Gerringong 则可 16:35 抵达。17:45 须离开才能经海崖大桥赶上 20:00 晚餐",
                 lat: -34.6719,
                 lng: 150.8631,
                 activities: [
-                    { time: "15:15–15:45", text: "Kiama Blowhole 海边喷水洞" },
-                    { time: "15:45–16:15", text: "灯塔与海岸步道" }
+                    { time: "17:10–17:30", text: "Kiama Blowhole 海边喷水洞" },
+                    { time: "17:30–17:45", text: "灯塔与海岸短走" }
                 ]
             },
             {
                 name: "南天寺",
-                time: "可选 · 16:15–17:00",
+                time: "16:30–17:00",
+                drive: "开车约 30 分钟",
                 optional: true,
-                note: "视大家体力与时间；赶不上 17:00 关门则从 Kiama 直接返程",
+                note: "17:00 关门。高地放慢后需压缩袋鼠谷、跳过 Gerringong，Kiama 只看喷水洞，16:00 前出发才赶得及；去不成则 17:45 从 Kiama 返程",
                 lat: -34.4772,
                 lng: 150.8522,
                 activities: [
-                    { time: "16:15–16:35", text: "大雄宝殿与万佛塔" },
-                    { time: "16:35–17:00", text: "园林与茶室（17:00 关门）" }
+                    { time: "16:30–16:50", text: "大雄宝殿与万佛塔" },
+                    { time: "16:50–17:00", text: "园林短走（关门前离开）" }
                 ]
             },
             {
                 name: "Taronga",
-                time: "19:00–20:30",
+                time: "20:00–21:30",
+                drive: "经海崖大桥约 2 小时",
                 lat: -33.8435,
                 lng: 151.2438,
                 activities: [
-                    { time: "19:00–20:30", text: "Me-Gal 晚餐，俯瞰悉尼港" },
-                    { time: "20:30", text: "驱车返回 Park Hyatt" }
+                    { time: "20:00–21:30", text: "Me-Gal 晚餐，俯瞰悉尼港" },
+                    { time: "21:30", text: "驱车返回 Park Hyatt" }
                 ]
             }
         ];
@@ -345,13 +352,14 @@
                     </li>`)
                 .join("");
 
+            const timeLine = [stop.drive, stop.time].filter(Boolean).join(" · ");
             const optionalTag = stop.optional ? '<span class="stop-tag">可选</span>' : "";
             const optionalNote = stop.note
                 ? `<span class="stop-note">${escapeHtml(stop.note)}</span>`
                 : "";
             marker.bindPopup(
                 `<p class="popup-title">${number}. ${escapeHtml(stop.name)}${optionalTag}</p>
-                 <p class="popup-desc">${escapeHtml(stop.time)}</p>
+                 <p class="popup-desc">${escapeHtml(timeLine)}</p>
                  ${optionalNote}
                  <ul class="activities activities--popup">${activityRows}</ul>`
             );
@@ -364,7 +372,7 @@
                     <span class="badge${optionalClass}">${number}</span>
                     <span>
                         <span class="stop-title">${escapeHtml(stop.name)}${optionalTag}</span>
-                        <span class="stop-meta">${escapeHtml(stop.time)}</span>
+                        <span class="stop-meta">${escapeHtml(timeLine)}</span>
                         ${optionalNote}
                     </span>
                 </button>
