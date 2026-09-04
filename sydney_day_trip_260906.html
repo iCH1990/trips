@@ -78,7 +78,26 @@
             margin-top: 1px;
         }
         .stop-title { font-size: 14px; font-weight: 650; color: var(--ink); }
+        .stop-tag {
+            display: inline-block;
+            margin-left: 6px;
+            font-size: 10px;
+            font-weight: 650;
+            color: #c05621;
+            background: #feebc8;
+            padding: 1px 6px;
+            border-radius: 999px;
+            vertical-align: 1px;
+        }
         .stop-meta { margin-top: 2px; font-size: 12px; color: var(--muted); line-height: 1.4; }
+        .stop-note { display: block; margin-top: 4px; font-size: 11px; color: #c05621; line-height: 1.4; }
+        .badge.is-optional,
+        .num-marker.is-optional {
+            background: #fff;
+            color: #c05621;
+            border: 2px dashed #dd6b20;
+            box-sizing: border-box;
+        }
         .activities {
             list-style: none;
             margin: 0 0 10px 19px;
@@ -156,12 +175,12 @@
         <h1>悉尼南部高地与南海岸一日游</h1>
         <p class="subtitle">09:00 出发 · 约 20:45 返抵 Park Hyatt · 点击站点可定位</p>
         <div class="stats" id="stats">
-            <span class="stat">7 个站点</span>
+            <span class="stat">6 站 + 南天寺可选</span>
             <span class="stat" id="routeStat">正在规划去程…</span>
             <span class="stat" id="returnStat">正在规划返程…</span>
         </div>
         <ol class="itinerary" id="itinerary"></ol>
-        <p class="hint">蓝线为去程。橙线为返程：南天寺关门后经海崖大桥到 Taronga 的 Me-Gal 晚餐，再回 Park Hyatt。</p>
+        <p class="hint">蓝线为去程。南天寺为可选项，视大家体力与时间；赶不上 17:00 关门则从 Kiama 经海崖大桥到 Taronga 的 Me-Gal 晚餐，再回 Park Hyatt。</p>
     </div>
     <div id="map" role="application" aria-label="一日游路线地图"></div>
 
@@ -221,7 +240,9 @@
             },
             {
                 name: "南天寺",
-                time: "15:45–17:00",
+                time: "可选 · 15:45–17:00",
+                optional: true,
+                note: "视大家体力与时间；赶不上 17:00 关门则从 Kiama 直接返程",
                 lat: -34.4772,
                 lng: 150.8522,
                 activities: [
@@ -292,10 +313,11 @@
 
         waypoints.forEach((stop, index) => {
             const number = index + 1;
+            const optionalClass = stop.optional ? " is-optional" : "";
             const marker = L.marker([stop.lat, stop.lng], {
                 icon: L.divIcon({
                     className: "",
-                    html: `<div class="num-marker">${number}</div>`,
+                    html: `<div class="num-marker${optionalClass}">${number}</div>`,
                     iconSize: [28, 28],
                     iconAnchor: [14, 14],
                     popupAnchor: [0, -16]
@@ -310,9 +332,14 @@
                     </li>`)
                 .join("");
 
+            const optionalTag = stop.optional ? '<span class="stop-tag">可选</span>' : "";
+            const optionalNote = stop.note
+                ? `<span class="stop-note">${escapeHtml(stop.note)}</span>`
+                : "";
             marker.bindPopup(
-                `<p class="popup-title">${number}. ${escapeHtml(stop.name)}</p>
+                `<p class="popup-title">${number}. ${escapeHtml(stop.name)}${optionalTag}</p>
                  <p class="popup-desc">${escapeHtml(stop.time)}</p>
+                 ${optionalNote}
                  <ul class="activities activities--popup">${activityRows}</ul>`
             );
             marker.on("click", () => setActive(index, false));
@@ -321,10 +348,11 @@
             const item = document.createElement("li");
             item.innerHTML = `
                 <button class="stop" type="button" data-index="${index}">
-                    <span class="badge">${number}</span>
+                    <span class="badge${optionalClass}">${number}</span>
                     <span>
-                        <span class="stop-title">${escapeHtml(stop.name)}</span>
+                        <span class="stop-title">${escapeHtml(stop.name)}${optionalTag}</span>
                         <span class="stop-meta">${escapeHtml(stop.time)}</span>
+                        ${optionalNote}
                     </span>
                 </button>
                 <ul class="activities">${activityRows}</ul>`;
