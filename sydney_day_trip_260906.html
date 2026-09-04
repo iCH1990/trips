@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>悉尼南部高地与南海岸一日游</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --ink: #1a365d;
+            --muted: #4a5568;
+            --line: #e2e8f0;
+            --accent: #2b6cb0;
+            --panel: rgba(255, 255, 255, 0.96);
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; height: 100%; font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
+        #map { width: 100%; height: 100%; }
+
+        .info-panel {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            width: min(340px, calc(100vw - 32px));
+            max-height: calc(100vh - 32px);
+            overflow: auto;
+            background: var(--panel);
+            padding: 16px 18px 14px;
+            border-radius: 12px;
+            box-shadow: 0 8px 28px rgba(15, 23, 42, 0.16);
+            backdrop-filter: blur(8px);
+        }
+        .info-panel h1 { margin: 0; font-size: 17px; color: var(--ink); line-height: 1.35; }
+        .subtitle { margin: 6px 0 0; font-size: 12px; color: var(--muted); }
+        .stats {
+            display: flex;
+            gap: 8px;
+            margin: 12px 0 4px;
+            flex-wrap: wrap;
+        }
+        .stat {
+            font-size: 11px;
+            color: var(--ink);
+            background: #edf2f7;
+            padding: 4px 8px;
+            border-radius: 999px;
+        }
+        .itinerary { list-style: none; margin: 10px 0 0; padding: 0; }
+        .itinerary li + li { border-top: 1px solid var(--line); }
+        .stop {
+            display: grid;
+            grid-template-columns: 28px 1fr;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 6px;
+            border: 0;
+            background: transparent;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 8px;
+            color: inherit;
+            font: inherit;
+        }
+        .stop:hover, .stop:focus-visible { background: #ebf8ff; outline: none; }
+        .stop.is-active { background: #ebf8ff; }
+        .badge {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            display: grid;
+            place-items: center;
+            margin-top: 1px;
+        }
+        .stop-title { font-size: 13px; font-weight: 650; color: var(--ink); }
+        .stop-meta { margin-top: 2px; font-size: 12px; color: var(--muted); line-height: 1.4; }
+        .hint { margin: 10px 0 0; font-size: 11px; color: #718096; }
+        .toggle {
+            display: none;
+            width: 100%;
+            margin-bottom: 8px;
+            border: 0;
+            background: #edf2f7;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font: inherit;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .num-marker {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+            display: grid;
+            place-items: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .via-marker {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #dd6b20;
+            color: #fff;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+            display: grid;
+            place-items: center;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .leaflet-popup-content { margin: 10px 14px; font-size: 13px; line-height: 1.45; }
+        .popup-title { margin: 0 0 4px; font-size: 14px; color: var(--ink); }
+        .popup-desc { margin: 0; color: var(--muted); }
+
+        @media (max-width: 640px) {
+            .info-panel { top: auto; bottom: 12px; right: 12px; left: 12px; width: auto; max-height: 42vh; }
+            .toggle { display: block; }
+            .info-panel.is-collapsed .itinerary,
+            .info-panel.is-collapsed .stats,
+            .info-panel.is-collapsed .hint { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="info-panel" id="panel">
+        <button class="toggle" id="togglePanel" type="button" aria-expanded="true">收起行程</button>
+        <h1>悉尼南部高地与南海岸一日游</h1>
+        <p class="subtitle">09:00 出发 · 约 20:45 返抵 Park Hyatt · 点击站点可定位</p>
+        <div class="stats" id="stats">
+            <span class="stat">7 个站点</span>
+            <span class="stat" id="routeStat">正在规划去程…</span>
+            <span class="stat" id="returnStat">正在规划返程…</span>
+        </div>
+        <ol class="itinerary" id="itinerary"></ol>
+        <p class="hint">蓝线为去程。橙线为返程：南天寺关门后经海崖大桥到 Taronga 的 Me-Gal 晚餐，再回 Park Hyatt。</p>
+    </div>
+    <div id="map" role="application" aria-label="一日游路线地图"></div>
+
+    <script>
+        const waypoints = [
+            { name: "Park Hyatt Sydney", time: "09:00 出发 · 约 20:45 返抵", desc: "The Rocks 岩石区，行程起点与终点", lat: -33.8573, lng: 151.2093 },
+            { name: "Harry's on Green Lane", time: "10:30–12:00", desc: "Bowral Brunch · 21 Banyette Street", lat: -34.4811, lng: 150.4175 },
+            { name: "Fitzroy Falls", time: "12:30–13:45", desc: "徒步观瀑布与峡谷", lat: -34.6462, lng: 150.4789 },
+            { name: "Kangaroo Valley", time: "13:45–14:45", desc: "Hampden Bridge 悬索桥", lat: -34.7333, lng: 150.5333 },
+            { name: "Kiama Blowhole", time: "14:45–15:45", desc: "海边喷水洞与灯塔", lat: -34.6719, lng: 150.8631 },
+            { name: "南天寺", time: "15:45–17:00", desc: "南半球最大寺庙，17:00 关门", lat: -34.4772, lng: 150.8522 },
+            { name: "Me-Gal · Taronga", time: "19:00–20:30", desc: "Taronga 晚餐，俯瞰悉尼港", lat: -33.8435, lng: 151.2438 }
+        ];
+
+        // 返程绕经 Grand Pacific Drive 上的海崖大桥，OSRM 会把它作为必经点。
+        const seaCliffBridge = { name: "海崖大桥 Sea Cliff Bridge", desc: "返程途经 · 悬于海崖之上的观景桥", lat: -34.2543, lng: 150.9734 };
+
+        const map = L.map("map", { zoomControl: true }).setView([-34.3, 150.7], 9);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        const itineraryEl = document.getElementById("itinerary");
+        const markers = [];
+        const outboundStops = waypoints.slice(0, -1);
+        const dinnerStop = waypoints[waypoints.length - 1];
+        const outboundCoords = outboundStops.map((w) => [w.lat, w.lng]);
+        const fallbackLine = L.polyline(outboundCoords, {
+            color: "#2b6cb0",
+            weight: 4,
+            opacity: 0.75,
+            dashArray: "8, 8"
+        }).addTo(map);
+
+        const returnCoords = [
+            outboundCoords[outboundCoords.length - 1],
+            [seaCliffBridge.lat, seaCliffBridge.lng],
+            [dinnerStop.lat, dinnerStop.lng],
+            outboundCoords[0]
+        ];
+        const returnLine = L.polyline(returnCoords, {
+            color: "#dd6b20",
+            weight: 4,
+            opacity: 0.75,
+            dashArray: "8, 8"
+        }).addTo(map);
+
+        L.marker([seaCliffBridge.lat, seaCliffBridge.lng], {
+            icon: L.divIcon({
+                className: "",
+                html: '<div class="via-marker">桥</div>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12],
+                popupAnchor: [0, -14]
+            })
+        })
+            .addTo(map)
+            .bindPopup(
+                `<p class="popup-title">${escapeHtml(seaCliffBridge.name)}</p>
+                 <p class="popup-desc">${escapeHtml(seaCliffBridge.desc)}</p>`
+            );
+
+        waypoints.forEach((stop, index) => {
+            const number = index + 1;
+            const marker = L.marker([stop.lat, stop.lng], {
+                icon: L.divIcon({
+                    className: "",
+                    html: `<div class="num-marker">${number}</div>`,
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14],
+                    popupAnchor: [0, -16]
+                })
+            }).addTo(map);
+
+            marker.bindPopup(
+                `<p class="popup-title">${number}. ${escapeHtml(stop.name)}</p>
+                 <p class="popup-desc">${escapeHtml(stop.time)}<br>${escapeHtml(stop.desc)}</p>`
+            );
+            marker.on("click", () => setActive(index, false));
+            markers.push(marker);
+
+            const item = document.createElement("li");
+            item.innerHTML = `
+                <button class="stop" type="button" data-index="${index}">
+                    <span class="badge">${number}</span>
+                    <span>
+                        <span class="stop-title">${escapeHtml(stop.name)}</span>
+                        <span class="stop-meta">${escapeHtml(stop.time)} · ${escapeHtml(stop.desc)}</span>
+                    </span>
+                </button>`;
+            itineraryEl.appendChild(item);
+        });
+
+        itineraryEl.addEventListener("click", (event) => {
+            const button = event.target.closest(".stop");
+            if (!button) return;
+            setActive(Number(button.dataset.index), true);
+        });
+
+        map.fitBounds(fallbackLine.getBounds().extend(returnLine.getBounds()).pad(0.12));
+        loadDrivingRoutes();
+
+        document.getElementById("togglePanel").addEventListener("click", () => {
+            const panel = document.getElementById("panel");
+            const collapsed = panel.classList.toggle("is-collapsed");
+            const toggle = document.getElementById("togglePanel");
+            toggle.textContent = collapsed ? "展开行程" : "收起行程";
+            toggle.setAttribute("aria-expanded", String(!collapsed));
+        });
+
+        function setActive(index, fly) {
+            document.querySelectorAll(".stop").forEach((el, i) => {
+                el.classList.toggle("is-active", i === index);
+            });
+            if (fly) {
+                map.flyTo([waypoints[index].lat, waypoints[index].lng], 12, { duration: 0.7 });
+                markers[index].openPopup();
+            }
+        }
+
+        async function loadDrivingRoutes() {
+            await Promise.all([
+                drawLeg(outboundCoords, fallbackLine, "routeStat", "去程"),
+                drawLeg(returnCoords, returnLine, "returnStat", "返程经海崖大桥→Me-Gal")
+            ]);
+            const bounds = fallbackLine.getBounds().extend(returnLine.getBounds());
+            map.fitBounds(bounds.pad(0.12));
+        }
+
+        async function drawLeg(coords, line, statId, label) {
+            const statEl = document.getElementById(statId);
+            const path = coords.map(([lat, lng]) => `${lng},${lat}`).join(";");
+            const url = `https://router.project-osrm.org/route/v1/driving/${path}?overview=full&geometries=geojson`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("route request failed");
+                const data = await response.json();
+                const route = data.routes && data.routes[0];
+                if (!route) throw new Error("no route returned");
+
+                line.setLatLngs(route.geometry.coordinates.map(([lng, lat]) => [lat, lng]));
+                line.setStyle({ dashArray: null, opacity: 0.85 });
+
+                const km = (route.distance / 1000).toFixed(0);
+                const hours = Math.floor(route.duration / 3600);
+                const mins = Math.round((route.duration % 3600) / 60);
+                const time = hours ? `${hours} 小时 ${mins} 分` : `${mins} 分`;
+                statEl.textContent = `${label} ${km} km · ${time}`;
+            } catch (error) {
+                statEl.textContent = `${label}路线暂不可用，显示直线示意`;
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+    </script>
+</body>
+</html>
