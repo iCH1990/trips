@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>澳大利亚 Melbourne / 大洋路 2026/04/02–2026/04/06</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --ink: #164e63;
+            --muted: #4a6672;
+            --line: #dce5ec;
+            --accent: #0e7490;
+            --accent-soft: #e0f4f8;
+            --warm: #b45f24;
+            --warm-soft: #fff0df;
+            --stay: #6b4ea0;
+            --stay-soft: #f0eafa;
+            --panel: rgba(255, 255, 255, 0.97);
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            height: 100%;
+            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        }
+        button { font: inherit; }
+        #map { width: 100%; height: 100%; }
+        .info-panel {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            width: min(400px, calc(100vw - 32px));
+            max-height: calc(100vh - 32px);
+            overflow: auto;
+            padding: 17px 18px 15px;
+            border-radius: 14px;
+            background: var(--panel);
+            box-shadow: 0 10px 32px rgba(15, 35, 55, 0.18);
+            backdrop-filter: blur(8px);
+        }
+        h1 { margin: 0; color: var(--ink); font-size: 19px; line-height: 1.35; }
+        .subtitle { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+        .stats { display: flex; flex-wrap: wrap; gap: 7px; margin: 11px 0; }
+        .stat {
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #edf3f7;
+            color: var(--ink);
+            font-size: 11px;
+        }
+        .day-tabs {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 4px;
+            margin: 8px 0 10px;
+        }
+        .day-tab {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 7px 3px;
+            background: #fff;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 11px;
+            line-height: 1.25;
+        }
+        .day-tab:hover, .day-tab:focus-visible { border-color: var(--accent); outline: none; }
+        .day-tab.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+        .day-summary {
+            margin: 0 0 8px;
+            padding: 9px 10px;
+            border-left: 3px solid var(--accent);
+            border-radius: 5px;
+            background: #f5f9fb;
+        }
+        .day-title { margin: 0; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .day-meta { margin: 3px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+        .itinerary { margin: 0; padding: 0; list-style: none; }
+        .stop-wrap + .stop-wrap { border-top: 1px solid var(--line); }
+        .stop {
+            display: grid;
+            grid-template-columns: 28px 1fr;
+            gap: 9px;
+            width: 100%;
+            padding: 10px 5px 6px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+        .stop:hover, .stop:focus-visible, .stop.is-active { background: var(--accent-soft); outline: none; }
+        .badge, .num-marker {
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+        }
+        .badge { width: 26px; height: 26px; margin-top: 1px; font-size: 12px; }
+        .num-marker {
+            width: 29px;
+            height: 29px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.27);
+            font-size: 12px;
+        }
+        .badge.is-stay, .num-marker.is-stay { background: var(--stay); }
+        .badge.is-highlight, .num-marker.is-highlight { background: var(--warm); }
+        .stop-title { color: var(--ink); font-size: 14px; font-weight: 650; }
+        .stop-meta { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+        .tag {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: var(--warm-soft);
+            color: var(--warm);
+            font-size: 10px;
+            font-weight: 700;
+            vertical-align: 1px;
+        }
+        .tag--stay { background: var(--stay-soft); color: var(--stay); }
+        .activities {
+            margin: 0 0 9px 19px;
+            padding: 2px 0 3px 14px;
+            border-left: 2px solid var(--line);
+            list-style: none;
+        }
+        .activity {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 7px;
+            padding: 3px 0;
+            font-size: 11.5px;
+            line-height: 1.45;
+        }
+        .activity-time { color: var(--accent); font-variant-numeric: tabular-nums; }
+        .activity-text { color: var(--muted); }
+        .note {
+            display: block;
+            margin-top: 4px;
+            color: var(--warm);
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        .hint { margin: 10px 0 0; color: #6c7d8e; font-size: 11px; line-height: 1.5; }
+        .popup-title { margin: 0 0 4px; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .popup-meta { margin: 0; color: var(--muted); font-size: 12px; }
+        .activities--popup { margin: 7px 0 0; padding-left: 10px; }
+        .leaflet-popup-content { margin: 10px 13px; min-width: 235px; }
+        .toggle {
+            display: none;
+            width: 100%;
+            margin-bottom: 8px;
+            padding: 8px;
+            border: 0;
+            border-radius: 8px;
+            background: #edf3f7;
+            cursor: pointer;
+        }
+        @media (max-width: 680px) {
+            .info-panel { top: auto; right: 10px; bottom: 10px; left: 10px; width: auto; max-height: 52vh; }
+            .toggle { display: block; }
+            .info-panel.is-collapsed .stats,
+            .info-panel.is-collapsed .day-tabs,
+            .info-panel.is-collapsed .day-summary,
+            .info-panel.is-collapsed .itinerary,
+            .info-panel.is-collapsed .hint { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="info-panel" id="panel">
+        <button class="toggle" id="togglePanel" type="button" aria-expanded="true">收起行程</button>
+        <h1>澳大利亚 Melbourne / 大洋路 2026/04/02–2026/04/06</h1>
+        <p class="subtitle">2026.04.02–06 · QF415 抵 MEL 租车 · Prom + 大洋路 · 6 日 QF490 返程</p>
+        <div class="stats">
+            <span class="stat">5 天 4 晚</span>
+            <span class="stat">Sandy Point 1 晚 · Apollo Bay 2 晚 · Docklands Marriott 1 晚</span>
+            <span class="stat">Wilsons Prom · 十二门徒</span>
+            <span class="stat" id="routeStat">正在规划当日路线…</span>
+        </div>
+        <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+        <section class="day-summary" id="daySummary"></section>
+        <ol class="itinerary" id="itinerary"></ol>
+        <p class="hint">去程 QF415 约 07:45 悉尼起飞、09:20 抵 MEL；返程 QF490 约 19:35 离 MEL、21:00 抵悉尼（3 月 30 日起时刻，出发前再核对）。大洋路务必选沿海线，不要走最快路线。驾驶路段按 OSRM 估算。</p>
+    </aside>
+    <div id="map" role="application" aria-label="Melbourne 与大洋路行程地图"></div>
+
+    <script>
+        const days = [
+            {
+                date: "4/2",
+                weekday: "周四",
+                title: "QF415 抵墨，CBD 早午餐后去 Prom",
+                meta: "Code Black 早午餐 · 下午 Wilsons Prom 徒步 · 入住 Sandy Point · 傍晚 Waratah Bay",
+                color: "#0e7490",
+                flightStat: "QF415 悉尼 → Melbourne",
+                stops: [
+                    {
+                        name: "Sydney Airport",
+                        time: "07:45 起飞",
+                        lat: -33.94989, lng: 151.18197,
+                        activities: [
+                            { time: "07:45", text: "QF415 从悉尼出发，飞往 Melbourne" }
+                        ]
+                    },
+                    {
+                        name: "Melbourne Airport",
+                        time: "约 09:20 抵达",
+                        drive: "飞行约 1 小时 35 分",
+                        leg: "flight",
+                        lat: -37.66676, lng: 144.82885,
+                        activities: [
+                            { time: "抵达后", text: "取行李、机场取车，再进城吃早午餐" }
+                        ]
+                    },
+                    {
+                        name: "Code Black Coffee",
+                        time: "出发前早午餐",
+                        kind: "highlight",
+                        lat: -37.81628, lng: 144.96819,
+                        activities: [
+                            { time: "早午餐", text: "Chloe 亲测，精品咖啡 + 早午餐，强推；吃完再开车去 Prom" }
+                        ],
+                        note: "189 Flinders Lane, Melbourne CBD · https://maps.app.goo.gl/pW2ygCY7grnoqwfH6"
+                    },
+                    {
+                        name: "Wilsons Promontory National Park",
+                        time: "14:30–15:30 徒步",
+                        kind: "highlight",
+                        lat: -39.01347, lng: 146.34595,
+                        activities: [
+                            { time: "14:30", text: "到 Wilsons Promontory 徒步约 1 小时" }
+                        ],
+                        note: "航班落地后再 brunch，约中午前后出城，目标下午到公园"
+                    },
+                    {
+                        name: "住宿 · Sandy Point",
+                        time: "16:00 入住",
+                        kind: "stay",
+                        lat: -38.81884, lng: 146.12156,
+                        activities: [
+                            { time: "16:00", text: "入住后休息到 17:00" }
+                        ],
+                        note: "Sandy Point 示意落点，具体门牌以入住信息为准"
+                    },
+                    {
+                        name: "Waratah Bay",
+                        time: "17:30 以后",
+                        lat: -38.79841, lng: 146.05983,
+                        activities: [
+                            { time: "17:30", text: "从住处去 Waratah Bay 散步，再在附近吃晚饭" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "4/3",
+                weekday: "周五",
+                title: "Prom 区域 → 上大洋路 → Apollo Bay",
+                meta: "Tidal River、Whisky Bay · Leongatha brunch · 川菜午餐 · Geelong 加油后沿海开到 Apollo Bay",
+                color: "#0369a1",
+                stops: [
+                    {
+                        name: "住宿 · Sandy Point",
+                        time: "07:30–08:00 出发",
+                        kind: "stay",
+                        lat: -38.81884, lng: 146.12156,
+                        activities: [
+                            { time: "07:30", text: "出发时油箱大约还剩 60%，当天约 405 km，不够撑完全天" }
+                        ]
+                    },
+                    {
+                        name: "Tidal River",
+                        time: "早上",
+                        kind: "highlight",
+                        lat: -39.01347, lng: 146.34595,
+                        activities: [
+                            { time: "早上", text: "先去 Tidal River" }
+                        ]
+                    },
+                    {
+                        name: "Whisky Bay",
+                        time: "早上",
+                        kind: "highlight",
+                        lat: -39.01227, lng: 146.29074,
+                        activities: [
+                            { time: "早上", text: "再去 Whisky Bay" }
+                        ]
+                    },
+                    {
+                        name: "Leongatha",
+                        time: "brunch",
+                        lat: -38.47616, lng: 145.94586,
+                        activities: [
+                            { time: "上午", text: "在附近的 Leongatha 吃 brunch" }
+                        ]
+                    },
+                    {
+                        name: "Haoziwei Sichuan Restaurant",
+                        time: "午餐",
+                        lat: -37.87535, lng: 145.09190,
+                        activities: [
+                            { time: "中午", text: "在 Haoziwei 吃四川午餐" }
+                        ],
+                        note: "653–655 Warrigal Road, Chadstone"
+                    },
+                    {
+                        name: "Geelong",
+                        time: "约 13:30",
+                        lat: -38.14932, lng: 144.35982,
+                        activities: [
+                            { time: "13:30", text: "到 Geelong，正式上大洋路" }
+                        ],
+                        note: "导航选沿海线，不要走最快路线。Geelong 或 Torquay 必加满油：进入大洋路前最后的城区油价洼地（91 ULP 预计约 1.85–1.95/L），后段沿线站点稀少且贵"
+                    },
+                    {
+                        name: "Bells Beach",
+                        time: "15:00–15:30",
+                        kind: "highlight",
+                        lat: -38.37671, lng: 144.25195,
+                        activities: [
+                            { time: "15:00", text: "短停冲浪圣地，拍照即可，之后继续往 Apollo Bay，不要贪停" }
+                        ]
+                    },
+                    {
+                        name: "住宿 · Apollo Bay",
+                        time: "约 18:00 check-in",
+                        kind: "stay",
+                        lat: -38.75474, lng: 143.66915,
+                        activities: [
+                            { time: "18:00", text: "天黑前务必到店办理入住" },
+                            { time: "19:00", text: "之后在镇上吃晚饭" }
+                        ],
+                        note: "连住两晚"
+                    }
+                ]
+            },
+            {
+                date: "4/4",
+                weekday: "周六",
+                title: "十二门徒 / Loch Ard Gorge，当晚回 Apollo Bay",
+                meta: "可选 Kennett River 考拉 · 早晨顺光看门徒 · Port Campbell 午饭补油 · 回程 Mait's Rest",
+                color: "#b45309",
+                stops: [
+                    {
+                        name: "住宿 · Apollo Bay",
+                        time: "07:00 出发",
+                        kind: "stay",
+                        lat: -38.75474, lng: 143.66915,
+                        activities: [
+                            { time: "07:00", text: "出发直奔十二门徒，约 100 km / 1.5 小时" }
+                        ]
+                    },
+                    {
+                        name: "Kennett River",
+                        time: "出发前可顺路",
+                        lat: -38.66770, lng: 143.85892,
+                        activities: [
+                            { time: "可选", text: "野生考拉：距 Apollo Bay 约 20 km，停路边抬头找桉树，基本必看到，约 20–30 分钟" }
+                        ],
+                        note: "在十二门徒反方向，去的话先东再折回西行"
+                    },
+                    {
+                        name: "Twelve Apostles",
+                        time: "08:30–10:30",
+                        kind: "highlight",
+                        lat: -38.66215, lng: 143.10510,
+                        activities: [
+                            { time: "08:30", text: "十二门徒。早晨东侧顺光，人极少，强推此时段" }
+                        ]
+                    },
+                    {
+                        name: "Loch Ard Gorge",
+                        time: "08:30–10:30",
+                        kind: "highlight",
+                        lat: -38.64641, lng: 143.07033,
+                        activities: [
+                            { time: "上午", text: "和十二门徒连看" }
+                        ]
+                    },
+                    {
+                        name: "The Arch",
+                        time: "视状态短停",
+                        lat: -38.62359, lng: 142.94418,
+                        activities: [
+                            { time: "上午", text: "The Arch / London Bridge / Bay of Martyrs 三选一，这里按 The Arch 落点" }
+                        ]
+                    },
+                    {
+                        name: "Port Campbell",
+                        time: "11:30–12:30",
+                        lat: -38.61963, lng: 142.99537,
+                        activities: [
+                            { time: "11:30", text: "镇上午餐 + 休息" }
+                        ],
+                        note: "十二门徒来回约 200 km，午饭时顺带补油（预计 20–25 L）。沿线贵约 10–15c/L，但之后路段无稳定站点"
+                    },
+                    {
+                        name: "Mait's Rest Rainforest Walk",
+                        time: "12:30–13:30",
+                        kind: "highlight",
+                        lat: -38.75582, lng: 143.55470,
+                        activities: [
+                            { time: "12:30", text: "返程路边停。距 Apollo Bay 约 17 km，步道约 800 m / 45 分钟，温带雨林 + 参天蕨树，不绕路" }
+                        ]
+                    },
+                    {
+                        name: "住宿 · Apollo Bay",
+                        time: "15:00–15:30 回到",
+                        kind: "stay",
+                        lat: -38.75474, lng: 143.66915,
+                        activities: [
+                            { time: "15:00", text: "回到 Apollo Bay，当晚继续住这里" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "4/5",
+                weekday: "周日",
+                title: "Apollo Bay 经 Forrest、Colac 回 Melbourne",
+                meta: "镇上早饭 · Forrest 转一圈 · Colac 午饭看湖 · 路过 Lake Corangamite · 直达 Docklands，不停 Geelong",
+                color: "#0f766e",
+                stops: [
+                    {
+                        name: "住宿 · Apollo Bay",
+                        time: "早饭后出发",
+                        kind: "stay",
+                        lat: -38.75474, lng: 143.66915,
+                        activities: [
+                            { time: "早上", text: "在 Apollo Bay 吃早饭，之后走内陆线回墨" }
+                        ]
+                    },
+                    {
+                        name: "Forrest",
+                        time: "上午",
+                        lat: -38.51864, lng: 143.71646,
+                        activities: [
+                            { time: "上午", text: "先到 Forrest 逛一圈" }
+                        ],
+                        note: "Otway 内陆小镇，Apollo Bay 往 Colac 路上"
+                    },
+                    {
+                        name: "Colac",
+                        time: "午饭",
+                        lat: -38.33998, lng: 143.58585,
+                        activities: [
+                            { time: "中午", text: "在 Colac 吃午饭" }
+                        ]
+                    },
+                    {
+                        name: "Lake Colac",
+                        time: "午饭后",
+                        kind: "highlight",
+                        lat: -38.29926, lng: 143.59845,
+                        activities: [
+                            { time: "下午", text: "看 Lake Colac" }
+                        ]
+                    },
+                    {
+                        name: "Lake Corangamite",
+                        time: "前往 Melbourne 路上",
+                        kind: "highlight",
+                        lat: -38.18464, lng: 143.40621,
+                        activities: [
+                            { time: "下午", text: "路上再看 Lake Corangamite，之后直开 Melbourne，不停 Geelong" }
+                        ]
+                    },
+                    {
+                        name: "Melbourne Marriott Hotel Docklands",
+                        time: "下午入住",
+                        kind: "stay",
+                        lat: -37.81371, lng: 144.93917,
+                        activities: [
+                            { time: "下午", text: "办理入住，当晚住 Docklands" }
+                        ],
+                        note: "15 Waterfront Way, Docklands。还车前在市区用 MotorMouth / GasBuddy 找最低价站补满（91 ULP 预计约 1.90/L），不要在机场或 Tullamarine 附近加"
+                    }
+                ]
+            },
+            {
+                date: "4/6",
+                weekday: "周一",
+                title: "州立图书馆、Brighton，晚上 QF490 回悉尼",
+                meta: "State Library Victoria · Dendy Park · Brighton bathing boxes · 机场还车乘 QF490",
+                color: "#4f6d7a",
+                flightStat: "QF490 Melbourne → 悉尼",
+                stops: [
+                    {
+                        name: "Melbourne Marriott Hotel Docklands",
+                        time: "早晨",
+                        kind: "stay",
+                        lat: -37.81371, lng: 144.93917,
+                        activities: [
+                            { time: "早上", text: "退房后先去城里" }
+                        ]
+                    },
+                    {
+                        name: "State Library Victoria",
+                        time: "上午",
+                        kind: "highlight",
+                        lat: -37.80977, lng: 144.96554,
+                        activities: [
+                            { time: "早上", text: "去 State Library Victoria 看一下" }
+                        ],
+                        note: "328 Swanston Street"
+                    },
+                    {
+                        name: "Dendy Park",
+                        time: "上午之后",
+                        lat: -37.92569, lng: 145.02340,
+                        activities: [
+                            { time: "上午", text: "再到 Dendy Park" }
+                        ],
+                        note: "Brighton East"
+                    },
+                    {
+                        name: "Brighton Bathing Boxes",
+                        time: "彩棚",
+                        kind: "highlight",
+                        lat: -37.91756, lng: 144.98641,
+                        activities: [
+                            { time: "中午前后", text: "去 Brighton 看 bathing boxes，之后去机场" }
+                        ]
+                    },
+                    {
+                        name: "Melbourne Airport",
+                        time: "傍晚前往登机",
+                        lat: -37.66676, lng: 144.82885,
+                        activities: [
+                            { time: "19:35", text: "还车、值机，乘坐 QF490 返程" }
+                        ]
+                    },
+                    {
+                        name: "Sydney Airport",
+                        time: "约 21:00 抵达",
+                        drive: "飞行约 1 小时 25 分",
+                        leg: "flight",
+                        lat: -33.94989, lng: 151.18197,
+                        activities: [
+                            { time: "21:00", text: "QF490 回到悉尼，行程结束" }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const map = L.map("map", { zoomControl: true }).setView([-38.3, 144.5], 8);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        const tabsEl = document.getElementById("dayTabs");
+        const summaryEl = document.getElementById("daySummary");
+        const itineraryEl = document.getElementById("itinerary");
+        const routeStatEl = document.getElementById("routeStat");
+        let routeLines = [];
+        let markers = [];
+        let activeDay = 0;
+
+        days.forEach((day, index) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "day-tab";
+            button.innerHTML = `${escapeHtml(day.date)}<br>${escapeHtml(day.weekday)}`;
+            button.addEventListener("click", () => renderDay(index));
+            tabsEl.appendChild(button);
+        });
+
+        document.getElementById("togglePanel").addEventListener("click", () => {
+            const panel = document.getElementById("panel");
+            const collapsed = panel.classList.toggle("is-collapsed");
+            const button = document.getElementById("togglePanel");
+            button.textContent = collapsed ? "展开行程" : "收起行程";
+            button.setAttribute("aria-expanded", String(!collapsed));
+        });
+
+        itineraryEl.addEventListener("click", (event) => {
+            const button = event.target.closest(".stop");
+            if (!button) return;
+            const index = Number(button.dataset.index);
+            document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+            const zoom = days[activeDay].zoom || 12;
+            map.flyTo(markers[index].getLatLng(), zoom, { duration: 0.7 });
+            markers[index].openPopup();
+        });
+
+        function splitLegs(day, coords) {
+            const groups = [];
+            let current = { type: "drive", points: [coords[0]] };
+            for (let i = 1; i < day.stops.length; i++) {
+                const type = day.stops[i].leg === "flight" ? "flight" : "drive";
+                if (type === current.type) {
+                    current.points.push(coords[i]);
+                } else {
+                    groups.push(current);
+                    current = { type, points: [coords[i - 1], coords[i]] };
+                }
+            }
+            groups.push(current);
+            return groups.filter((group) => group.points.length > 1);
+        }
+
+        async function renderDay(dayIndex) {
+            activeDay = dayIndex;
+            const day = days[dayIndex];
+            document.querySelectorAll(".day-tab").forEach((tab, index) => {
+                tab.classList.toggle("is-active", index === dayIndex);
+            });
+            summaryEl.innerHTML = `
+                <p class="day-title">${escapeHtml(day.date)} ${escapeHtml(day.weekday)} · ${escapeHtml(day.title)}</p>
+                <p class="day-meta">${escapeHtml(day.meta)}</p>`;
+            itineraryEl.innerHTML = "";
+            markers.forEach((marker) => marker.remove());
+            markers = [];
+            routeLines.forEach((line) => line.remove());
+            routeLines = [];
+
+            const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
+
+            day.stops.forEach((stop, index) => {
+                const number = index + 1;
+                const kindClass = stop.kind ? ` is-${stop.kind}` : "";
+                const label = stop.kind === "stay"
+                    ? '<span class="tag tag--stay">住宿</span>'
+                    : stop.kind === "highlight"
+                        ? '<span class="tag">重点</span>'
+                        : "";
+                const activityRows = stop.activities.map((activity) => `
+                    <li class="activity">
+                        <span class="activity-time">${escapeHtml(activity.time)}</span>
+                        <span class="activity-text">${escapeHtml(activity.text)}</span>
+                    </li>`).join("");
+                const meta = [stop.drive, stop.time].filter(Boolean).join(" · ");
+                const note = stop.note ? `<span class="note">${escapeHtml(stop.note)}</span>` : "";
+
+                const marker = L.marker([stop.lat, stop.lng], {
+                    icon: L.divIcon({
+                        className: "",
+                        html: `<div class="num-marker${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</div>`,
+                        iconSize: [29, 29],
+                        iconAnchor: [14, 14],
+                        popupAnchor: [0, -16]
+                    })
+                }).addTo(map);
+                marker.bindPopup(`
+                    <p class="popup-title">${number}. ${escapeHtml(stop.name)}${label}</p>
+                    <p class="popup-meta">${escapeHtml(meta)}</p>
+                    ${note}
+                    <ul class="activities activities--popup">${activityRows}</ul>`);
+                marker.on("click", () => {
+                    document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+                });
+                markers.push(marker);
+
+                const item = document.createElement("li");
+                item.className = "stop-wrap";
+                item.innerHTML = `
+                    <button class="stop" type="button" data-index="${index}">
+                        <span class="badge${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</span>
+                        <span>
+                            <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
+                            <span class="stop-meta">${escapeHtml(meta)}</span>
+                            ${note}
+                        </span>
+                    </button>
+                    <ul class="activities">${activityRows}</ul>`;
+                itineraryEl.appendChild(item);
+            });
+
+            const fallback = L.polyline(coords, {
+                color: day.color,
+                weight: 4,
+                opacity: 0.82,
+                dashArray: "8, 8"
+            }).addTo(map);
+            routeLines.push(fallback);
+            map.fitBounds(fallback.getBounds().pad(0.18));
+            await loadRoute(day, coords, dayIndex, fallback);
+        }
+
+        async function loadRoute(day, coords, expectedDay, fallback) {
+            const groups = splitLegs(day, coords);
+            const profile = day.mode === "foot" ? "foot" : "driving";
+            const waiting = day.mode === "foot" ? "正在规划步行路线…" : "正在规划当日路线…";
+            routeStatEl.textContent = waiting;
+
+            let driveKm = 0;
+            let driveMin = 0;
+            let hasFlight = false;
+            let routed = false;
+
+            for (const group of groups) {
+                if (group.type === "flight") {
+                    hasFlight = true;
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 3,
+                        opacity: 0.75,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                    continue;
+                }
+                const path = group.points.map(([lat, lng]) => `${lng},${lat}`).join(";");
+                const url = `https://router.project-osrm.org/route/v1/${profile}/${path}?overview=full&geometries=geojson`;
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error("route request failed");
+                    const data = await response.json();
+                    if (activeDay !== expectedDay) return;
+                    const route = data.routes && data.routes[0];
+                    if (!route) throw new Error("no route returned");
+                    const line = L.polyline(
+                        route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+                        { color: day.color, weight: 4, opacity: 0.85 }
+                    ).addTo(map);
+                    routeLines.push(line);
+                    driveKm += route.distance / 1000;
+                    driveMin += route.duration / 60;
+                    routed = true;
+                } catch (error) {
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 4,
+                        opacity: 0.82,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                }
+            }
+
+            if (activeDay !== expectedDay) return;
+            if (fallback) {
+                fallback.remove();
+                routeLines = routeLines.filter((line) => line !== fallback);
+            }
+
+            const parts = [];
+            if (hasFlight) parts.push(day.flightStat || "航班示意线");
+            if (routed) {
+                const km = profile === "foot" ? driveKm.toFixed(1) : Math.round(driveKm);
+                const minutes = Math.round(driveMin);
+                const time = minutes >= 60
+                    ? `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分`
+                    : `${minutes} 分`;
+                const label = profile === "foot" ? "步行" : "自驾";
+                parts.push(`${label}约 ${km} km · ${time}`);
+            } else if (!hasFlight) {
+                parts.push(profile === "foot" ? "步行路线暂不可用，显示直线示意" : "路线暂不可用，显示直线示意");
+            }
+            routeStatEl.textContent = parts.join(" · ");
+
+            const bounds = routeLines.reduce((acc, line) => acc.extend(line.getBounds()), routeLines[0].getBounds());
+            map.fitBounds(bounds.pad(0.15));
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        renderDay(0);
+    </script>
+</body>
+</html>
