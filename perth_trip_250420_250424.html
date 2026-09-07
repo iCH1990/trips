@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>澳大利亚 Perth 2025/04/20–2025/04/24</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --ink: #134e4a;
+            --muted: #4a6672;
+            --line: #dce5ec;
+            --accent: #0f766e;
+            --accent-soft: #e6f4f1;
+            --warm: #b45f24;
+            --warm-soft: #fff0df;
+            --stay: #6b4ea0;
+            --stay-soft: #f0eafa;
+            --panel: rgba(255, 255, 255, 0.97);
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            height: 100%;
+            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        }
+        button { font: inherit; }
+        #map { width: 100%; height: 100%; }
+        .info-panel {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            width: min(400px, calc(100vw - 32px));
+            max-height: calc(100vh - 32px);
+            overflow: auto;
+            padding: 17px 18px 15px;
+            border-radius: 14px;
+            background: var(--panel);
+            box-shadow: 0 10px 32px rgba(15, 35, 55, 0.18);
+            backdrop-filter: blur(8px);
+        }
+        h1 { margin: 0; color: var(--ink); font-size: 19px; line-height: 1.35; }
+        .subtitle { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+        .stats { display: flex; flex-wrap: wrap; gap: 7px; margin: 11px 0; }
+        .stat {
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #edf3f7;
+            color: var(--ink);
+            font-size: 11px;
+        }
+        .day-tabs {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 4px;
+            margin: 8px 0 10px;
+        }
+        .day-tab {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 7px 3px;
+            background: #fff;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 11px;
+            line-height: 1.25;
+        }
+        .day-tab:hover, .day-tab:focus-visible { border-color: var(--accent); outline: none; }
+        .day-tab.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+        .day-summary {
+            margin: 0 0 8px;
+            padding: 9px 10px;
+            border-left: 3px solid var(--accent);
+            border-radius: 5px;
+            background: #f5f9fb;
+        }
+        .day-title { margin: 0; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .day-meta { margin: 3px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+        .itinerary { margin: 0; padding: 0; list-style: none; }
+        .stop-wrap + .stop-wrap { border-top: 1px solid var(--line); }
+        .stop {
+            display: grid;
+            grid-template-columns: 28px 1fr;
+            gap: 9px;
+            width: 100%;
+            padding: 10px 5px 6px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+        .stop:hover, .stop:focus-visible, .stop.is-active { background: var(--accent-soft); outline: none; }
+        .badge, .num-marker {
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+        }
+        .badge { width: 26px; height: 26px; margin-top: 1px; font-size: 12px; }
+        .num-marker {
+            width: 29px;
+            height: 29px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.27);
+            font-size: 12px;
+        }
+        .badge.is-stay, .num-marker.is-stay { background: var(--stay); }
+        .badge.is-highlight, .num-marker.is-highlight { background: var(--warm); }
+        .stop-title { color: var(--ink); font-size: 14px; font-weight: 650; }
+        .stop-meta { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+        .tag {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: var(--warm-soft);
+            color: var(--warm);
+            font-size: 10px;
+            font-weight: 700;
+            vertical-align: 1px;
+        }
+        .tag--stay { background: var(--stay-soft); color: var(--stay); }
+        .activities {
+            margin: 0 0 9px 19px;
+            padding: 2px 0 3px 14px;
+            border-left: 2px solid var(--line);
+            list-style: none;
+        }
+        .activity {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 7px;
+            padding: 3px 0;
+            font-size: 11.5px;
+            line-height: 1.45;
+        }
+        .activity-time { color: var(--accent); font-variant-numeric: tabular-nums; }
+        .activity-text { color: var(--muted); }
+        .note {
+            display: block;
+            margin-top: 4px;
+            color: var(--warm);
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        .hint { margin: 10px 0 0; color: #6c7d8e; font-size: 11px; line-height: 1.5; }
+        .popup-title { margin: 0 0 4px; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .popup-meta { margin: 0; color: var(--muted); font-size: 12px; }
+        .activities--popup { margin: 7px 0 0; padding-left: 10px; }
+        .leaflet-popup-content { margin: 10px 13px; min-width: 235px; }
+        .toggle {
+            display: none;
+            width: 100%;
+            margin-bottom: 8px;
+            padding: 8px;
+            border: 0;
+            border-radius: 8px;
+            background: #edf3f7;
+            cursor: pointer;
+        }
+        @media (max-width: 680px) {
+            .info-panel { top: auto; right: 10px; bottom: 10px; left: 10px; width: auto; max-height: 52vh; }
+            .toggle { display: block; }
+            .info-panel.is-collapsed .stats,
+            .info-panel.is-collapsed .day-tabs,
+            .info-panel.is-collapsed .day-summary,
+            .info-panel.is-collapsed .itinerary,
+            .info-panel.is-collapsed .hint { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="info-panel" id="panel">
+        <button class="toggle" id="togglePanel" type="button" aria-expanded="true">收起行程</button>
+        <h1>澳大利亚 Perth 2025/04/20–2025/04/24</h1>
+        <p class="subtitle">2025.04.20–24 · QF645 抵 Perth 租车 · 住 Airbnb · 24 日 QF650 返程</p>
+        <div class="stats">
+            <span class="stat">5 天 4 晚</span>
+            <span class="stat">Perth Airbnb</span>
+            <span class="stat">北上尖峰石 · 南下 Busselton</span>
+            <span class="stat" id="routeStat">正在规划当日路线…</span>
+        </div>
+        <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+        <section class="day-summary" id="daySummary"></section>
+        <ol class="itinerary" id="itinerary"></ol>
+        <p class="hint">去程 QF645 约 10:35 从悉尼飞 Perth；返程 QF650 约 14:35 回悉尼。驾驶路段按 OSRM 估算。Airbnb 按内城区示意落点，具体门牌以入住信息为准。</p>
+    </aside>
+    <div id="map" role="application" aria-label="Perth 行程地图"></div>
+
+    <script>
+        const days = [
+            {
+                date: "4/20",
+                weekday: "周日",
+                title: "悉尼 → Perth，入住后去 6HEAD 晚餐",
+                meta: "QF645 · Perth 机场取车 · 当晚入住后去 Elizabeth Quay 吃饭",
+                color: "#0f766e",
+                flightStat: "QF645 悉尼 → Perth",
+                stops: [
+                    {
+                        name: "Sydney Airport",
+                        time: "10:35 起飞",
+                        lat: -33.9499, lng: 151.1820,
+                        activities: [
+                            { time: "10:35", text: "QF645 从悉尼出发，飞往 Perth" }
+                        ]
+                    },
+                    {
+                        name: "Perth Airport",
+                        time: "约 13:35 抵达",
+                        drive: "飞行约 5 小时",
+                        leg: "flight",
+                        lat: -31.9403, lng: 115.9672,
+                        activities: [
+                            { time: "抵达后", text: "取行李，机场取车后自驾前往住处" }
+                        ]
+                    },
+                    {
+                        name: "Airbnb · Perth",
+                        time: "下午入住",
+                        kind: "stay",
+                        lat: -31.9568, lng: 115.8735,
+                        activities: [
+                            { time: "下午", text: "办理入住，当晚先安顿下来" }
+                        ],
+                        note: "内城区示意落点 · 连住四晚"
+                    },
+                    {
+                        name: "6HEAD Perth",
+                        time: "晚餐",
+                        lat: -31.9569, lng: 115.8573,
+                        activities: [
+                            { time: "晚上", text: "开车去 6HEAD 吃晚餐，之后回住处" }
+                        ],
+                        note: "Shop 1, Ground Floor, One The Esplanade, Elizabeth Quay"
+                    }
+                ]
+            },
+            {
+                date: "4/21",
+                weekday: "周一",
+                title: "龙虾工厂、Jurien Bay 与尖峰石",
+                meta: "家里随便吃点 · Cervantes 午餐 · 看海 · 尖峰石镇 · 返程日落 · 城里打包泰餐",
+                color: "#0e7490",
+                stops: [
+                    {
+                        name: "Airbnb · Perth",
+                        time: "早晨出发",
+                        kind: "stay",
+                        lat: -31.9568, lng: 115.8735,
+                        activities: [
+                            { time: "早上", text: "在家里随便吃点，之后北上" }
+                        ]
+                    },
+                    {
+                        name: "Lobster Shack",
+                        time: "午餐",
+                        drive: "驾驶约 2 小时",
+                        kind: "highlight",
+                        lat: -30.4995, lng: 115.0660,
+                        activities: [
+                            { time: "中午", text: "在龙虾工厂吃午餐" }
+                        ],
+                        note: "37 Catalonia Street, Cervantes"
+                    },
+                    {
+                        name: "Jurien Bay",
+                        time: "午餐后",
+                        lat: -30.3042, lng: 115.0395,
+                        activities: [
+                            { time: "下午", text: "去 Jurien Bay 看海" }
+                        ]
+                    },
+                    {
+                        name: "The Pinnacles · 尖峰石镇",
+                        time: "下午",
+                        kind: "highlight",
+                        lat: -30.6064, lng: 115.1569,
+                        activities: [
+                            { time: "下午", text: "去尖峰石镇看石灰岩柱林" }
+                        ],
+                        note: "Nambung National Park, Cervantes"
+                    },
+                    {
+                        name: "Lancelin",
+                        time: "日落",
+                        kind: "highlight",
+                        lat: -31.0178, lng: 115.3300,
+                        activities: [
+                            { time: "傍晚", text: "返程路上停车看日落" }
+                        ]
+                    },
+                    {
+                        name: "Perth City · 泰餐外卖",
+                        time: "晚上",
+                        lat: -31.9523, lng: 115.8589,
+                        activities: [
+                            { time: "晚上", text: "在 Perth city 打包泰餐，回 Airbnb 吃" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "4/22",
+                weekday: "周二",
+                title: "Kings Park、蓝船屋与 Fremantle 买菜",
+                meta: "Mount Street 早餐 · 公园坐坐 · 拍照 · 市场买菜回家做饭",
+                color: "#0369a1",
+                stops: [
+                    {
+                        name: "Mount Street Breakfast Bar",
+                        time: "早餐",
+                        lat: -31.9558, lng: 115.8478,
+                        activities: [
+                            { time: "早上", text: "去 Mount Street Breakfast Bar 吃早餐" }
+                        ],
+                        note: "42 Mount Street, Perth"
+                    },
+                    {
+                        name: "Kings Park",
+                        time: "上午",
+                        kind: "highlight",
+                        lat: -31.9619, lng: 115.8425,
+                        activities: [
+                            { time: "上午", text: "去 Kings Park 坐一会儿" }
+                        ]
+                    },
+                    {
+                        name: "Blue Boat House",
+                        time: "拍照",
+                        kind: "highlight",
+                        lat: -31.9735, lng: 115.8266,
+                        activities: [
+                            { time: "上午–中午", text: "去蓝船屋拍照" }
+                        ],
+                        note: "Crawley Edge Boatshed, Crawley"
+                    },
+                    {
+                        name: "Fremantle Markets",
+                        time: "买菜",
+                        lat: -32.0564, lng: 115.7486,
+                        activities: [
+                            { time: "下午", text: "去 Fremantle Markets 买菜，之后回 Airbnb 做饭" }
+                        ],
+                        note: "74 South Terrace, Fremantle"
+                    }
+                ]
+            },
+            {
+                date: "4/23",
+                weekday: "周三",
+                title: "Mandurah brunch，再去 Busselton",
+                meta: "Perch'd · Crooked Carrot 陪小孩玩 · 小火车 · 巧克力工厂后返程",
+                color: "#b45309",
+                stops: [
+                    {
+                        name: "Airbnb · Perth",
+                        time: "出发",
+                        kind: "stay",
+                        lat: -31.9568, lng: 115.8735,
+                        activities: [
+                            { time: "上午", text: "出发前往 Mandurah" }
+                        ]
+                    },
+                    {
+                        name: "Perch'd",
+                        time: "brunch",
+                        lat: -32.5294, lng: 115.7198,
+                        activities: [
+                            { time: "上午", text: "在 Mandurah 的 Perch'd 吃 brunch" }
+                        ],
+                        note: "30 Mandurah Terrace, Mandurah"
+                    },
+                    {
+                        name: "The Crooked Carrot",
+                        time: "休息",
+                        lat: -33.1033, lng: 115.6989,
+                        activities: [
+                            { time: "中午前后", text: "在 The Crooked Carrot 休息一下，陪小孩玩" }
+                        ],
+                        note: "Forrest Highway & Rigg Road, Myalup"
+                    },
+                    {
+                        name: "Busselton Jetty",
+                        time: "小火车",
+                        kind: "highlight",
+                        lat: -33.6475, lng: 115.3447,
+                        activities: [
+                            { time: "下午", text: "去 Busselton 坐小火车" }
+                        ]
+                    },
+                    {
+                        name: "The Margaret River Chocolate Company",
+                        time: "品尝",
+                        kind: "highlight",
+                        lat: -33.7998, lng: 115.0775,
+                        activities: [
+                            { time: "下午", text: "去巧克力工厂品尝巧克力和雪糕，参观一下，之后返程" }
+                        ],
+                        note: "415 Harmans Mill Road, Metricup"
+                    }
+                ]
+            },
+            {
+                date: "4/24",
+                weekday: "周四",
+                title: "Maylands 玩一会儿，之后返程悉尼",
+                meta: "早餐后去 Waterland · 下午去机场 · QF650 回悉尼",
+                color: "#4f6d7a",
+                flightStat: "QF650 Perth → 悉尼",
+                stops: [
+                    {
+                        name: "Airbnb · Perth",
+                        time: "早晨",
+                        kind: "stay",
+                        lat: -31.9568, lng: 115.8735,
+                        activities: [
+                            { time: "早晨", text: "吃过早餐后退房" }
+                        ]
+                    },
+                    {
+                        name: "Maylands Waterland",
+                        time: "上午",
+                        kind: "highlight",
+                        lat: -31.9389, lng: 115.9044,
+                        activities: [
+                            { time: "上午", text: "先去 Maylands Waterland 玩一会儿，之后去机场" }
+                        ],
+                        note: "32 Clarkson Road, Maylands"
+                    },
+                    {
+                        name: "Perth Airport",
+                        time: "前往登机",
+                        lat: -31.9403, lng: 115.9672,
+                        activities: [
+                            { time: "下午", text: "还车、值机，乘坐 QF650 返程" }
+                        ]
+                    },
+                    {
+                        name: "Sydney Airport",
+                        time: "抵达",
+                        drive: "飞行约 4 小时",
+                        leg: "flight",
+                        lat: -33.9499, lng: 151.1820,
+                        activities: [
+                            { time: "抵达后", text: "QF650 回到悉尼，行程结束" }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const map = L.map("map", { zoomControl: true }).setView([-31.95, 115.86], 10);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        const tabsEl = document.getElementById("dayTabs");
+        const summaryEl = document.getElementById("daySummary");
+        const itineraryEl = document.getElementById("itinerary");
+        const routeStatEl = document.getElementById("routeStat");
+        let routeLines = [];
+        let markers = [];
+        let activeDay = 0;
+
+        days.forEach((day, index) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "day-tab";
+            button.innerHTML = `${escapeHtml(day.date)}<br>${escapeHtml(day.weekday)}`;
+            button.addEventListener("click", () => renderDay(index));
+            tabsEl.appendChild(button);
+        });
+
+        document.getElementById("togglePanel").addEventListener("click", () => {
+            const panel = document.getElementById("panel");
+            const collapsed = panel.classList.toggle("is-collapsed");
+            const button = document.getElementById("togglePanel");
+            button.textContent = collapsed ? "展开行程" : "收起行程";
+            button.setAttribute("aria-expanded", String(!collapsed));
+        });
+
+        itineraryEl.addEventListener("click", (event) => {
+            const button = event.target.closest(".stop");
+            if (!button) return;
+            const index = Number(button.dataset.index);
+            document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+            const zoom = days[activeDay].zoom || 12;
+            map.flyTo(markers[index].getLatLng(), zoom, { duration: 0.7 });
+            markers[index].openPopup();
+        });
+
+        function splitLegs(day, coords) {
+            const groups = [];
+            let current = { type: "drive", points: [coords[0]] };
+            for (let i = 1; i < day.stops.length; i++) {
+                const type = day.stops[i].leg === "flight" ? "flight" : "drive";
+                if (type === current.type) {
+                    current.points.push(coords[i]);
+                } else {
+                    groups.push(current);
+                    current = { type, points: [coords[i - 1], coords[i]] };
+                }
+            }
+            groups.push(current);
+            return groups.filter((group) => group.points.length > 1);
+        }
+
+        async function renderDay(dayIndex) {
+            activeDay = dayIndex;
+            const day = days[dayIndex];
+            document.querySelectorAll(".day-tab").forEach((tab, index) => {
+                tab.classList.toggle("is-active", index === dayIndex);
+            });
+            summaryEl.innerHTML = `
+                <p class="day-title">${escapeHtml(day.date)} ${escapeHtml(day.weekday)} · ${escapeHtml(day.title)}</p>
+                <p class="day-meta">${escapeHtml(day.meta)}</p>`;
+            itineraryEl.innerHTML = "";
+            markers.forEach((marker) => marker.remove());
+            markers = [];
+            routeLines.forEach((line) => line.remove());
+            routeLines = [];
+
+            const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
+
+            day.stops.forEach((stop, index) => {
+                const number = index + 1;
+                const kindClass = stop.kind ? ` is-${stop.kind}` : "";
+                const label = stop.kind === "stay"
+                    ? '<span class="tag tag--stay">住宿</span>'
+                    : stop.kind === "highlight"
+                        ? '<span class="tag">重点</span>'
+                        : "";
+                const activityRows = stop.activities.map((activity) => `
+                    <li class="activity">
+                        <span class="activity-time">${escapeHtml(activity.time)}</span>
+                        <span class="activity-text">${escapeHtml(activity.text)}</span>
+                    </li>`).join("");
+                const meta = [stop.drive, stop.time].filter(Boolean).join(" · ");
+                const note = stop.note ? `<span class="note">${escapeHtml(stop.note)}</span>` : "";
+
+                const marker = L.marker([stop.lat, stop.lng], {
+                    icon: L.divIcon({
+                        className: "",
+                        html: `<div class="num-marker${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</div>`,
+                        iconSize: [29, 29],
+                        iconAnchor: [14, 14],
+                        popupAnchor: [0, -16]
+                    })
+                }).addTo(map);
+                marker.bindPopup(`
+                    <p class="popup-title">${number}. ${escapeHtml(stop.name)}${label}</p>
+                    <p class="popup-meta">${escapeHtml(meta)}</p>
+                    ${note}
+                    <ul class="activities activities--popup">${activityRows}</ul>`);
+                marker.on("click", () => {
+                    document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+                });
+                markers.push(marker);
+
+                const item = document.createElement("li");
+                item.className = "stop-wrap";
+                item.innerHTML = `
+                    <button class="stop" type="button" data-index="${index}">
+                        <span class="badge${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</span>
+                        <span>
+                            <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
+                            <span class="stop-meta">${escapeHtml(meta)}</span>
+                            ${note}
+                        </span>
+                    </button>
+                    <ul class="activities">${activityRows}</ul>`;
+                itineraryEl.appendChild(item);
+            });
+
+            const fallback = L.polyline(coords, {
+                color: day.color,
+                weight: 4,
+                opacity: 0.82,
+                dashArray: "8, 8"
+            }).addTo(map);
+            routeLines.push(fallback);
+            map.fitBounds(fallback.getBounds().pad(0.18));
+            await loadRoute(day, coords, dayIndex, fallback);
+        }
+
+        async function loadRoute(day, coords, expectedDay, fallback) {
+            const groups = splitLegs(day, coords);
+            const profile = day.mode === "foot" ? "foot" : "driving";
+            const waiting = day.mode === "foot" ? "正在规划步行路线…" : "正在规划当日路线…";
+            routeStatEl.textContent = waiting;
+
+            let driveKm = 0;
+            let driveMin = 0;
+            let hasFlight = false;
+            let routed = false;
+
+            for (const group of groups) {
+                if (group.type === "flight") {
+                    hasFlight = true;
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 3,
+                        opacity: 0.75,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                    continue;
+                }
+                const path = group.points.map(([lat, lng]) => `${lng},${lat}`).join(";");
+                const url = `https://router.project-osrm.org/route/v1/${profile}/${path}?overview=full&geometries=geojson`;
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error("route request failed");
+                    const data = await response.json();
+                    if (activeDay !== expectedDay) return;
+                    const route = data.routes && data.routes[0];
+                    if (!route) throw new Error("no route returned");
+                    const line = L.polyline(
+                        route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+                        { color: day.color, weight: 4, opacity: 0.85 }
+                    ).addTo(map);
+                    routeLines.push(line);
+                    driveKm += route.distance / 1000;
+                    driveMin += route.duration / 60;
+                    routed = true;
+                } catch (error) {
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 4,
+                        opacity: 0.82,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                }
+            }
+
+            if (activeDay !== expectedDay) return;
+            if (fallback) {
+                fallback.remove();
+                routeLines = routeLines.filter((line) => line !== fallback);
+            }
+
+            const parts = [];
+            if (hasFlight) parts.push(day.flightStat || "航班示意线");
+            if (routed) {
+                const km = profile === "foot" ? driveKm.toFixed(1) : Math.round(driveKm);
+                const minutes = Math.round(driveMin);
+                const time = minutes >= 60
+                    ? `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分`
+                    : `${minutes} 分`;
+                const label = profile === "foot" ? "步行" : "自驾";
+                parts.push(`${label}约 ${km} km · ${time}`);
+            } else if (!hasFlight) {
+                parts.push(profile === "foot" ? "步行路线暂不可用，显示直线示意" : "路线暂不可用，显示直线示意");
+            }
+            routeStatEl.textContent = parts.join(" · ");
+
+            const bounds = routeLines.reduce((acc, line) => acc.extend(line.getBounds()), routeLines[0].getBounds());
+            map.fitBounds(bounds.pad(0.15));
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        renderDay(0);
+    </script>
+</body>
+</html>
