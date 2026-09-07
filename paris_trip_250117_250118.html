@@ -183,13 +183,12 @@
         <div class="stats">
             <span class="stat">2 天 1 晚</span>
             <span class="stat">全天步行</span>
-            <span class="stat">框架页 · 地点待补</span>
             <span class="stat" id="routeStat">正在规划当日路线…</span>
         </div>
         <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
         <section class="day-summary" id="daySummary"></section>
         <ol class="itinerary" id="itinerary"></ol>
-        <p class="hint">17 日只安排抵达与入住。18 日目前只标了酒店、午餐店和北站；上午走过的地方告诉我之后，会按顺序补到地图上。</p>
+        <p class="hint">17 日抵达入住。18 日从酒店出发，按实际步行顺序标点；下午在 La Grille Montorgueil 午餐后，从北站搭欧洲之星回伦敦。</p>
     </aside>
     <div id="map" role="application" aria-label="巴黎行程地图"></div>
 
@@ -247,28 +246,175 @@
                         time: "早晨出发",
                         kind: "stay",
                         lat: 48.86278, lng: 2.33589,
-                        activities: [
-                            { time: "早晨", text: "退房或先把行李放下，开始步行" }
-                        ],
-                        note: "上午具体走过的地方还没标，之后按你的顺序补进地图。"
+                        activities: [{ time: "早晨", text: "从酒店出发，开始步行" }],
+                        note: "Place André Malraux, 75001 Paris"
+                    },
+                    {
+                        name: "卢浮宫",
+                        time: "上午",
+                        kind: "highlight",
+                        lat: 48.8606, lng: 2.3376,
+                        activities: [{ time: "途经", text: "Musée du Louvre" }]
+                    },
+                    {
+                        name: "Palais de Justice de Paris",
+                        time: "上午",
+                        lat: 48.8557, lng: 2.3450,
+                        activities: [{ time: "途经", text: "巴黎司法宫，西岱岛" }]
+                    },
+                    {
+                        name: "Sainte-Chapelle",
+                        time: "上午",
+                        kind: "highlight",
+                        lat: 48.8554, lng: 2.3450,
+                        activities: [{ time: "途经", text: "圣礼拜堂" }]
+                    },
+                    {
+                        name: "Notre-Dame Cathedral of Paris",
+                        time: "上午",
+                        kind: "highlight",
+                        lat: 48.8530, lng: 2.3499,
+                        activities: [{ time: "途经", text: "巴黎圣母院" }]
+                    },
+                    {
+                        name: "Saint-Nicolas du Chardonnet",
+                        time: "上午",
+                        lat: 48.8491, lng: 2.3502,
+                        activities: [{ time: "途经", text: "23 Rue des Bernardins" }]
+                    },
+                    {
+                        name: "Panthéon",
+                        time: "上午",
+                        kind: "highlight",
+                        lat: 48.8462, lng: 2.3460,
+                        activities: [{ time: "途经", text: "先贤祠" }]
+                    },
+                    {
+                        name: "Panthéon-Sorbonne University",
+                        time: "上午",
+                        lat: 48.8467, lng: 2.3444,
+                        activities: [{ time: "途经", text: "Université Paris 1 · Place du Panthéon" }]
+                    },
+                    {
+                        name: "Luxembourg Palace",
+                        time: "上午",
+                        lat: 48.8481, lng: 2.3372,
+                        activities: [{ time: "途经", text: "卢森堡宫" }]
+                    },
+                    {
+                        name: "Hôtel des Invalides",
+                        time: "下午",
+                        kind: "highlight",
+                        lat: 48.8565, lng: 2.3126,
+                        activities: [{ time: "途经", text: "荣军院" }]
+                    },
+                    {
+                        name: "Military School",
+                        time: "下午",
+                        lat: 48.8528, lng: 2.3043,
+                        activities: [{ time: "途经", text: "École Militaire 军事学院" }]
+                    },
+                    {
+                        name: "Champ de Mars",
+                        time: "下午",
+                        lat: 48.8556, lng: 2.2986,
+                        activities: [{ time: "途经", text: "战神广场" }]
+                    },
+                    {
+                        name: "Eiffel Tower",
+                        time: "下午",
+                        kind: "highlight",
+                        lat: 48.8584, lng: 2.2945,
+                        activities: [{ time: "途经", text: "埃菲尔铁塔" }]
+                    },
+                    {
+                        name: "Place du Trocadero",
+                        time: "下午",
+                        lat: 48.8630, lng: 2.2876,
+                        activities: [{ time: "途经", text: "特罗卡德罗广场" }]
+                    },
+                    {
+                        name: "Palais d'Iéna",
+                        time: "下午",
+                        lat: 48.8642, lng: 2.2944,
+                        activities: [{ time: "途经", text: "耶拿宫" }]
+                    },
+                    {
+                        name: "Musée national des arts asiatiques - Guimet",
+                        time: "下午",
+                        lat: 48.86528, lng: 2.29389,
+                        activities: [{ time: "途经", text: "吉美亚洲艺术博物馆 · 6 Place d'Iéna" }]
+                    },
+                    {
+                        name: "Palais de Tokyo",
+                        time: "下午",
+                        lat: 48.8640, lng: 2.2972,
+                        activities: [{ time: "途经", text: "东京宫" }]
+                    },
+                    {
+                        name: "Square du Palais-Galliera",
+                        time: "下午",
+                        lat: 48.8664, lng: 2.2967,
+                        activities: [{ time: "途经", text: "加列拉宫广场 · 10 Avenue Pierre 1er de Serbie" }]
+                    },
+                    {
+                        name: "Arc de Triomphe",
+                        time: "下午",
+                        kind: "highlight",
+                        lat: 48.8738, lng: 2.2950,
+                        activities: [{ time: "途经", text: "凯旋门" }]
+                    },
+                    {
+                        name: "Avenue des Champs-Élysées",
+                        time: "下午",
+                        lat: 48.8698, lng: 2.3078,
+                        activities: [{ time: "途经", text: "沿香榭丽舍大街向东走" }]
+                    },
+                    {
+                        name: "Grand Palais",
+                        time: "下午",
+                        lat: 48.8661, lng: 2.3125,
+                        activities: [{ time: "途经", text: "大皇宫" }]
+                    },
+                    {
+                        name: "Petit Palais",
+                        time: "下午",
+                        lat: 48.8660, lng: 2.3146,
+                        activities: [{ time: "途经", text: "小皇宫" }]
+                    },
+                    {
+                        name: "Place de la Concorde",
+                        time: "下午",
+                        kind: "highlight",
+                        lat: 48.8656, lng: 2.3212,
+                        activities: [{ time: "途经", text: "协和广场" }]
+                    },
+                    {
+                        name: "La Madeleine",
+                        time: "下午",
+                        lat: 48.8701, lng: 2.3244,
+                        activities: [{ time: "途经", text: "玛德莱娜教堂" }]
+                    },
+                    {
+                        name: "Palais Garnier",
+                        time: "下午",
+                        kind: "highlight",
+                        lat: 48.8719, lng: 2.3316,
+                        activities: [{ time: "途经", text: "加尼叶歌剧院，之后去午餐" }]
                     },
                     {
                         name: "La Grille Montorgueil",
                         time: "下午午餐",
                         kind: "highlight",
                         lat: 48.8650, lng: 2.3473,
-                        activities: [
-                            { time: "下午", text: "午餐，吃完后前往北站回伦敦" }
-                        ],
+                        activities: [{ time: "下午", text: "午餐，吃完后前往北站回伦敦" }],
                         note: "50 Rue Montorgueil, 75002 Paris"
                     },
                     {
                         name: "Paris Gare du Nord",
                         time: "返程",
                         lat: 48.8809, lng: 2.3553,
-                        activities: [
-                            { time: "午餐后", text: "步行或就近前往北站，欧洲之星回伦敦" }
-                        ]
+                        activities: [{ time: "午餐后", text: "前往北站，欧洲之星回伦敦" }]
                     }
                 ]
             }
@@ -410,7 +556,7 @@
                 routeLine.setStyle({ dashArray: null });
                 const km = (route.distance / 1000).toFixed(1);
                 const minutes = Math.round(route.duration / 60);
-                routeStatEl.textContent = `步行约 ${km} km · ${minutes} 分（地点补全后会更新）`;
+                routeStatEl.textContent = `步行约 ${km} km · ${minutes} 分`;
                 map.fitBounds(routeLine.getBounds().pad(0.15));
             } catch (error) {
                 if (activeDay === expectedDay) routeStatEl.textContent = "步行路线暂不可用，显示直线示意";
