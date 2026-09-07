@@ -42,10 +42,22 @@
             font-size: 15px;
             line-height: 1.7;
         }
+        .year {
+            margin: 32px 0 0;
+        }
+        .year h2 {
+            margin: 0 0 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--line);
+            font-size: 13px;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            font-weight: 650;
+        }
         .trips {
             display: grid;
             gap: 14px;
-            margin: 28px 0 0;
+            margin: 0;
             padding: 0;
             list-style: none;
         }
@@ -68,7 +80,7 @@
             color: var(--accent);
             font-weight: 650;
         }
-        .trip h2 {
+        .trip h3 {
             margin: 6px 0 0;
             font-size: 18px;
             line-height: 1.35;
@@ -92,29 +104,37 @@
         <p class="kicker">Personal itineraries</p>
         <h1>Jason's Trip</h1>
         <p class="intro">这里放的是我自己的行程安排：去哪、停多久、晚上住哪。写给自己用，也公开出来，如果有人路线相近，可以直接拿去参考。</p>
-        <ul class="trips">
-            <li>
-                <a class="trip" href="paris_trip_250117_250118.html">
-                    <p class="trip-date">步行 · 欧洲之星往返伦敦</p>
-                    <h2>法国 巴黎 2025/01/17–2025/01/18</h2>
-                    <p>住 Hôtel du Louvre - The Unbound Collection by Hyatt。18 日全天步行，下午在 La Grille Montorgueil 午餐后回伦敦。步行站点还在补。</p>
-                </a>
-            </li>
-            <li>
-                <a class="trip" href="southern_highland_trip_260906.html">
-                    <p class="trip-date">一日游</p>
-                    <h2>澳大利亚 南部高地 2026/09/06</h2>
-                    <p>Park Hyatt 出发，经 Bowral、Fitzroy Falls、Kangaroo Valley，再到 Gerringong 与 Kiama，晚上回 Taronga 吃晚餐。</p>
-                </a>
-            </li>
-            <li>
-                <a class="trip" href="dubbo_trip_261031_261104.html">
-                    <p class="trip-date">五日自驾</p>
-                    <h2>澳大利亚 Dubbo 2026/10/31–2026/11/04</h2>
-                    <p>Chatswood 出发，经蓝山和 Mudgee，Dubbo 看动物园与市区，11 月 3 日住 Zoofari Lodge，返程经 Orange、Bathurst 回家。</p>
-                </a>
-            </li>
-        </ul>
+        <section class="year" aria-labelledby="year-2026">
+            <h2 id="year-2026">2026</h2>
+            <ul class="trips">
+                <li>
+                    <a class="trip" href="dubbo_trip_261031_261104.html">
+                        <p class="trip-date">五日自驾</p>
+                        <h3>澳大利亚 Dubbo 2026/10/31–2026/11/04</h3>
+                        <p>Chatswood 出发，经蓝山和 Mudgee，Dubbo 看动物园与市区，11 月 3 日住 Zoofari Lodge，返程经 Orange、Bathurst 回家。</p>
+                    </a>
+                </li>
+                <li>
+                    <a class="trip" href="southern_highland_trip_260906.html">
+                        <p class="trip-date">一日游</p>
+                        <h3>澳大利亚 南部高地 2026/09/06</h3>
+                        <p>Park Hyatt 出发，经 Bowral、Fitzroy Falls、Kangaroo Valley，再到 Gerringong 与 Kiama，晚上回 Taronga 吃晚餐。</p>
+                    </a>
+                </li>
+            </ul>
+        </section>
+        <section class="year" aria-labelledby="year-2025">
+            <h2 id="year-2025">2025</h2>
+            <ul class="trips">
+                <li>
+                    <a class="trip" href="paris_trip_250117_250118.html">
+                        <p class="trip-date">步行 · 欧洲之星往返伦敦</p>
+                        <h3>法国 巴黎 2025/01/17–2025/01/18</h3>
+                        <p>住 Hôtel du Louvre - The Unbound Collection by Hyatt。18 日全天步行，下午在 La Grille Montorgueil 午餐后回伦敦。步行站点还在补。</p>
+                    </a>
+                </li>
+            </ul>
+        </section>
         <footer>托管在 GitHub Pages。时间与路况会变，出发前请再核对开放时间和预订。</footer>
     </main>
 </body>
