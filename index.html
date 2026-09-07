@@ -39,10 +39,9 @@
         h1 { margin: 8px 0 0; font-size: 32px; line-height: 1.2; }
         .intro {
             margin: 14px 0 0;
-            max-width: 38em;
             color: var(--muted);
             font-size: 15px;
-            line-height: 1.7;
+            line-height: 1.75;
         }
         .footprint {
             margin: 28px 0 0;
@@ -118,12 +117,6 @@
             margin: 4px 0 0;
             font-size: 12px;
             color: var(--muted);
-        }
-        .popup-link {
-            display: inline-block;
-            margin: 6px 0 0;
-            font-size: 12px;
-            color: var(--accent);
         }
         .year {
             margin: 32px 0 0;
@@ -241,96 +234,57 @@
     <script>
         // 只保留最近去过的年份和次数，不放具体日期和行程。
         const places = [
-            { name: "中国", en: "China", visits: 22, lastYear: 2026, lat: 35.0, lng: 105.0 },
-            { name: "澳大利亚", en: "Australia", visits: 21, lastYear: 2026, lat: -25.3, lng: 133.8 },
-            { name: "日本", en: "Japan", visits: 5, lastYear: 2026, lat: 36.2, lng: 138.3 },
-            { name: "英国", en: "United Kingdom", visits: 4, lastYear: 2025, lat: 54.0, lng: -2.0 },
-            { name: "新加坡", en: "Singapore", visits: 3, lastYear: 2026, lat: 1.35, lng: 103.82 },
-            { name: "香港", en: "Hong Kong", visits: 2, lastYear: 2026, lat: 22.32, lng: 114.17 },
-            { name: "泰国", en: "Thailand", visits: 2, lastYear: 2019, lat: 15.0, lng: 101.0 },
-            { name: "美国", en: "United States", visits: 2, lastYear: 2026, lat: 39.5, lng: -98.35 },
-            { name: "法国", en: "France", visits: 1, lastYear: 2025, lat: 46.6, lng: 2.4 },
-            { name: "马来西亚", en: "Malaysia", visits: 1, lastYear: 2026, lat: 4.2, lng: 102.0 },
-            { name: "阿联酋", en: "United Arab Emirates", visits: 1, lastYear: 2025, lat: 24.0, lng: 54.0 }
+            { name: "澳大利亚", visits: 21, lastYear: 2026, lastDate: "2026-09-02", lat: -25.3, lng: 133.8 },
+            { name: "日本", visits: 5, lastYear: 2026, lastDate: "2026-08-14", lat: 36.2, lng: 138.3 },
+            { name: "香港", visits: 2, lastYear: 2026, lastDate: "2026-08-04", lat: 22.32, lng: 114.17 },
+            { name: "中国", visits: 22, lastYear: 2026, lastDate: "2026-08-03", lat: 35.0, lng: 105.0 },
+            { name: "美国", visits: 2, lastYear: 2026, lastDate: "2026-02-13", lat: 39.5, lng: -98.35 },
+            { name: "新加坡", visits: 3, lastYear: 2026, lastDate: "2026-01-08", lat: 1.35, lng: 103.82 },
+            { name: "马来西亚", visits: 1, lastYear: 2026, lastDate: "2026-01-07", lat: 4.2, lng: 102.0 },
+            { name: "英国", visits: 4, lastYear: 2025, lastDate: "2025-12-23", lat: 54.0, lng: -2.0 },
+            { name: "阿联酋", visits: 1, lastYear: 2025, lastDate: "2025-02-11", lat: 24.0, lng: 54.0 },
+            { name: "法国", visits: 1, lastYear: 2025, lastDate: "2025-01-18", lat: 46.6, lng: 2.4 },
+            { name: "泰国", visits: 2, lastYear: 2019, lastDate: "2019-12-23", lat: 15.0, lng: 101.0 }
         ];
 
-        const footprints = [
-            {
-                country: "澳大利亚",
-                region: "黄金海岸 / 布里斯班",
-                date: "2024/12/18–2024/12/22",
-                end: "2024-12-22",
-                note: "黄金海岸租车、Springbrook、Wet'n'Wild，再去布里斯班",
-                href: "gold_coast_trip_241218_241222.html",
-                lat: -27.9671, lng: 153.4280
-            },
-            {
-                country: "法国",
-                region: "巴黎",
-                date: "2025/01/17–2025/01/18",
-                end: "2025-01-18",
-                note: "欧洲之星从伦敦往返，一整天步行",
-                href: "paris_trip_250117_250118.html",
-                lat: 48.8606, lng: 2.3376
-            },
-            {
-                country: "澳大利亚",
-                region: "南部高地",
-                date: "2026/09/06",
-                end: "2026-09-06",
-                note: "Bowral、Fitzroy Falls、Kangaroo Valley、Kiama",
-                href: "southern_highland_trip_260906.html",
-                lat: -34.4776, lng: 150.4189
-            },
-            {
-                country: "澳大利亚",
-                region: "Dubbo",
-                date: "2026/10/31–2026/11/04",
-                end: "2026-11-04",
-                note: "蓝山、Mudgee、动物园、Orange 返程",
-                href: "dubbo_trip_261031_261104.html",
-                lat: -32.2569, lng: 148.6011
-            }
-        ];
+        const sorted = [...places].sort((a, b) => b.lastDate.localeCompare(a.lastDate));
+        const totalVisits = places.reduce((sum, place) => sum + place.visits, 0);
+        const latestYear = Math.max(...places.map((place) => place.lastYear));
 
-        const today = new Date().toISOString().slice(0, 10);
-        const visited = footprints.filter((trip) => trip.end < today);
-        const countries = new Set(footprints.map((trip) => trip.country));
-
-        document.getElementById("stats").innerHTML = [
-            [footprints.length, "条行程"],
-            [countries.size, "个国家"],
-            [visited.length, "条已走过"]
-        ].map(([value, label]) => `<div><b>${value}</b><span>${label}</span></div>`).join("");
-
-        const map = L.map("map", { zoomControl: true, scrollWheelZoom: false });
+        const map = L.map("map", { zoomControl: true, scrollWheelZoom: false, minZoom: 1 });
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,
             attribution: "&copy; OpenStreetMap contributors"
         }).addTo(map);
 
-        footprints.forEach((trip) => {
-            const planned = trip.end >= today;
-            const marker = L.marker([trip.lat, trip.lng], {
-                icon: L.divIcon({
-                    className: "",
-                    html: `<div class="dot-marker${planned ? " is-planned" : ""}"></div>`,
-                    iconSize: [15, 15],
-                    iconAnchor: [8, 8],
-                    popupAnchor: [0, -8]
-                })
-            }).addTo(map);
-            marker.bindPopup(`
-                <p class="popup-title">${trip.country} ${trip.region}</p>
-                <p class="popup-meta">${trip.date} · ${planned ? "还没出发" : "已走过"}</p>
-                <p class="popup-meta">${trip.note}</p>
-                <a class="popup-link" href="${trip.href}">查看行程 →</a>`);
+        places.forEach((place) => {
+            L.circleMarker([place.lat, place.lng], {
+                radius: 5 + Math.sqrt(place.visits) * 2,
+                color: "#fff",
+                weight: 2,
+                fillColor: "#2b6cb0",
+                fillOpacity: 0.78
+            }).addTo(map).bindPopup(`
+                <p class="popup-title">${place.name}</p>
+                <p class="popup-meta">最近 ${place.lastYear} 年 · 去过 ${place.visits} 次</p>`);
         });
 
-        map.fitBounds(footprints.map((trip) => [trip.lat, trip.lng]), {
-            padding: [40, 40],
-            maxZoom: 6
+        map.fitBounds(places.map((place) => [place.lat, place.lng]), {
+            padding: [30, 30],
+            maxZoom: 4
         });
+
+        document.getElementById("stats").innerHTML = [
+            [places.length, "个国家/地区"],
+            [totalVisits, "次到访"],
+            [latestYear, "最近一次"]
+        ].map(([value, label]) => `<div><b>${value}</b><span>${label}</span></div>`).join("");
+
+        document.getElementById("places").innerHTML = sorted.map((place) => `
+            <li>
+                <p class="place-name">${place.name}</p>
+                <p class="place-meta">最近 ${place.lastYear} 年 · ${place.visits} 次</p>
+            </li>`).join("");
     </script>
 </body>
 </html>
