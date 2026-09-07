@@ -5,6 +5,8 @@
     <title>Jason's Trip</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Jason 的自驾行程安排，公开分享给可能用得上的人。">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root {
             --ink: #1a365d;
@@ -41,6 +43,87 @@
             color: var(--muted);
             font-size: 15px;
             line-height: 1.7;
+        }
+        .footprint {
+            margin: 28px 0 0;
+        }
+        .footprint h2 {
+            margin: 0 0 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--line);
+            font-size: 13px;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            font-weight: 650;
+        }
+        .stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin: 14px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+        .stats div {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+        .stats b {
+            font-size: 22px;
+            line-height: 1;
+            color: var(--accent);
+        }
+        .stats span {
+            font-size: 12px;
+            color: var(--muted);
+        }
+        #map {
+            height: 340px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: #fff;
+        }
+        .places {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 14px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+        .places li {
+            padding: 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #fff;
+        }
+        .place-name {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 650;
+        }
+        .place-meta {
+            margin: 4px 0 0;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .popup-title {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 650;
+            color: var(--ink);
+        }
+        .popup-meta {
+            margin: 4px 0 0;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .popup-link {
+            display: inline-block;
+            margin: 6px 0 0;
+            font-size: 12px;
+            color: var(--accent);
         }
         .year {
             margin: 32px 0 0;
@@ -104,6 +187,12 @@
         <p class="kicker">Personal itineraries</p>
         <h1>Jason's Trip</h1>
         <p class="intro">这里放的是我自己的行程安排：去哪、停多久、晚上住哪。写给自己用，也公开出来，如果有人路线相近，可以直接拿去参考。</p>
+        <section class="footprint" aria-labelledby="footprint-title">
+            <h2 id="footprint-title">旅行足迹</h2>
+            <div id="map"></div>
+            <div class="stats" id="stats"></div>
+            <ul class="places" id="places"></ul>
+        </section>
         <section class="year" aria-labelledby="year-2026">
             <h2 id="year-2026">2026</h2>
             <ul class="trips">
@@ -135,7 +224,113 @@
                 </li>
             </ul>
         </section>
+        <section class="year" aria-labelledby="year-2024">
+            <h2 id="year-2024">2024</h2>
+            <ul class="trips">
+                <li>
+                    <a class="trip" href="gold_coast_trip_241218_241222.html">
+                        <p class="trip-date">五日 · 飞行往返 · 黄金海岸租车</p>
+                        <h3>澳大利亚 黄金海岸 / 布里斯班 2024/12/18–2024/12/22</h3>
+                        <p>QF594 抵黄金海岸，住 Sheraton Grand Mirage 两晚；Springbrook 看瀑布、Wet'n'Wild，再开车去布里斯班，22 日 Mt Coot-tha 后乘 JQ823 回悉尼。</p>
+                    </a>
+                </li>
+            </ul>
+        </section>
         <footer>托管在 GitHub Pages。时间与路况会变，出发前请再核对开放时间和预订。</footer>
     </main>
+    <script>
+        // 只保留最近去过的年份和次数，不放具体日期和行程。
+        const places = [
+            { name: "中国", en: "China", visits: 22, lastYear: 2026, lat: 35.0, lng: 105.0 },
+            { name: "澳大利亚", en: "Australia", visits: 21, lastYear: 2026, lat: -25.3, lng: 133.8 },
+            { name: "日本", en: "Japan", visits: 5, lastYear: 2026, lat: 36.2, lng: 138.3 },
+            { name: "英国", en: "United Kingdom", visits: 4, lastYear: 2025, lat: 54.0, lng: -2.0 },
+            { name: "新加坡", en: "Singapore", visits: 3, lastYear: 2026, lat: 1.35, lng: 103.82 },
+            { name: "香港", en: "Hong Kong", visits: 2, lastYear: 2026, lat: 22.32, lng: 114.17 },
+            { name: "泰国", en: "Thailand", visits: 2, lastYear: 2019, lat: 15.0, lng: 101.0 },
+            { name: "美国", en: "United States", visits: 2, lastYear: 2026, lat: 39.5, lng: -98.35 },
+            { name: "法国", en: "France", visits: 1, lastYear: 2025, lat: 46.6, lng: 2.4 },
+            { name: "马来西亚", en: "Malaysia", visits: 1, lastYear: 2026, lat: 4.2, lng: 102.0 },
+            { name: "阿联酋", en: "United Arab Emirates", visits: 1, lastYear: 2025, lat: 24.0, lng: 54.0 }
+        ];
+
+        const footprints = [
+            {
+                country: "澳大利亚",
+                region: "黄金海岸 / 布里斯班",
+                date: "2024/12/18–2024/12/22",
+                end: "2024-12-22",
+                note: "黄金海岸租车、Springbrook、Wet'n'Wild，再去布里斯班",
+                href: "gold_coast_trip_241218_241222.html",
+                lat: -27.9671, lng: 153.4280
+            },
+            {
+                country: "法国",
+                region: "巴黎",
+                date: "2025/01/17–2025/01/18",
+                end: "2025-01-18",
+                note: "欧洲之星从伦敦往返，一整天步行",
+                href: "paris_trip_250117_250118.html",
+                lat: 48.8606, lng: 2.3376
+            },
+            {
+                country: "澳大利亚",
+                region: "南部高地",
+                date: "2026/09/06",
+                end: "2026-09-06",
+                note: "Bowral、Fitzroy Falls、Kangaroo Valley、Kiama",
+                href: "southern_highland_trip_260906.html",
+                lat: -34.4776, lng: 150.4189
+            },
+            {
+                country: "澳大利亚",
+                region: "Dubbo",
+                date: "2026/10/31–2026/11/04",
+                end: "2026-11-04",
+                note: "蓝山、Mudgee、动物园、Orange 返程",
+                href: "dubbo_trip_261031_261104.html",
+                lat: -32.2569, lng: 148.6011
+            }
+        ];
+
+        const today = new Date().toISOString().slice(0, 10);
+        const visited = footprints.filter((trip) => trip.end < today);
+        const countries = new Set(footprints.map((trip) => trip.country));
+
+        document.getElementById("stats").innerHTML = [
+            [footprints.length, "条行程"],
+            [countries.size, "个国家"],
+            [visited.length, "条已走过"]
+        ].map(([value, label]) => `<div><b>${value}</b><span>${label}</span></div>`).join("");
+
+        const map = L.map("map", { zoomControl: true, scrollWheelZoom: false });
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        footprints.forEach((trip) => {
+            const planned = trip.end >= today;
+            const marker = L.marker([trip.lat, trip.lng], {
+                icon: L.divIcon({
+                    className: "",
+                    html: `<div class="dot-marker${planned ? " is-planned" : ""}"></div>`,
+                    iconSize: [15, 15],
+                    iconAnchor: [8, 8],
+                    popupAnchor: [0, -8]
+                })
+            }).addTo(map);
+            marker.bindPopup(`
+                <p class="popup-title">${trip.country} ${trip.region}</p>
+                <p class="popup-meta">${trip.date} · ${planned ? "还没出发" : "已走过"}</p>
+                <p class="popup-meta">${trip.note}</p>
+                <a class="popup-link" href="${trip.href}">查看行程 →</a>`);
+        });
+
+        map.fitBounds(footprints.map((trip) => [trip.lat, trip.lng]), {
+            padding: [40, 40],
+            maxZoom: 6
+        });
+    </script>
 </body>
 </html>
