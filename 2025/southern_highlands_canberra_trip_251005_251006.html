@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>澳大利亚 Southern Highlands / Canberra 2025/10/05–2025/10/06</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --ink: #1a365d;
+            --muted: #4a5568;
+            --line: #e2e8f0;
+            --accent: #c53030;
+            --accent-soft: #fff5f5;
+            --warm: #c05621;
+            --warm-soft: #feebc8;
+            --stay: #6b4ea0;
+            --stay-soft: #f0eafa;
+            --panel: rgba(255, 255, 255, 0.97);
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            height: 100%;
+            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        }
+        button { font: inherit; }
+        #map { width: 100%; height: 100%; }
+        .info-panel {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            width: min(400px, calc(100vw - 32px));
+            max-height: calc(100vh - 32px);
+            overflow: auto;
+            padding: 17px 18px 15px;
+            border-radius: 14px;
+            background: var(--panel);
+            box-shadow: 0 10px 32px rgba(26, 54, 93, 0.16);
+            backdrop-filter: blur(8px);
+        }
+        h1 { margin: 0; color: var(--ink); font-size: 19px; line-height: 1.35; }
+        .subtitle { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+        .stats { display: flex; flex-wrap: wrap; gap: 7px; margin: 11px 0; }
+        .stat {
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #edf2f7;
+            color: var(--ink);
+            font-size: 11px;
+        }
+        .day-tabs {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 4px;
+            margin: 8px 0 10px;
+        }
+        .day-tab {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 7px 3px;
+            background: #fff;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 11px;
+            line-height: 1.25;
+        }
+        .day-tab:hover, .day-tab:focus-visible { border-color: var(--accent); outline: none; }
+        .day-tab.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+        .day-summary {
+            margin: 0 0 8px;
+            padding: 9px 10px;
+            border-left: 3px solid var(--accent);
+            border-radius: 5px;
+            background: #f7fafc;
+        }
+        .day-title { margin: 0; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .day-meta { margin: 3px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+        .itinerary { margin: 0; padding: 0; list-style: none; }
+        .stop-wrap + .stop-wrap { border-top: 1px solid var(--line); }
+        .stop {
+            display: grid;
+            grid-template-columns: 28px 1fr;
+            gap: 9px;
+            width: 100%;
+            padding: 10px 5px 6px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+        .stop:hover, .stop:focus-visible, .stop.is-active { background: var(--accent-soft); outline: none; }
+        .badge, .num-marker {
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+        }
+        .badge { width: 26px; height: 26px; margin-top: 1px; font-size: 12px; }
+        .num-marker {
+            width: 29px;
+            height: 29px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.27);
+            font-size: 12px;
+        }
+        .badge.is-stay, .num-marker.is-stay { background: var(--stay); }
+        .badge.is-highlight, .num-marker.is-highlight { background: var(--warm); }
+        .stop-title { color: var(--ink); font-size: 14px; font-weight: 650; }
+        .stop-meta { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+        .tag {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: var(--warm-soft);
+            color: var(--warm);
+            font-size: 10px;
+            font-weight: 700;
+            vertical-align: 1px;
+        }
+        .tag--stay { background: var(--stay-soft); color: var(--stay); }
+        .activities {
+            margin: 0 0 9px 19px;
+            padding: 2px 0 3px 14px;
+            border-left: 2px solid var(--line);
+            list-style: none;
+        }
+        .activity {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 7px;
+            padding: 3px 0;
+            font-size: 11.5px;
+            line-height: 1.45;
+        }
+        .activity-time { color: var(--accent); font-variant-numeric: tabular-nums; }
+        .activity-text { color: var(--muted); }
+        .note {
+            display: block;
+            margin-top: 4px;
+            color: var(--warm);
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        .hint { margin: 10px 0 0; color: #718096; font-size: 11px; line-height: 1.5; }
+        .popup-title { margin: 0 0 4px; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .popup-meta { margin: 0; color: var(--muted); font-size: 12px; }
+        .activities--popup { margin: 7px 0 0; padding-left: 10px; }
+        .leaflet-popup-content { margin: 10px 13px; min-width: 235px; }
+        .toggle {
+            display: none;
+            width: 100%;
+            margin-bottom: 8px;
+            padding: 8px;
+            border: 0;
+            border-radius: 8px;
+            background: #edf2f7;
+            cursor: pointer;
+        }
+        @media (max-width: 680px) {
+            .info-panel { top: auto; right: 10px; bottom: 10px; left: 10px; width: auto; max-height: 52vh; }
+            .toggle { display: block; }
+            .info-panel.is-collapsed .stats,
+            .info-panel.is-collapsed .day-tabs,
+            .info-panel.is-collapsed .day-summary,
+            .info-panel.is-collapsed .itinerary,
+            .info-panel.is-collapsed .hint { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="info-panel" id="panel">
+        <button class="toggle" id="togglePanel" type="button" aria-expanded="true">收起行程</button>
+        <h1>澳大利亚 Southern Highlands / Canberra 2025/10/05–2025/10/06</h1>
+        <p class="subtitle">🇦🇺 · 两天 · 自驾 · 郁金香节与首都</p>
+        <div class="stats">
+            <span class="stat">2 天 1 晚</span>
+            <span class="stat">Tulip Time 末日周末</span>
+            <span class="stat">Midnight Hotel</span>
+            <span class="stat" id="routeStat">正在规划当日路线…</span>
+        </div>
+        <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+        <section class="day-summary" id="daySummary"></section>
+        <ol class="itinerary" id="itinerary"></ol>
+        <p class="hint">驾驶时间按 OSRM 常规路况估算。10 月 5 日已进入夏令时。Harry’s 周日午餐 12:00 场需订位；Corbett Gardens 当日 16:30 关门。Questacon、国会与国家博物馆均 9:00–17:00。Cabramatta 火锅周一晚餐多在 22:00 前后停客，观景台建议 18:20 前离开。热门餐厅建议提前订位。</p>
+    </aside>
+    <div id="map" role="application" aria-label="Southern Highlands 与 Canberra 两日自驾地图"></div>
+
+    <script>
+        const days = [
+            {
+                date: "10/5",
+                weekday: "周日",
+                title: "Bowral 郁金香节，徒步瀑布，袋鼠谷日落后再去 Canberra",
+                meta: "St Leonards 出发 · Harry’s brunch · Dirty Janes · Corbett Gardens · Fitzroy Falls · 袋鼠谷 · Moss Vale 晚餐后入住",
+                color: "#c53030",
+                stops: [
+                    {
+                        name: "St Leonards",
+                        time: "09:00 出发",
+                        lat: -33.8247, lng: 151.1967,
+                        activities: [
+                            { time: "09:00", text: "出发前往 Bowral，车程约 1 小时 50 分" }
+                        ]
+                    },
+                    {
+                        name: "Harry's on Green Lane",
+                        time: "11:00–13:15",
+                        drive: "开车约 1 小时 50 分",
+                        kind: "highlight",
+                        lat: -34.48164, lng: 150.41746,
+                        activities: [
+                            { time: "11:00", text: "抵达 Banyette St，Green Lane 停车" },
+                            { time: "12:00–13:15", text: "Harry's on Green Lane Brunch · 21 Banyette St" }
+                        ],
+                        note: "周日两场午餐 12:00 / 14:00，订 12:00 场。若想更早吃，隔壁 Plantation Cafe 约 8:00 起供应早午餐"
+                    },
+                    {
+                        name: "Dirty Janes Bowral",
+                        time: "13:20–14:10",
+                        lat: -34.4815, lng: 150.4172,
+                        activities: [
+                            { time: "13:20–14:10", text: "逛古董市集，家具、家居与旧物" }
+                        ],
+                        note: "13–15 Banyette St · 紧挨 Green Lane，每日 10:00–17:00"
+                    },
+                    {
+                        name: "Corbett Gardens",
+                        time: "14:15–15:40",
+                        kind: "highlight",
+                        lat: -34.47854, lng: 150.41992,
+                        activities: [
+                            { time: "14:15–15:40", text: "Tulip Time 郁金香节拍照打卡" }
+                        ],
+                        note: "Bendooley St。2025 年节期至 10 月 6 日，当日 9:30–16:30；步行约 5 分钟，16:00 前离开即可"
+                    },
+                    {
+                        name: "Fitzroy Falls",
+                        time: "16:10–17:30",
+                        drive: "开车约 25 分钟",
+                        kind: "highlight",
+                        lat: -34.6462, lng: 150.4789,
+                        activities: [
+                            { time: "16:10–16:25", text: "Visitor Centre 与瀑布观景台" },
+                            { time: "16:25–17:30", text: "East Rim 步道观峡谷（约 1 小时，不必走完整环线）" }
+                        ]
+                    },
+                    {
+                        name: "Kangaroo Valley",
+                        time: "18:00–19:10",
+                        drive: "开车约 25 分钟",
+                        kind: "highlight",
+                        lat: -34.74057, lng: 150.47206,
+                        activities: [
+                            { time: "18:00–19:10", text: "Bendeela Recreation Area 看落日、袋鼠和袋熊" }
+                        ],
+                        note: "日落约 19:05。暮光时袋鼠、袋熊较活跃；开车慢行，勿投喂"
+                    },
+                    {
+                        name: "Thai Som Boon",
+                        time: "19:45–21:00",
+                        drive: "开车约 35 分钟",
+                        lat: -34.54873, lng: 150.37246,
+                        activities: [
+                            { time: "19:45–21:00", text: "Moss Vale 泰餐晚餐" }
+                        ],
+                        note: "Shop 11/254 Argyle St（Clarence St 转角）。周日晚餐至约 21:00–21:30，建议订位"
+                    },
+                    {
+                        name: "Midnight Hotel",
+                        time: "约 22:50 入住",
+                        drive: "开车约 1 小时 50 分",
+                        kind: "stay",
+                        lat: -35.27501, lng: 149.13683,
+                        activities: [
+                            { time: "21:00", text: "吃完直接开往 Canberra" },
+                            { time: "22:50", text: "办理入住，休息" }
+                        ],
+                        note: "Midnight Hotel, Autograph Collection · 1 Elouera St, Braddon"
+                    }
+                ]
+            },
+            {
+                date: "10/6",
+                weekday: "周一",
+                title: "首都馆所与游乐场，落日后再经 Lake George 回家",
+                meta: "酒店早餐 · Questacon · Parliament House · Lunetta · Pod Playground · 国家博物馆 · Mount Pleasant · Cabramatta 火锅",
+                color: "#2b6cb0",
+                stops: [
+                    {
+                        name: "Midnight Hotel",
+                        time: "08:00–08:45 早餐",
+                        kind: "stay",
+                        lat: -35.27501, lng: 149.13683,
+                        activities: [
+                            { time: "08:00–08:45", text: "酒店吃早餐，8:45 前出发" }
+                        ],
+                        note: "1 Elouera St, Braddon"
+                    },
+                    {
+                        name: "Questacon",
+                        time: "09:00–11:00",
+                        drive: "开车约 10 分钟",
+                        kind: "highlight",
+                        lat: -35.29851, lng: 149.13125,
+                        activities: [
+                            { time: "09:00–11:00", text: "National Science and Technology Centre，动手展项给小朋友" }
+                        ],
+                        note: "King Edward Terrace, Parkes · 9:00–17:00，建议提前买票"
+                    },
+                    {
+                        name: "Parliament House",
+                        time: "11:15–12:20",
+                        drive: "开车约 5 分钟",
+                        kind: "highlight",
+                        lat: -35.30756, lng: 149.12460,
+                        activities: [
+                            { time: "11:15–12:20", text: "国会大厦公共区域与观景草坡" }
+                        ],
+                        note: "非开会日通常 9:00–17:00；地下停车场可停"
+                    },
+                    {
+                        name: "Lunetta Trattoria",
+                        time: "12:40–14:00",
+                        drive: "开车约 10 分钟",
+                        lat: -35.32582, lng: 149.11499,
+                        activities: [
+                            { time: "12:40–14:00", text: "Red Hill 意大利午餐，俯瞰 Canberra" }
+                        ],
+                        note: "60 Red Hill Dr。常规周三至周日 11:30 起；周一若未开可改订 Red Hill 或 Civic 午餐"
+                    },
+                    {
+                        name: "Pod Playground",
+                        time: "14:20–15:20",
+                        drive: "开车约 15 分钟",
+                        kind: "highlight",
+                        lat: -35.28794, lng: 149.06924,
+                        activities: [
+                            { time: "14:20–15:20", text: "National Arboretum 的巨型橡果游乐场，带小朋友玩一会儿" }
+                        ],
+                        note: "Forest Dr，Village Centre 旁。夏令时约 6:00–20:30"
+                    },
+                    {
+                        name: "National Museum of Australia",
+                        time: "15:40–17:00",
+                        drive: "开车约 15 分钟",
+                        kind: "highlight",
+                        lat: -35.29294, lng: 149.12136,
+                        activities: [
+                            { time: "15:40–17:00", text: "看完闭馆前的常设展" }
+                        ],
+                        note: "Lawson Cres, Acton · 9:00–17:00，15:30 前入馆较从容"
+                    },
+                    {
+                        name: "Mount Pleasant Lookout",
+                        time: "17:20–18:20",
+                        drive: "开车约 10 分钟",
+                        kind: "highlight",
+                        lat: -35.29868, lng: 149.15805,
+                        activities: [
+                            { time: "17:20–18:20", text: "拍金色光线和 Canberra 全城景色" }
+                        ],
+                        note: "General Bridges Dr，可开车到山顶。日落约 19:10；为赶上火锅 18:20 前离开，黄金时段仍够拍照"
+                    },
+                    {
+                        name: "Kevin Wheatley VC Rest Area",
+                        time: "18:50–19:05",
+                        drive: "开车约 30 分钟",
+                        lat: -35.06724, lng: 149.37415,
+                        activities: [
+                            { time: "18:50–19:05", text: "停一下看 Lake George" }
+                        ],
+                        note: "Federal Highway / Remembrance Driveway。部分入口偏南行；北返若不好进，可改停对向看湖的 VC 停车区"
+                    },
+                    {
+                        name: "Fresh Beef Hotpot",
+                        time: "21:30–22:45",
+                        drive: "开车约 2 小时 20 分",
+                        lat: -33.89452, lng: 150.93354,
+                        activities: [
+                            { time: "21:30–22:45", text: "鲜潮汕牛肉火锅自助晚餐 · Buffet All You Can Eat" }
+                        ],
+                        note: "117A John St, Cabramatta。周一晚餐约 17:00–22:00，最迟约 21:30 入座；请提前订位并核对打烊"
+                    },
+                    {
+                        name: "St Leonards",
+                        time: "约 23:30 行程结束",
+                        drive: "开车约 40 分钟",
+                        lat: -33.8247, lng: 151.1967,
+                        activities: [
+                            { time: "22:45", text: "从 Cabramatta 返程" },
+                            { time: "23:30", text: "回到 St Leonards，行程结束" }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const map = L.map("map", { zoomControl: true }).setView([-34.6, 150.6], 8);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        const tabsEl = document.getElementById("dayTabs");
+        const summaryEl = document.getElementById("daySummary");
+        const itineraryEl = document.getElementById("itinerary");
+        const routeStatEl = document.getElementById("routeStat");
+        let routeLines = [];
+        let markers = [];
+        let activeDay = 0;
+
+        days.forEach((day, index) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "day-tab";
+            button.innerHTML = `${escapeHtml(day.date)}<br>${escapeHtml(day.weekday)}`;
+            button.addEventListener("click", () => renderDay(index));
+            tabsEl.appendChild(button);
+        });
+
+        document.getElementById("togglePanel").addEventListener("click", () => {
+            const panel = document.getElementById("panel");
+            const collapsed = panel.classList.toggle("is-collapsed");
+            const button = document.getElementById("togglePanel");
+            button.textContent = collapsed ? "展开行程" : "收起行程";
+            button.setAttribute("aria-expanded", String(!collapsed));
+        });
+
+        itineraryEl.addEventListener("click", (event) => {
+            const button = event.target.closest(".stop");
+            if (!button) return;
+            const index = Number(button.dataset.index);
+            document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+            const zoom = days[activeDay].zoom || 12;
+            map.flyTo(markers[index].getLatLng(), zoom, { duration: 0.7 });
+            markers[index].openPopup();
+        });
+
+        function splitLegs(day, coords) {
+            const groups = [];
+            let current = { type: "drive", points: [coords[0]] };
+            for (let i = 1; i < day.stops.length; i++) {
+                const type = day.stops[i].leg === "flight" ? "flight" : "drive";
+                if (type === current.type) {
+                    current.points.push(coords[i]);
+                } else {
+                    groups.push(current);
+                    current = { type, points: [coords[i - 1], coords[i]] };
+                }
+            }
+            groups.push(current);
+            return groups.filter((group) => group.points.length > 1);
+        }
+
+        async function renderDay(dayIndex) {
+            activeDay = dayIndex;
+            const day = days[dayIndex];
+            document.querySelectorAll(".day-tab").forEach((tab, index) => {
+                tab.classList.toggle("is-active", index === dayIndex);
+            });
+            summaryEl.innerHTML = `
+                <p class="day-title">${escapeHtml(day.date)} ${escapeHtml(day.weekday)} · ${escapeHtml(day.title)}</p>
+                <p class="day-meta">${escapeHtml(day.meta)}</p>`;
+            itineraryEl.innerHTML = "";
+            markers.forEach((marker) => marker.remove());
+            markers = [];
+            routeLines.forEach((line) => line.remove());
+            routeLines = [];
+
+            const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
+
+            day.stops.forEach((stop, index) => {
+                const number = index + 1;
+                const kindClass = stop.kind ? ` is-${stop.kind}` : "";
+                const label = stop.kind === "stay"
+                    ? '<span class="tag tag--stay">住宿</span>'
+                    : stop.kind === "highlight"
+                        ? '<span class="tag">重点</span>'
+                        : "";
+                const activityRows = stop.activities.map((activity) => `
+                    <li class="activity">
+                        <span class="activity-time">${escapeHtml(activity.time)}</span>
+                        <span class="activity-text">${escapeHtml(activity.text)}</span>
+                    </li>`).join("");
+                const meta = [stop.drive, stop.time].filter(Boolean).join(" · ");
+                const note = stop.note ? `<span class="note">${escapeHtml(stop.note)}</span>` : "";
+
+                const marker = L.marker([stop.lat, stop.lng], {
+                    icon: L.divIcon({
+                        className: "",
+                        html: `<div class="num-marker${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</div>`,
+                        iconSize: [29, 29],
+                        iconAnchor: [14, 14],
+                        popupAnchor: [0, -16]
+                    })
+                }).addTo(map);
+                marker.bindPopup(`
+                    <p class="popup-title">${number}. ${escapeHtml(stop.name)}${label}</p>
+                    <p class="popup-meta">${escapeHtml(meta)}</p>
+                    ${note}
+                    <ul class="activities activities--popup">${activityRows}</ul>`);
+                marker.on("click", () => {
+                    document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+                });
+                markers.push(marker);
+
+                const item = document.createElement("li");
+                item.className = "stop-wrap";
+                item.innerHTML = `
+                    <button class="stop" type="button" data-index="${index}">
+                        <span class="badge${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</span>
+                        <span>
+                            <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
+                            <span class="stop-meta">${escapeHtml(meta)}</span>
+                            ${note}
+                        </span>
+                    </button>
+                    <ul class="activities">${activityRows}</ul>`;
+                itineraryEl.appendChild(item);
+            });
+
+            const fallback = L.polyline(coords, {
+                color: day.color,
+                weight: 4,
+                opacity: 0.82,
+                dashArray: "8, 8"
+            }).addTo(map);
+            routeLines.push(fallback);
+            map.fitBounds(fallback.getBounds().pad(0.18));
+            await loadRoute(day, coords, dayIndex, fallback);
+        }
+
+        async function loadRoute(day, coords, expectedDay, fallback) {
+            const groups = splitLegs(day, coords);
+            const profile = day.mode === "foot" ? "foot" : "driving";
+            const waiting = day.mode === "foot" ? "正在规划步行路线…" : "正在规划当日路线…";
+            routeStatEl.textContent = waiting;
+
+            let driveKm = 0;
+            let driveMin = 0;
+            let hasFlight = false;
+            let routed = false;
+
+            for (const group of groups) {
+                if (group.type === "flight") {
+                    hasFlight = true;
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 3,
+                        opacity: 0.75,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                    continue;
+                }
+                const path = group.points.map(([lat, lng]) => `${lng},${lat}`).join(";");
+                const url = `https://router.project-osrm.org/route/v1/${profile}/${path}?overview=full&geometries=geojson`;
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error("route request failed");
+                    const data = await response.json();
+                    if (activeDay !== expectedDay) return;
+                    const route = data.routes && data.routes[0];
+                    if (!route) throw new Error("no route returned");
+                    const line = L.polyline(
+                        route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+                        { color: day.color, weight: 4, opacity: 0.85 }
+                    ).addTo(map);
+                    routeLines.push(line);
+                    driveKm += route.distance / 1000;
+                    driveMin += route.duration / 60;
+                    routed = true;
+                } catch (error) {
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 4,
+                        opacity: 0.82,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                }
+            }
+
+            if (activeDay !== expectedDay) return;
+            if (fallback) {
+                fallback.remove();
+                routeLines = routeLines.filter((line) => line !== fallback);
+            }
+
+            const parts = [];
+            if (hasFlight) parts.push(day.flightStat || "航班示意线");
+            if (routed) {
+                const km = profile === "foot" ? driveKm.toFixed(1) : Math.round(driveKm);
+                const minutes = Math.round(driveMin);
+                const time = minutes >= 60
+                    ? `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分`
+                    : `${minutes} 分`;
+                const label = profile === "foot" ? "步行" : "自驾";
+                parts.push(`${label}约 ${km} km · ${time}`);
+            } else if (!hasFlight) {
+                parts.push(profile === "foot" ? "步行路线暂不可用，显示直线示意" : "路线暂不可用，显示直线示意");
+            }
+            routeStatEl.textContent = parts.join(" · ");
+
+            const bounds = routeLines.reduce((acc, line) => acc.extend(line.getBounds()), routeLines[0].getBounds());
+            map.fitBounds(bounds.pad(0.15));
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        renderDay(0);
+    </script>
+</body>
+</html>
