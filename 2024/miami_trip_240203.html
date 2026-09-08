@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>美国 Miami / Key West 2024/02/03</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --ink: #164e63;
+            --muted: #4a6672;
+            --line: #dce5ec;
+            --accent: #0e7490;
+            --accent-soft: #e0f4f8;
+            --warm: #b45f24;
+            --warm-soft: #fff0df;
+            --stay: #6b4ea0;
+            --stay-soft: #f0eafa;
+            --panel: rgba(255, 255, 255, 0.97);
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            height: 100%;
+            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        }
+        button { font: inherit; }
+        #map { width: 100%; height: 100%; }
+        .info-panel {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            width: min(400px, calc(100vw - 32px));
+            max-height: calc(100vh - 32px);
+            overflow: auto;
+            padding: 17px 18px 15px;
+            border-radius: 14px;
+            background: var(--panel);
+            box-shadow: 0 10px 32px rgba(15, 35, 55, 0.18);
+            backdrop-filter: blur(8px);
+        }
+        h1 { margin: 0; color: var(--ink); font-size: 19px; line-height: 1.35; }
+        .subtitle { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+        .stats { display: flex; flex-wrap: wrap; gap: 7px; margin: 11px 0; }
+        .stat {
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #edf3f7;
+            color: var(--ink);
+            font-size: 11px;
+        }
+        .day-tabs {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 4px;
+            margin: 8px 0 10px;
+        }
+        .day-tab {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 7px 3px;
+            background: #fff;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 11px;
+            line-height: 1.25;
+        }
+        .day-tab:hover, .day-tab:focus-visible { border-color: var(--accent); outline: none; }
+        .day-tab.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+        .day-summary {
+            margin: 0 0 8px;
+            padding: 9px 10px;
+            border-left: 3px solid var(--accent);
+            border-radius: 5px;
+            background: #f4fafc;
+        }
+        .day-title { margin: 0; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .day-meta { margin: 3px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+        .itinerary { margin: 0; padding: 0; list-style: none; }
+        .stop-wrap + .stop-wrap { border-top: 1px solid var(--line); }
+        .stop {
+            display: grid;
+            grid-template-columns: 28px 1fr;
+            gap: 9px;
+            width: 100%;
+            padding: 10px 5px 6px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+        .stop:hover, .stop:focus-visible, .stop.is-active { background: var(--accent-soft); outline: none; }
+        .badge, .num-marker {
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+        }
+        .badge { width: 26px; height: 26px; margin-top: 1px; font-size: 12px; }
+        .num-marker {
+            width: 29px;
+            height: 29px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.27);
+            font-size: 12px;
+        }
+        .badge.is-stay, .num-marker.is-stay { background: var(--stay); }
+        .badge.is-highlight, .num-marker.is-highlight { background: var(--warm); }
+        .stop-title { color: var(--ink); font-size: 14px; font-weight: 650; }
+        .stop-meta { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+        .tag {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: var(--warm-soft);
+            color: var(--warm);
+            font-size: 10px;
+            font-weight: 700;
+            vertical-align: 1px;
+        }
+        .tag--stay { background: var(--stay-soft); color: var(--stay); }
+        .activities {
+            margin: 0 0 9px 19px;
+            padding: 2px 0 3px 14px;
+            border-left: 2px solid var(--line);
+            list-style: none;
+        }
+        .activity {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 7px;
+            padding: 3px 0;
+            font-size: 11.5px;
+            line-height: 1.45;
+        }
+        .activity-time { color: var(--accent); font-variant-numeric: tabular-nums; }
+        .activity-text { color: var(--muted); }
+        .note {
+            display: block;
+            margin-top: 4px;
+            color: var(--warm);
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        .hint { margin: 10px 0 0; color: #6a7f88; font-size: 11px; line-height: 1.5; }
+        .popup-title { margin: 0 0 4px; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .popup-meta { margin: 0; color: var(--muted); font-size: 12px; }
+        .activities--popup { margin: 7px 0 0; padding-left: 10px; }
+        .leaflet-popup-content { margin: 10px 13px; min-width: 235px; }
+        .toggle {
+            display: none;
+            width: 100%;
+            margin-bottom: 8px;
+            padding: 8px;
+            border: 0;
+            border-radius: 8px;
+            background: #edf3f7;
+            cursor: pointer;
+        }
+        @media (max-width: 680px) {
+            .info-panel { top: auto; right: 10px; bottom: 10px; left: 10px; width: auto; max-height: 52vh; }
+            .toggle { display: block; }
+            .info-panel.is-collapsed .stats,
+            .info-panel.is-collapsed .day-tabs,
+            .info-panel.is-collapsed .day-summary,
+            .info-panel.is-collapsed .itinerary,
+            .info-panel.is-collapsed .hint { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="info-panel" id="panel">
+        <button class="toggle" id="togglePanel" type="button" aria-expanded="true">收起行程</button>
+        <h1>美国 Miami / Key West 2024/02/03</h1>
+        <p class="subtitle">一天 · 自驾 · Overseas Highway 往返 Key West</p>
+        <div class="stats">
+            <span class="stat">1 天</span>
+            <span class="stat">Brickell 出发</span>
+            <span class="stat">Key West</span>
+            <span class="stat" id="routeStat">正在规划当日路线…</span>
+        </div>
+        <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+        <section class="day-summary" id="daySummary"></section>
+        <ol class="itinerary" id="itinerary"></ol>
+        <p class="hint">Overseas Highway 桥上不能停车拍照，观景请用指定停车区。Vista Point 车位少，停一下就走。海明威故居约 17:00 关门，需提前入馆。当天 Key West 日落约 18:17。Bobalu's 周六开到 21:30。驾驶时间按 OSRM 常规路况估算。</p>
+    </aside>
+    <div id="map" role="application" aria-label="Miami 至 Key West 一日自驾地图"></div>
+
+    <script>
+        const days = [
+            {
+                date: "2/3",
+                weekday: "周六",
+                title: "Brickell 出发，沿 Overseas Highway 到 Key West，日落后再回",
+                meta: "Mrs. Mac's brunch · 途中观景 · 最南端与海明威故居 · Mallory Square 日落 · Big Coppitt 晚饭",
+                color: "#0e7490",
+                stops: [
+                    {
+                        name: "Brickell",
+                        time: "09:00 出发",
+                        kind: "stay",
+                        lat: 25.7664, lng: -80.1920,
+                        activities: [
+                            { time: "09:00", text: "出发前往 Key Largo，走 US-1，车程约 1 小时 20 分" }
+                        ]
+                    },
+                    {
+                        name: "Mrs. Mac's Kitchen (Original)",
+                        time: "10:20–11:35",
+                        drive: "开车约 1 小时 20 分",
+                        lat: 25.0920, lng: -80.4440,
+                        activities: [
+                            { time: "10:20–11:35", text: "在 Original / Little 店吃 brunch，再继续南下" }
+                        ],
+                        note: "99336 Overseas Hwy, Key Largo, FL 33037 · 不要去 Big 店"
+                    },
+                    {
+                        name: "Anne's Beach",
+                        time: "12:15–12:40",
+                        drive: "开车约 40 分钟",
+                        lat: 24.8467, lng: -80.7443,
+                        activities: [
+                            { time: "12:15–12:40", text: "Islamorada 浅滩观景拍照，之后继续南下" }
+                        ],
+                        note: "MM 73.5 US-1 Oceanside, Islamorada"
+                    },
+                    {
+                        name: "7 Mile Bridge - Vista Point",
+                        time: "13:25–13:50",
+                        drive: "开车约 45 分钟",
+                        kind: "highlight",
+                        lat: 24.7116, lng: -81.1230,
+                        activities: [
+                            { time: "13:25–13:50", text: "在 Knights Key 指定停车区停留拍照，可走一小段旧桥" }
+                        ],
+                        note: "Marathon / Knights Key，MM 47 附近。桥上车道上不要停车"
+                    },
+                    {
+                        name: "Bahia Honda State Park",
+                        time: "14:05–14:25",
+                        drive: "开车约 15 分钟",
+                        lat: 24.6642, lng: -81.2745,
+                        activities: [
+                            { time: "14:05–14:25", text: "看 Old Bahia Honda Bridge 与水色，短停后直奔 Key West" }
+                        ],
+                        note: "36850 Overseas Hwy, Big Pine Key, FL 33043 · 进园可能收费"
+                    },
+                    {
+                        name: "Southernmost Point of the Continental U.S.A.",
+                        time: "15:10–15:35",
+                        drive: "开车约 45 分钟",
+                        kind: "highlight",
+                        lat: 24.5465, lng: -81.7977,
+                        activities: [
+                            { time: "15:10–15:35", text: "南端浮标打卡，人多就快速拍完去海明威故居" }
+                        ],
+                        note: "Whitehead St & South St, Key West, FL 33040"
+                    },
+                    {
+                        name: "The Ernest Hemingway Home & Museum",
+                        time: "15:45–16:50",
+                        drive: "开车约 5 分钟",
+                        kind: "highlight",
+                        lat: 24.5512, lng: -81.8006,
+                        activities: [
+                            { time: "15:45–16:50", text: "参观故居与多趾猫，关门前离开" }
+                        ],
+                        note: "907 Whitehead St, Key West, FL 33040 · 约 17:00 关门，尽量 16:30 前入馆"
+                    },
+                    {
+                        name: "Mallory Square",
+                        time: "17:40–18:50",
+                        drive: "开车约 8 分钟",
+                        kind: "highlight",
+                        lat: 24.5597, lng: -81.8074,
+                        activities: [
+                            { time: "17:40–18:17", text: "日落前到广场占位置，看街头表演与落日（约 18:17）" },
+                            { time: "18:20–18:50", text: "日落后再在 Old Town / Duval Street 逛一下" }
+                        ],
+                        note: "400 Wall St, Key West, FL 33040"
+                    },
+                    {
+                        name: "Bobalu's Southern Cafe",
+                        time: "19:20–20:40",
+                        drive: "开车约 20 分钟",
+                        lat: 24.5987, lng: -81.6573,
+                        activities: [
+                            { time: "19:20–20:40", text: "路过 Big Coppitt Key 吃晚饭，吃完直接回 Brickell" }
+                        ],
+                        note: "301 US-1, Big Coppitt Key, FL 33040 · 周六约 21:30 关门"
+                    },
+                    {
+                        name: "Brickell",
+                        time: "23:50 行程结束",
+                        drive: "开车约 3 小时",
+                        kind: "stay",
+                        lat: 25.7664, lng: -80.1920,
+                        activities: [
+                            { time: "20:50", text: "从 Big Coppitt 上 US-1 直接返回" },
+                            { time: "23:50", text: "回到 Brickell，行程结束" }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const map = L.map("map", { zoomControl: true }).setView([24.9, -81.0], 8);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        const tabsEl = document.getElementById("dayTabs");
+        const summaryEl = document.getElementById("daySummary");
+        const itineraryEl = document.getElementById("itinerary");
+        const routeStatEl = document.getElementById("routeStat");
+        let routeLines = [];
+        let markers = [];
+        let activeDay = 0;
+
+        days.forEach((day, index) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "day-tab";
+            button.innerHTML = `${escapeHtml(day.date)}<br>${escapeHtml(day.weekday)}`;
+            button.addEventListener("click", () => renderDay(index));
+            tabsEl.appendChild(button);
+        });
+
+        document.getElementById("togglePanel").addEventListener("click", () => {
+            const panel = document.getElementById("panel");
+            const collapsed = panel.classList.toggle("is-collapsed");
+            const button = document.getElementById("togglePanel");
+            button.textContent = collapsed ? "展开行程" : "收起行程";
+            button.setAttribute("aria-expanded", String(!collapsed));
+        });
+
+        itineraryEl.addEventListener("click", (event) => {
+            const button = event.target.closest(".stop");
+            if (!button) return;
+            const index = Number(button.dataset.index);
+            document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+            const zoom = days[activeDay].zoom || 12;
+            map.flyTo(markers[index].getLatLng(), zoom, { duration: 0.7 });
+            markers[index].openPopup();
+        });
+
+        function splitLegs(day, coords) {
+            const groups = [];
+            let current = { type: "drive", points: [coords[0]] };
+            for (let i = 1; i < day.stops.length; i++) {
+                const type = day.stops[i].leg === "flight" ? "flight" : "drive";
+                if (type === current.type) {
+                    current.points.push(coords[i]);
+                } else {
+                    groups.push(current);
+                    current = { type, points: [coords[i - 1], coords[i]] };
+                }
+            }
+            groups.push(current);
+            return groups.filter((group) => group.points.length > 1);
+        }
+
+        async function renderDay(dayIndex) {
+            activeDay = dayIndex;
+            const day = days[dayIndex];
+            document.querySelectorAll(".day-tab").forEach((tab, index) => {
+                tab.classList.toggle("is-active", index === dayIndex);
+            });
+            summaryEl.innerHTML = `
+                <p class="day-title">${escapeHtml(day.date)} ${escapeHtml(day.weekday)} · ${escapeHtml(day.title)}</p>
+                <p class="day-meta">${escapeHtml(day.meta)}</p>`;
+            itineraryEl.innerHTML = "";
+            markers.forEach((marker) => marker.remove());
+            markers = [];
+            routeLines.forEach((line) => line.remove());
+            routeLines = [];
+
+            const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
+
+            day.stops.forEach((stop, index) => {
+                const number = index + 1;
+                const kindClass = stop.kind ? ` is-${stop.kind}` : "";
+                const label = stop.kind === "stay"
+                    ? '<span class="tag tag--stay">住宿</span>'
+                    : stop.kind === "highlight"
+                        ? '<span class="tag">重点</span>'
+                        : "";
+                const activityRows = stop.activities.map((activity) => `
+                    <li class="activity">
+                        <span class="activity-time">${escapeHtml(activity.time)}</span>
+                        <span class="activity-text">${escapeHtml(activity.text)}</span>
+                    </li>`).join("");
+                const meta = [stop.drive, stop.time].filter(Boolean).join(" · ");
+                const note = stop.note ? `<span class="note">${escapeHtml(stop.note)}</span>` : "";
+
+                const marker = L.marker([stop.lat, stop.lng], {
+                    icon: L.divIcon({
+                        className: "",
+                        html: `<div class="num-marker${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</div>`,
+                        iconSize: [29, 29],
+                        iconAnchor: [14, 14],
+                        popupAnchor: [0, -16]
+                    })
+                }).addTo(map);
+                marker.bindPopup(`
+                    <p class="popup-title">${number}. ${escapeHtml(stop.name)}${label}</p>
+                    <p class="popup-meta">${escapeHtml(meta)}</p>
+                    ${note}
+                    <ul class="activities activities--popup">${activityRows}</ul>`);
+                marker.on("click", () => {
+                    document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+                });
+                markers.push(marker);
+
+                const item = document.createElement("li");
+                item.className = "stop-wrap";
+                item.innerHTML = `
+                    <button class="stop" type="button" data-index="${index}">
+                        <span class="badge${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</span>
+                        <span>
+                            <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
+                            <span class="stop-meta">${escapeHtml(meta)}</span>
+                            ${note}
+                        </span>
+                    </button>
+                    <ul class="activities">${activityRows}</ul>`;
+                itineraryEl.appendChild(item);
+            });
+
+            const fallback = L.polyline(coords, {
+                color: day.color,
+                weight: 4,
+                opacity: 0.82,
+                dashArray: "8, 8"
+            }).addTo(map);
+            routeLines.push(fallback);
+            map.fitBounds(fallback.getBounds().pad(0.18));
+            await loadRoute(day, coords, dayIndex, fallback);
+        }
+
+        async function loadRoute(day, coords, expectedDay, fallback) {
+            const groups = splitLegs(day, coords);
+            const profile = day.mode === "foot" ? "foot" : "driving";
+            const waiting = day.mode === "foot" ? "正在规划步行路线…" : "正在规划当日路线…";
+            routeStatEl.textContent = waiting;
+
+            let driveKm = 0;
+            let driveMin = 0;
+            let hasFlight = false;
+            let routed = false;
+
+            for (const group of groups) {
+                if (group.type === "flight") {
+                    hasFlight = true;
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 3,
+                        opacity: 0.75,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                    continue;
+                }
+                const path = group.points.map(([lat, lng]) => `${lng},${lat}`).join(";");
+                const url = `https://router.project-osrm.org/route/v1/${profile}/${path}?overview=full&geometries=geojson`;
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error("route request failed");
+                    const data = await response.json();
+                    if (activeDay !== expectedDay) return;
+                    const route = data.routes && data.routes[0];
+                    if (!route) throw new Error("no route returned");
+                    const line = L.polyline(
+                        route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+                        { color: day.color, weight: 4, opacity: 0.85 }
+                    ).addTo(map);
+                    routeLines.push(line);
+                    driveKm += route.distance / 1000;
+                    driveMin += route.duration / 60;
+                    routed = true;
+                } catch (error) {
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 4,
+                        opacity: 0.82,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                }
+            }
+
+            if (activeDay !== expectedDay) return;
+            if (fallback) {
+                fallback.remove();
+                routeLines = routeLines.filter((line) => line !== fallback);
+            }
+
+            const parts = [];
+            if (hasFlight) parts.push(day.flightStat || "航班示意线");
+            if (routed) {
+                const km = profile === "foot" ? driveKm.toFixed(1) : Math.round(driveKm);
+                const minutes = Math.round(driveMin);
+                const time = minutes >= 60
+                    ? `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分`
+                    : `${minutes} 分`;
+                const label = profile === "foot" ? "步行" : "自驾";
+                parts.push(`${label}约 ${km} km · ${time}`);
+            } else if (!hasFlight) {
+                parts.push(profile === "foot" ? "步行路线暂不可用，显示直线示意" : "路线暂不可用，显示直线示意");
+            }
+            routeStatEl.textContent = parts.join(" · ");
+
+            const bounds = routeLines.reduce((acc, line) => acc.extend(line.getBounds()), routeLines[0].getBounds());
+            map.fitBounds(bounds.pad(0.15));
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        renderDay(0);
+    </script>
+</body>
+</html>
