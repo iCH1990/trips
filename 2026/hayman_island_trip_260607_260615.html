@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>澳大利亚 Hayman Island 2026/06/07–2026/06/15</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --ink: #164e63;
+            --muted: #4a6672;
+            --line: #dce5ec;
+            --accent: #0e7490;
+            --accent-soft: #e0f4f8;
+            --warm: #b45f24;
+            --warm-soft: #fff0df;
+            --stay: #6b4ea0;
+            --stay-soft: #f0eafa;
+            --panel: rgba(255, 255, 255, 0.97);
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            height: 100%;
+            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        }
+        button { font: inherit; }
+        #map { width: 100%; height: 100%; }
+        .info-panel {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            width: min(400px, calc(100vw - 32px));
+            max-height: calc(100vh - 32px);
+            overflow: auto;
+            padding: 17px 18px 15px;
+            border-radius: 14px;
+            background: var(--panel);
+            box-shadow: 0 10px 32px rgba(15, 35, 55, 0.18);
+            backdrop-filter: blur(8px);
+        }
+        h1 { margin: 0; color: var(--ink); font-size: 19px; line-height: 1.35; }
+        .subtitle { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+        .stats { display: flex; flex-wrap: wrap; gap: 7px; margin: 11px 0; }
+        .stat {
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #edf3f7;
+            color: var(--ink);
+            font-size: 11px;
+        }
+        .day-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 4px;
+            margin: 8px 0 10px;
+        }
+        .day-tab {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 7px 3px;
+            background: #fff;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 11px;
+            line-height: 1.25;
+        }
+        .day-tab:hover, .day-tab:focus-visible { border-color: var(--accent); outline: none; }
+        .day-tab.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+        .day-summary {
+            margin: 0 0 8px;
+            padding: 9px 10px;
+            border-left: 3px solid var(--accent);
+            border-radius: 5px;
+            background: #f5f9fb;
+        }
+        .day-title { margin: 0; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .day-meta { margin: 3px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+        .itinerary { margin: 0; padding: 0; list-style: none; }
+        .stop-wrap + .stop-wrap { border-top: 1px solid var(--line); }
+        .stop {
+            display: grid;
+            grid-template-columns: 28px 1fr;
+            gap: 9px;
+            width: 100%;
+            padding: 10px 5px 6px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+        .stop:hover, .stop:focus-visible, .stop.is-active { background: var(--accent-soft); outline: none; }
+        .badge, .num-marker {
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+        }
+        .badge { width: 26px; height: 26px; margin-top: 1px; font-size: 12px; }
+        .num-marker {
+            width: 29px;
+            height: 29px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.27);
+            font-size: 12px;
+        }
+        .badge.is-stay, .num-marker.is-stay { background: var(--stay); }
+        .badge.is-highlight, .num-marker.is-highlight { background: var(--warm); }
+        .stop-title { color: var(--ink); font-size: 14px; font-weight: 650; }
+        .stop-meta { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+        .tag {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: var(--warm-soft);
+            color: var(--warm);
+            font-size: 10px;
+            font-weight: 700;
+            vertical-align: 1px;
+        }
+        .tag--stay { background: var(--stay-soft); color: var(--stay); }
+        .activities {
+            margin: 0 0 9px 19px;
+            padding: 2px 0 3px 14px;
+            border-left: 2px solid var(--line);
+            list-style: none;
+        }
+        .activity {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 7px;
+            padding: 3px 0;
+            font-size: 11.5px;
+            line-height: 1.45;
+        }
+        .activity-time { color: var(--accent); font-variant-numeric: tabular-nums; }
+        .activity-text { color: var(--muted); }
+        .note {
+            display: block;
+            margin-top: 4px;
+            color: var(--warm);
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        .popup-title { margin: 0 0 4px; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .popup-meta { margin: 0; color: var(--muted); font-size: 12px; }
+        .activities--popup { margin: 7px 0 0; padding-left: 10px; }
+        .leaflet-popup-content { margin: 10px 13px; min-width: 235px; }
+        .toggle {
+            display: none;
+            width: 100%;
+            margin-bottom: 8px;
+            padding: 8px;
+            border: 0;
+            border-radius: 8px;
+            background: #edf3f7;
+            cursor: pointer;
+        }
+        @media (max-width: 680px) {
+            .info-panel { top: auto; right: 10px; bottom: 10px; left: 10px; width: auto; max-height: 52vh; }
+            .toggle { display: block; }
+            .info-panel.is-collapsed .stats,
+            .info-panel.is-collapsed .day-tabs,
+            .info-panel.is-collapsed .day-summary,
+            .info-panel.is-collapsed .itinerary { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="info-panel" id="panel">
+        <button class="toggle" id="togglePanel" type="button" aria-expanded="true">收起行程</button>
+        <h1>澳大利亚 Hayman Island 2026/06/07–2026/06/15</h1>
+        <p class="subtitle">🇦🇺 · 九天 · 岛上 8 晚</p>
+        <div class="stats">
+            <span class="stat">9 天 8 晚</span>
+            <span class="stat">InterContinental Hayman</span>
+            <span class="stat">Heart Reef · Whitehaven</span>
+            <span class="stat" id="routeStat">正在规划当日路线…</span>
+        </div>
+        <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+        <section class="day-summary" id="daySummary"></section>
+        <ol class="itinerary" id="itinerary"></ol>
+    </aside>
+    <div id="map" role="application" aria-label="Hayman Island 行程地图"></div>
+
+    <script>
+        const days = [
+            {
+                date: "6/7",
+                weekday: "周日",
+                title: "Sydney → Hamilton Island → Hayman",
+                meta: "上岛入住 · Golf Simulator · Pacific 晚餐。第一天不安排直升机和下水。",
+                color: "#0e7490",
+                flightStat: "Sydney → Hamilton Island · 船上 Hayman",
+                stops: [
+                    {
+                        name: "Sydney Airport",
+                        time: "09:40 起飞",
+                        lat: -33.94989, lng: 151.18197,
+                        activities: [
+                            { time: "09:40", text: "从 Sydney 飞 Hamilton Island，约 2 小时 35 分" }
+                        ]
+                    },
+                    {
+                        name: "Hamilton Island Airport",
+                        time: "12:15 抵达",
+                        drive: "飞行约 2 小时 35 分",
+                        leg: "flight",
+                        lat: -20.3580, lng: 148.9519,
+                        activities: [
+                            { time: "12:15", text: "下飞机、行李交接，确认 Hayman 接驳船" },
+                            { time: "13:00", text: "坐船前往 Hayman Island，约 1.5 小时" }
+                        ]
+                    },
+                    {
+                        name: "InterContinental Hayman Island",
+                        time: "14:30 入住",
+                        kind: "stay",
+                        drive: "船上约 1.5 小时",
+                        leg: "flight",
+                        lat: -20.0595, lng: 148.8865,
+                        activities: [
+                            { time: "14:30", text: "抵达办理入住，洗澡换衣服、休息" },
+                            { time: "16:00", text: "Golf Simulator / Activity Lounge，室内轻松，不受天气影响" },
+                            { time: "19:00", text: "Pacific Restaurant 晚餐，正式但不要太累" }
+                        ],
+                        note: "OpenTable：Pacific Restaurant。Golf Simulator 约 AUD 49 / 小时。"
+                    }
+                ]
+            },
+            {
+                date: "6/8",
+                weekday: "周一",
+                title: "海滩皮划艇 + 酒店网球",
+                meta: "上午酒店沙滩划皮划艇 · 下午打网球 · Bam Bam",
+                color: "#0369a1",
+                mode: "foot",
+                stops: [
+                    {
+                        name: "Hayman Beach 皮划艇",
+                        time: "上午",
+                        kind: "highlight",
+                        lat: -20.0612, lng: 148.8882,
+                        activities: [
+                            { time: "09:30", text: "慢早餐" },
+                            { time: "10:30", text: "在酒店沙滩划皮划艇，不离开度假村水域" }
+                        ],
+                        note: "风大或浪高就改浅水区或取消。"
+                    },
+                    {
+                        name: "Hayman 网球场",
+                        time: "下午",
+                        kind: "highlight",
+                        lat: -20.0576, lng: 148.8844,
+                        activities: [
+                            { time: "中午", text: "回房间换衣服、简单吃点，中午不安排正式午餐" },
+                            { time: "14:30", text: "酒店网球场打球，向 concierge 订场地和拍子" },
+                            { time: "17:00", text: "打完海边或 bar 坐一会儿" }
+                        ]
+                    },
+                    {
+                        name: "Bam Bam",
+                        time: "18:30 晚餐",
+                        kind: "stay",
+                        lat: -20.0590, lng: 148.8860,
+                        activities: [
+                            { time: "18:30", text: "Bam Bam，越南 / 泛亚，活动后轻松吃" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "6/9",
+                weekday: "周二",
+                title: "桌球板球 + 赶海 + 泳池 + 海边浮潜",
+                meta: "上午酒店打桌球和板球 · 下午赶海 · 泳池游泳后去海边浮潜 · Amici",
+                color: "#0f766e",
+                mode: "foot",
+                stops: [
+                    {
+                        name: "Activity Lounge / 板球草坪",
+                        time: "上午",
+                        kind: "highlight",
+                        lat: -20.0588, lng: 148.8856,
+                        activities: [
+                            { time: "09:30", text: "慢早餐" },
+                            { time: "10:30", text: "酒店打桌球，再到草坪打板球" }
+                        ]
+                    },
+                    {
+                        name: "Hayman 沙滩赶海",
+                        time: "下午",
+                        kind: "highlight",
+                        lat: -20.0648, lng: 148.8798,
+                        activities: [
+                            { time: "14:00", text: "赶低潮去沙滩 / 沙洲捡螺看螃蟹" }
+                        ],
+                        note: "出发前问 concierge 当天潮汐。穿防滑鞋，别捡受保护的生物。"
+                    },
+                    {
+                        name: "酒店泳池",
+                        time: "赶海结束后",
+                        lat: -20.0604, lng: 148.8876,
+                        activities: [
+                            { time: "结束后", text: "冲脚换衣服，去泳池游泳" }
+                        ]
+                    },
+                    {
+                        name: "Hayman Beach 浮潜",
+                        time: "泳池之后",
+                        kind: "highlight",
+                        lat: -20.0612, lng: 148.8882,
+                        activities: [
+                            { time: "泳池后", text: "去酒店海边浮潜" }
+                        ]
+                    },
+                    {
+                        name: "Amici Trattoria",
+                        time: "18:30 晚餐",
+                        kind: "stay",
+                        lat: -20.0598, lng: 148.8868,
+                        activities: [
+                            { time: "18:30", text: "Amici，pizza / pasta / shared plates" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "6/10",
+                weekday: "周三",
+                title: "乒乓球 + Black Island 浮潜",
+                meta: "上午酒店打乒乓球 · 中午出海 Black Island 浮潜 · 回来吃 Aqua",
+                color: "#155e75",
+                flightStat: "Hayman → Black Island 出海示意",
+                stops: [
+                    {
+                        name: "Activity Lounge 乒乓球",
+                        time: "上午",
+                        lat: -20.0588, lng: 148.8856,
+                        activities: [
+                            { time: "09:30", text: "慢早餐" },
+                            { time: "10:30", text: "酒店打乒乓球" }
+                        ]
+                    },
+                    {
+                        name: "Black Island",
+                        time: "中午出海浮潜",
+                        kind: "highlight",
+                        drive: "Hayman 坐船，约 2 km",
+                        leg: "flight",
+                        lat: -20.0780, lng: 148.8930,
+                        activities: [
+                            { time: "12:00", text: "出海去 Black Island（Bali Hai）浮潜看珊瑚和鱼" }
+                        ],
+                        note: "问 concierge 订船。海况不好可改期。"
+                    },
+                    {
+                        name: "Aqua Restaurant",
+                        time: "17:30 晚餐",
+                        kind: "stay",
+                        drive: "回程后休息再吃",
+                        leg: "flight",
+                        lat: -20.0608, lng: 148.8874,
+                        activities: [
+                            { time: "回岛后", text: "洗澡换衣服、补水" },
+                            { time: "17:30", text: "Aqua 海鲜晚餐，出海后早点吃" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "6/11",
+                weekday: "周四",
+                title: "壁球 + Spa + 岛上骑行",
+                meta: "上午打壁球 · 下午 Spa · 傍晚岛上骑自行车 · Pacific",
+                color: "#0e7490",
+                mode: "foot",
+                stops: [
+                    {
+                        name: "Hayman 壁球室",
+                        time: "上午",
+                        kind: "highlight",
+                        lat: -20.0574, lng: 148.8842,
+                        activities: [
+                            { time: "09:30", text: "慢早餐" },
+                            { time: "10:30", text: "酒店打壁球，向 concierge 订场地" }
+                        ]
+                    },
+                    {
+                        name: "Hayman Spa",
+                        time: "下午",
+                        kind: "highlight",
+                        lat: -20.0584, lng: 148.8852,
+                        activities: [
+                            { time: "14:30", text: "做 Spa，Massage / Facial / Body 按预约" }
+                        ],
+                        note: "https://haymanisland.intercontinental.com/experiences-recreation/hayman-spa-salon/"
+                    },
+                    {
+                        name: "Hayman 岛上骑行",
+                        time: "傍晚",
+                        lat: -20.0595, lng: 148.8865,
+                        activities: [
+                            { time: "傍晚", text: "Spa 后在岛上骑自行车，绕度假村和海边路" }
+                        ]
+                    },
+                    {
+                        name: "Pacific Restaurant",
+                        time: "18:30 晚餐",
+                        kind: "stay",
+                        lat: -20.0596, lng: 148.8871,
+                        activities: [
+                            { time: "18:30", text: "室内 Pacific，把 Beach Dinner 留给最后一晚" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "6/12",
+                weekday: "周五",
+                title: "沙滩排球 + Langford 浮潜喂鱼",
+                meta: "上午打沙滩排球 · 下午 Langford Island 浮潜和喂鱼 · Bam Bam",
+                color: "#0369a1",
+                flightStat: "Hayman → Langford Island 出海示意",
+                stops: [
+                    {
+                        name: "Hayman Beach 沙滩排球",
+                        time: "上午",
+                        kind: "highlight",
+                        lat: -20.0612, lng: 148.8882,
+                        activities: [
+                            { time: "09:30", text: "慢早餐" },
+                            { time: "10:30", text: "酒店沙滩打排球" }
+                        ]
+                    },
+                    {
+                        name: "Langford Island",
+                        time: "下午出海",
+                        kind: "highlight",
+                        drive: "Hayman 坐船",
+                        leg: "flight",
+                        lat: -20.0828, lng: 148.8246,
+                        activities: [
+                            { time: "14:00", text: "去 Langford Island 浮潜，并在沙洲 / 浅水喂鱼" }
+                        ],
+                        note: "问 concierge 订船。海况不好可改期。"
+                    },
+                    {
+                        name: "Bam Bam",
+                        time: "18:30 晚餐",
+                        kind: "stay",
+                        drive: "回程后晚餐",
+                        leg: "flight",
+                        lat: -20.0590, lng: 148.8860,
+                        activities: [
+                            { time: "18:30", text: "回岛后 Bam Bam 晚餐" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "6/13",
+                weekday: "周六",
+                title: "桌球 + 开椰子 + 桑拿 + 夜行动物",
+                meta: "上午打桌球 · 中午看开椰子表演 · 下午蒸桑拿 · 晚饭后看夜行动物 · Amici",
+                color: "#0f766e",
+                mode: "foot",
+                stops: [
+                    {
+                        name: "Activity Lounge 桌球",
+                        time: "上午",
+                        kind: "highlight",
+                        lat: -20.0588, lng: 148.8856,
+                        activities: [
+                            { time: "09:30", text: "慢早餐" },
+                            { time: "10:30", text: "酒店打桌球" }
+                        ]
+                    },
+                    {
+                        name: "开椰子表演",
+                        time: "中午",
+                        kind: "highlight",
+                        lat: -20.0595, lng: 148.8865,
+                        activities: [
+                            { time: "12:00", text: "看酒店开椰子表演" }
+                        ]
+                    },
+                    {
+                        name: "Hayman Spa 桑拿",
+                        time: "下午",
+                        kind: "highlight",
+                        lat: -20.0584, lng: 148.8852,
+                        activities: [
+                            { time: "14:30", text: "去蒸桑拿" }
+                        ]
+                    },
+                    {
+                        name: "Amici Trattoria",
+                        time: "18:30 晚餐",
+                        kind: "stay",
+                        lat: -20.0598, lng: 148.8868,
+                        activities: [
+                            { time: "18:30", text: "Amici 晚餐" }
+                        ]
+                    },
+                    {
+                        name: "岛上夜行动物",
+                        time: "饭后",
+                        kind: "highlight",
+                        lat: -20.0568, lng: 148.8838,
+                        activities: [
+                            { time: "饭后", text: "散步看夜行动物" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "6/14",
+                weekday: "周日",
+                title: "门球 + 赶海 + 桨板",
+                meta: "上午打门球 · 中午赶海 · 下午划桨板 · 晚上 Pacific Beach Dinner",
+                color: "#155e75",
+                mode: "foot",
+                stops: [
+                    {
+                        name: "Hayman 门球场",
+                        time: "上午",
+                        kind: "highlight",
+                        lat: -20.0572, lng: 148.8848,
+                        activities: [
+                            { time: "09:30", text: "慢早餐" },
+                            { time: "10:30", text: "酒店草坪打门球" }
+                        ]
+                    },
+                    {
+                        name: "Hayman 沙滩赶海",
+                        time: "中午",
+                        kind: "highlight",
+                        lat: -20.0648, lng: 148.8798,
+                        activities: [
+                            { time: "12:00", text: "赶低潮去沙滩 / 沙洲赶海" }
+                        ],
+                        note: "出发前问 concierge 当天潮汐。"
+                    },
+                    {
+                        name: "Hayman Beach 桨板",
+                        time: "下午",
+                        kind: "highlight",
+                        lat: -20.0612, lng: 148.8882,
+                        activities: [
+                            { time: "14:30", text: "酒店沙滩划桨板" }
+                        ]
+                    },
+                    {
+                        name: "Pacific Beach Dinner",
+                        time: "18:30–21:00",
+                        kind: "stay",
+                        lat: -20.0618, lng: 148.8888,
+                        activities: [
+                            { time: "18:30", text: "Pacific Beach Dinner，最后一晚沙滩晚餐" }
+                        ],
+                        note: "https://haymanisland.intercontinental.com/dining-experiences/ 明天直升机离岛，晚上把行李按限额分装。"
+                    }
+                ]
+            },
+            {
+                date: "6/15",
+                weekday: "周一",
+                title: "心形礁 + Whitehaven → PPP 回 Sydney",
+                meta: "退房后直升机看 Heart Reef，Whitehaven 玩沙，再直送 Proserpine，傍晚飞回。",
+                color: "#b45309",
+                zoom: 8,
+                flightStat: "Hayman → Heart Reef / Whitehaven → PPP → Sydney",
+                stops: [
+                    {
+                        name: "InterContinental Hayman Island",
+                        time: "早餐后退房",
+                        kind: "stay",
+                        lat: -20.0595, lng: 148.8865,
+                        activities: [
+                            { time: "08:00", text: "早餐、checkout，行李随直升机走" },
+                            { time: "约 10:00", text: "Hayman 起飞，进入观光航段" }
+                        ],
+                        note: "向 concierge 确认起飞时刻，必须赶上 PPP 17:50 值机。不要再排 Reefworld，时间留给 Whitehaven 和机场缓冲。"
+                    },
+                    {
+                        name: "Heart Reef",
+                        time: "空中俯瞰",
+                        kind: "highlight",
+                        drive: "观光直升机",
+                        leg: "flight",
+                        lat: -19.7378, lng: 149.1917,
+                        activities: [
+                            { time: "航段中", text: "空中看 Heart Reef、外礁和 Whitsunday 群岛，不下水" }
+                        ]
+                    },
+                    {
+                        name: "Whitehaven Beach",
+                        time: "停留玩耍",
+                        kind: "highlight",
+                        drive: "直升机降落",
+                        leg: "flight",
+                        lat: -20.2665, lng: 149.0148,
+                        activities: [
+                            { time: "沙滩", text: "Whitehaven 玩沙、拍照、看 Hill Inlet；浮潜 optional，6 月水凉可不下水" },
+                            { time: "离开前", text: "换衣服、收湿衣服，直升机直送 PPP，不回 Hayman" }
+                        ]
+                    },
+                    {
+                        name: "Whitsunday Coast Airport (PPP)",
+                        time: "下午抵达后值机",
+                        drive: "直升机直送",
+                        leg: "flight",
+                        lat: -20.4950, lng: 148.5522,
+                        activities: [
+                            { time: "抵达后", text: "值机、托运行李（若航司可收）" },
+                            { time: "17:50", text: "PPP 飞 Sydney，约 2 小时 20–25 分" }
+                        ],
+                        note: "按机票：PPP 17:50 回 Sydney。公开班期常见是 JQ839，有的日期写成 18:50，出发前再核对。"
+                    },
+                    {
+                        name: "Sydney Airport",
+                        time: "约 20:15–21:15 抵达",
+                        drive: "飞行约 2 小时 25 分",
+                        leg: "flight",
+                        lat: -33.94989, lng: 151.18197,
+                        activities: [
+                            { time: "抵达", text: "回到 Sydney，行程结束" }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const map = L.map("map", { zoomControl: true }).setView([-20.15, 148.95], 9);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        const tabsEl = document.getElementById("dayTabs");
+        const summaryEl = document.getElementById("daySummary");
+        const itineraryEl = document.getElementById("itinerary");
+        const routeStatEl = document.getElementById("routeStat");
+        let routeLines = [];
+        let markers = [];
+        let activeDay = 0;
+
+        days.forEach((day, index) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "day-tab";
+            button.innerHTML = `${escapeHtml(day.date)}<br>${escapeHtml(day.weekday)}`;
+            button.addEventListener("click", () => renderDay(index));
+            tabsEl.appendChild(button);
+        });
+
+        document.getElementById("togglePanel").addEventListener("click", () => {
+            const panel = document.getElementById("panel");
+            const collapsed = panel.classList.toggle("is-collapsed");
+            const button = document.getElementById("togglePanel");
+            button.textContent = collapsed ? "展开行程" : "收起行程";
+            button.setAttribute("aria-expanded", String(!collapsed));
+        });
+
+        itineraryEl.addEventListener("click", (event) => {
+            const button = event.target.closest(".stop");
+            if (!button) return;
+            const index = Number(button.dataset.index);
+            document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+            const zoom = days[activeDay].zoom || 12;
+            map.flyTo(markers[index].getLatLng(), zoom, { duration: 0.7 });
+            markers[index].openPopup();
+        });
+
+        function splitLegs(day, coords) {
+            const groups = [];
+            let current = { type: "drive", points: [coords[0]] };
+            for (let i = 1; i < day.stops.length; i++) {
+                const type = day.stops[i].leg === "flight" ? "flight" : "drive";
+                if (type === current.type) {
+                    current.points.push(coords[i]);
+                } else {
+                    groups.push(current);
+                    current = { type, points: [coords[i - 1], coords[i]] };
+                }
+            }
+            groups.push(current);
+            return groups.filter((group) => group.points.length > 1);
+        }
+
+        async function renderDay(dayIndex) {
+            activeDay = dayIndex;
+            const day = days[dayIndex];
+            document.querySelectorAll(".day-tab").forEach((tab, index) => {
+                tab.classList.toggle("is-active", index === dayIndex);
+            });
+            summaryEl.innerHTML = `
+                <p class="day-title">${escapeHtml(day.date)} ${escapeHtml(day.weekday)} · ${escapeHtml(day.title)}</p>
+                <p class="day-meta">${escapeHtml(day.meta)}</p>`;
+            itineraryEl.innerHTML = "";
+            markers.forEach((marker) => marker.remove());
+            markers = [];
+            routeLines.forEach((line) => line.remove());
+            routeLines = [];
+
+            const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
+
+            day.stops.forEach((stop, index) => {
+                const number = index + 1;
+                const kindClass = stop.kind ? ` is-${stop.kind}` : "";
+                const label = stop.kind === "stay"
+                    ? '<span class="tag tag--stay">住宿</span>'
+                    : stop.kind === "highlight"
+                        ? '<span class="tag">重点</span>'
+                        : "";
+                const activityRows = stop.activities.map((activity) => `
+                    <li class="activity">
+                        <span class="activity-time">${escapeHtml(activity.time)}</span>
+                        <span class="activity-text">${escapeHtml(activity.text)}</span>
+                    </li>`).join("");
+                const meta = [stop.drive, stop.time].filter(Boolean).join(" · ");
+                const note = stop.note ? `<span class="note">${escapeHtml(stop.note)}</span>` : "";
+
+                const marker = L.marker([stop.lat, stop.lng], {
+                    icon: L.divIcon({
+                        className: "",
+                        html: `<div class="num-marker${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</div>`,
+                        iconSize: [29, 29],
+                        iconAnchor: [14, 14],
+                        popupAnchor: [0, -16]
+                    })
+                }).addTo(map);
+                marker.bindPopup(`
+                    <p class="popup-title">${number}. ${escapeHtml(stop.name)}${label}</p>
+                    <p class="popup-meta">${escapeHtml(meta)}</p>
+                    ${note}
+                    <ul class="activities activities--popup">${activityRows}</ul>`);
+                marker.on("click", () => {
+                    document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+                });
+                markers.push(marker);
+
+                const item = document.createElement("li");
+                item.className = "stop-wrap";
+                item.innerHTML = `
+                    <button class="stop" type="button" data-index="${index}">
+                        <span class="badge${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</span>
+                        <span>
+                            <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
+                            <span class="stop-meta">${escapeHtml(meta)}</span>
+                            ${note}
+                        </span>
+                    </button>
+                    <ul class="activities">${activityRows}</ul>`;
+                itineraryEl.appendChild(item);
+            });
+
+            const fallback = L.polyline(coords, {
+                color: day.color,
+                weight: 4,
+                opacity: 0.82,
+                dashArray: "8, 8"
+            }).addTo(map);
+            routeLines.push(fallback);
+            map.fitBounds(fallback.getBounds().pad(0.18));
+            await loadRoute(day, coords, dayIndex, fallback);
+        }
+
+        async function loadRoute(day, coords, expectedDay, fallback) {
+            const groups = splitLegs(day, coords);
+            const profile = day.mode === "foot" ? "foot" : "driving";
+            const waiting = day.mode === "foot" ? "正在规划步行路线…" : "正在规划当日路线…";
+            routeStatEl.textContent = waiting;
+
+            let driveKm = 0;
+            let driveMin = 0;
+            let hasFlight = false;
+            let routed = false;
+
+            for (const group of groups) {
+                if (group.type === "flight") {
+                    hasFlight = true;
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 3,
+                        opacity: 0.75,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                    continue;
+                }
+                const path = group.points.map(([lat, lng]) => `${lng},${lat}`).join(";");
+                const url = `https://router.project-osrm.org/route/v1/${profile}/${path}?overview=full&geometries=geojson`;
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error("route request failed");
+                    const data = await response.json();
+                    if (activeDay !== expectedDay) return;
+                    const route = data.routes && data.routes[0];
+                    if (!route) throw new Error("no route returned");
+                    const line = L.polyline(
+                        route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+                        { color: day.color, weight: 4, opacity: 0.85 }
+                    ).addTo(map);
+                    routeLines.push(line);
+                    driveKm += route.distance / 1000;
+                    driveMin += route.duration / 60;
+                    routed = true;
+                } catch (error) {
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 4,
+                        opacity: 0.82,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                }
+            }
+
+            if (activeDay !== expectedDay) return;
+            if (fallback) {
+                fallback.remove();
+                routeLines = routeLines.filter((line) => line !== fallback);
+            }
+
+            const parts = [];
+            if (hasFlight) parts.push(day.flightStat || "航班示意线");
+            if (routed) {
+                const km = profile === "foot" ? driveKm.toFixed(1) : Math.round(driveKm);
+                const minutes = Math.round(driveMin);
+                const time = minutes >= 60
+                    ? `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分`
+                    : `${minutes} 分`;
+                const label = profile === "foot" ? "步行" : "自驾";
+                parts.push(`${label}约 ${km} km · ${time}`);
+            } else if (!hasFlight) {
+                parts.push(profile === "foot" ? "步行路线暂不可用，显示直线示意" : "路线暂不可用，显示直线示意");
+            }
+            routeStatEl.textContent = parts.join(" · ");
+
+            const bounds = routeLines.reduce((acc, line) => acc.extend(line.getBounds()), routeLines[0].getBounds());
+            map.fitBounds(bounds.pad(0.15));
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        renderDay(0);
+    </script>
+</body>
+</html>
