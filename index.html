@@ -13,7 +13,11 @@
             --muted: #4a5568;
             --line: #e2e8f0;
             --accent: #2b6cb0;
+            --accent-soft: #ebf5ff;
+            --chip: #edf2f7;
             --bg: #f7fafc;
+            --shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+            --shadow-lift: 0 10px 24px rgba(15, 23, 42, 0.09);
         }
         * { box-sizing: border-box; }
         body {
@@ -24,9 +28,24 @@
             color: var(--ink);
         }
         main {
-            max-width: 720px;
+            max-width: 760px;
             margin: 0 auto;
-            padding: 48px 20px 64px;
+            padding: 48px 20px 72px;
+        }
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+            border: 0;
+        }
+        a:focus-visible, button:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
         }
         .kicker {
             margin: 0;
@@ -58,8 +77,8 @@
         .stats {
             display: flex;
             flex-wrap: wrap;
-            gap: 18px;
-            margin: 14px 0 0;
+            gap: 12px 24px;
+            margin: 16px 0 0;
             padding: 0;
             list-style: none;
         }
@@ -78,10 +97,11 @@
             color: var(--muted);
         }
         #map {
-            height: 340px;
+            height: clamp(220px, 42vw, 340px);
             border: 1px solid var(--line);
             border-radius: 14px;
             background: #fff;
+            box-shadow: var(--shadow);
         }
         .places {
             display: grid;
@@ -94,8 +114,9 @@
         .places li {
             padding: 10px 12px;
             border: 1px solid var(--line);
-            border-radius: 12px;
+            border-radius: 14px;
             background: #fff;
+            box-shadow: var(--shadow);
         }
         .place-name {
             margin: 0;
@@ -118,17 +139,47 @@
             font-size: 12px;
             color: var(--muted);
         }
-        .year {
-            margin: 32px 0 0;
+        .year-tabs {
+            position: sticky;
+            top: 0;
+            z-index: 1001;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            margin: 34px 0 18px;
+            padding: 10px 0;
+            background: var(--bg);
         }
-        .year h2 {
-            margin: 0 0 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--line);
-            font-size: 13px;
-            letter-spacing: 0.06em;
+        .year-tab {
+            display: grid;
+            gap: 2px;
+            padding: 9px 6px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #fff;
             color: var(--muted);
-            font-weight: 650;
+            font: inherit;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+        }
+        .year-tab:hover { border-color: var(--accent); }
+        .year-tab.is-active {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+        .year-tab b {
+            font-size: 17px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+        .year-tab span {
+            font-size: 11px;
+            opacity: 0.85;
+        }
+        .year {
+            margin: 0;
         }
         .trips {
             display: grid;
@@ -145,19 +196,35 @@
             background: #fff;
             color: inherit;
             text-decoration: none;
+            box-shadow: var(--shadow);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
         }
         a.trip:hover, a.trip:focus-visible {
             border-color: #bee3f8;
-            outline: none;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lift);
         }
-        .trip-date {
+        .trip-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
             margin: 0;
-            font-size: 12px;
-            color: var(--accent);
+        }
+        .trip-tag {
+            padding: 3px 9px;
+            border-radius: 999px;
+            background: var(--chip);
+            color: var(--muted);
+            font-size: 11px;
             font-weight: 650;
+            line-height: 1.5;
+        }
+        .trip-tag--flag {
+            background: var(--accent-soft);
+            color: var(--accent);
         }
         .trip h3 {
-            margin: 6px 0 0;
+            margin: 10px 0 0;
             font-size: 18px;
             line-height: 1.35;
         }
@@ -168,12 +235,48 @@
             line-height: 1.6;
         }
         footer {
-            margin: 36px 0 0;
+            margin: 40px 0 0;
+            padding-top: 16px;
+            border-top: 1px solid var(--line);
             color: #718096;
             font-size: 12px;
             line-height: 1.6;
         }
+        @media (max-width: 520px) {
+            main { padding: 32px 16px 56px; }
+            h1 { font-size: 26px; }
+            .places { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
+            a.trip { padding: 16px 15px 14px; }
+            .year-tabs { gap: 6px; }
+            .year-tab { padding: 8px 4px; }
+            .year-tab b { font-size: 15px; }
+            .year-tab span { font-size: 10px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            a.trip, .year-tab { transition: none; }
+            a.trip:hover, a.trip:focus-visible { transform: none; }
+        }
     </style>
+    <noscript>
+        <style>
+            .year-tabs { display: none; }
+            .year[hidden] { display: block; }
+            .year { margin: 32px 0 0; }
+            .year-title {
+                position: static;
+                width: auto;
+                height: auto;
+                margin: 0 0 12px;
+                padding-bottom: 8px;
+                border-bottom: 1px solid var(--line);
+                clip-path: none;
+                font-size: 13px;
+                letter-spacing: 0.06em;
+                color: var(--muted);
+                font-weight: 650;
+            }
+        </style>
+    </noscript>
 </head>
 <body>
     <main>
@@ -186,99 +289,117 @@
             <div class="stats" id="stats"></div>
             <ul class="places" id="places"></ul>
         </section>
-        <section class="year" aria-labelledby="year-2026">
-            <h2 id="year-2026">2026</h2>
+        <nav class="year-tabs" id="yearTabs" role="tablist" aria-label="按年份查看行程">
+            <button type="button" class="year-tab is-active" id="tab-2026" role="tab" data-year="2026" aria-controls="panel-2026" aria-selected="true">
+                <b>2026</b><span>5 段行程</span>
+            </button>
+            <button type="button" class="year-tab" id="tab-2025" role="tab" data-year="2025" aria-controls="panel-2025" aria-selected="false" tabindex="-1">
+                <b>2025</b><span>5 段行程</span>
+            </button>
+            <button type="button" class="year-tab" id="tab-2024" role="tab" data-year="2024" aria-controls="panel-2024" aria-selected="false" tabindex="-1">
+                <b>2024</b><span>3 段行程</span>
+            </button>
+        </nav>
+        <section class="year" id="panel-2026" role="tabpanel" aria-labelledby="tab-2026">
+            <h2 class="visually-hidden year-title">2026</h2>
             <ul class="trips">
                 <li>
                     <a class="trip" href="2026/dubbo_trip_261031_261104.html">
-                        <p class="trip-date">🇦🇺 · 五天 · 自驾</p>
+                        <p class="trip-tags"><span class="trip-tag trip-tag--flag">🇦🇺</span><span class="trip-tag">五天</span><span class="trip-tag">自驾</span></p>
                         <h3>澳大利亚 Dubbo 2026/10/31–2026/11/04</h3>
                         <p>Chatswood 出发，经 Blue Mountains 和 Mudgee，Dubbo 看动物园与市区，11 月 3 日住 Zoofari Lodge，返程经 Orange、Bathurst 回家。</p>
                     </a>
                 </li>
                 <li>
                     <a class="trip" href="2026/southern_highland_trip_260906.html">
-                        <p class="trip-date">🇦🇺 · 一天 · 自驾</p>
+                        <p class="trip-tags"><span class="trip-tag trip-tag--flag">🇦🇺</span><span class="trip-tag">一天</span><span class="trip-tag">自驾</span></p>
                         <h3>澳大利亚 Southern Highlands 2026/09/06</h3>
                         <p>Park Hyatt 出发，经 Bowral、Fitzroy Falls、Kangaroo Valley，再到 Gerringong 与 Kiama，晚上回 Taronga 吃晚餐。</p>
                     </a>
                 </li>
                 <li>
                     <a class="trip" href="2026/tokyo_trip_260808_260809.html">
-                        <p class="trip-date">🇯🇵 · 两天 · 步行 + 地铁</p>
+                        <p class="trip-tags"><span class="trip-tag trip-tag--flag">🇯🇵</span><span class="trip-tag">两天</span><span class="trip-tag">步行 + 地铁</span></p>
                         <h3>日本 Tokyo 2026/08/08–2026/08/09</h3>
                         <p>8 日 Shibuya 出发，Omotesando 逛街后吃 Red Rock，再去 Ginza；晚上回 Shibuya 吃 Steak Lodge、逛 MEGA Don Quijote。9 日 Ueno Park 看 Pakistan Japan Friendship Festival，Tokyo National Museum 集章做 ukiyo-e，打车 Akihabara 逛手办，晚上回 Shibuya 吃 Yakitori Tsukada。</p>
                     </a>
                 </li>
                 <li>
+                    <a class="trip" href="2026/hayman_island_trip_260607_260615.html">
+                        <p class="trip-tags"><span class="trip-tag trip-tag--flag">🇦🇺</span><span class="trip-tag">九天</span><span class="trip-tag">海岛度假</span></p>
+                        <h3>澳大利亚 Hayman Island 2026/06/07–2026/06/15</h3>
+                        <p>Sydney 经 Hamilton Island 坐船上 Hayman，住 InterContinental 八晚。Spa、轻玩水、Langford 出海，最后一天直升机看心形礁和 Whitehaven，直送 PPP 傍晚回 Sydney。</p>
+                    </a>
+                </li>
+                <li>
                     <a class="trip" href="2026/melbourne_trip_260402_260406.html">
-                        <p class="trip-date">🇦🇺 · 五天 · 自驾</p>
+                        <p class="trip-tags"><span class="trip-tag trip-tag--flag">🇦🇺</span><span class="trip-tag">五天</span><span class="trip-tag">自驾</span></p>
                         <h3>澳大利亚 Melbourne / Great Ocean Road 2026/04/02–2026/04/06</h3>
                         <p>QF415 抵 Melbourne 租车；Wilsons Prom 与 Sandy Point，再上 Great Ocean Road 看 Twelve Apostles。内陆经 Forrest、Colac 回 Melbourne，住 Docklands Marriott，6 日 QF490 回 Sydney。</p>
                     </a>
                 </li>
             </ul>
         </section>
-        <section class="year" aria-labelledby="year-2025">
-            <h2 id="year-2025">2025</h2>
+        <section class="year" id="panel-2025" role="tabpanel" aria-labelledby="tab-2025" hidden>
+            <h2 class="visually-hidden year-title">2025</h2>
             <ul class="trips">
                 <li>
                     <a class="trip" href="2025/southern_highlands_canberra_trip_251005_251006.html">
-                        <p class="trip-date">🇦🇺 · 两天 · 自驾</p>
+                        <p class="trip-tags"><span class="trip-tag trip-tag--flag">🇦🇺</span><span class="trip-tag">两天</span><span class="trip-tag">自驾</span></p>
                         <h3>澳大利亚 Southern Highlands / Canberra 2025/10/05–2025/10/06</h3>
                         <p>St Leonards 出发，Bowral 吃 Harry's、逛 Dirty Janes 与郁金香节，Fitzroy Falls 徒步、袋鼠谷看日落，Moss Vale 晚餐后住 Midnight Hotel；次日 Questacon、国会、博物馆，返程经 Lake George，Cabramatta 火锅后回家。</p>
                     </a>
                 </li>
                 <li>
                     <a class="trip" href="2025/orange_trip_250802_250803.html">
-                        <p class="trip-date">🇦🇺 · 两天 · 自驾</p>
+                        <p class="trip-tags"><span class="trip-tag trip-tag--flag">🇦🇺</span><span class="trip-tag">两天</span><span class="trip-tag">自驾</span></p>
                         <h3>澳大利亚 Orange 2025/08/02–2025/08/03</h3>
                         <p>St Leonards 取 12 座，经 Katoomba 午餐、Bathurst 歇脚后入住 Orange；晚上 Fire Festival 与日料，次日 Mayfield Garden、Three Sisters，Leura 韩料后回家。</p>
                     </a>
                 </li>
                 <li>
                     <a class="trip" href="2025/blue_mountains_trip_250510_250511.html">
-                        <p class="trip-date">🇦🇺 · 两天 · 自驾</p>
+                        <p class="trip-tags"><span class="trip-tag trip-tag--flag">🇦🇺</span><span class="trip-tag">两天</span><span class="trip-tag">自驾</span></p>
                         <h3>澳大利亚 Blue Mountains 2025/05/10–2025/05/11</h3>
                         <p>Chatswood 午餐后入住 Leura，Wentworth Falls 徒步、Lincoln's Rock 日落，晚上 Jiggle 韩料。次日 Sorensen's 早餐、Scenic World、Unique 肉骨茶，Blackheath 看枫叶与 Govetts Leap，返程在 Burwood 夜市吃晚饭。</p>
                     </a>
                 </li>
                 <li>
                     <a class="trip" href="2025/perth_trip_250420_250424.html">
-                        <p class="trip-date">🇦🇺 · 五天 · 自驾</p>
+                        <p class="trip-tags"><span class="trip-tag trip-tag--flag">🇦🇺</span><span class="trip-tag">五天</span><span class="trip-tag">自驾</span></p>
                         <h3>澳大利亚 Perth 2025/04/20–2025/04/24</h3>
                         <p>QF645 抵 Perth 租车，住 Airbnb；北上 Cervantes 的 Lobster Shack、Jurien Bay 与 The Pinnacles，南下 Mandurah、Busselton，24 日 Maylands 后乘 QF650 回 Sydney。</p>
                     </a>
                 </li>
                 <li>
                     <a class="trip" href="2025/paris_trip_250117_250118.html">
-                        <p class="trip-date">🇫🇷 · 两天 · 步行</p>
+                        <p class="trip-tags"><span class="trip-tag trip-tag--flag">🇫🇷</span><span class="trip-tag">两天</span><span class="trip-tag">步行</span></p>
                         <h3>法国 Paris 2025/01/17–2025/01/18</h3>
                         <p>从 Hôtel du Louvre 出发，步行经过 Louvre、Notre-Dame、Panthéon、Eiffel Tower、Arc de Triomphe、Champs-Élysées 和 Palais Garnier，下午在 La Grille Montorgueil 午餐后回 London。</p>
                     </a>
                 </li>
             </ul>
         </section>
-        <section class="year" aria-labelledby="year-2024">
-            <h2 id="year-2024">2024</h2>
+        <section class="year" id="panel-2024" role="tabpanel" aria-labelledby="tab-2024" hidden>
+            <h2 class="visually-hidden year-title">2024</h2>
             <ul class="trips">
                 <li>
                     <a class="trip" href="2024/gold_coast_trip_241218_241222.html">
-                        <p class="trip-date">🇦🇺 · 五天 · 自驾</p>
+                        <p class="trip-tags"><span class="trip-tag trip-tag--flag">🇦🇺</span><span class="trip-tag">五天</span><span class="trip-tag">自驾</span></p>
                         <h3>澳大利亚 Gold Coast / Brisbane 2024/12/18–2024/12/22</h3>
                         <p>QF594 抵 Gold Coast，住 Sheraton Grand Mirage 两晚；Springbrook 看瀑布、Wet'n'Wild，再开车去 Brisbane，22 日 Mt Coot-tha 后乘 JQ823 回 Sydney。</p>
                     </a>
                 </li>
                 <li>
                     <a class="trip" href="2024/miami_trip_240203.html">
-                        <p class="trip-date">🇺🇸 · 一天 · 自驾</p>
+                        <p class="trip-tags"><span class="trip-tag trip-tag--flag">🇺🇸</span><span class="trip-tag">一天</span><span class="trip-tag">自驾</span></p>
                         <h3>美国 Miami / Key West 2024/02/03</h3>
                         <p>Brickell 出发，Key Largo 吃 brunch，沿 Overseas Highway 经 7 Mile Bridge 到 Key West：最南端打卡、海明威故居、Mallory Square 日落，返程在 Big Coppitt Key 吃晚饭后回 Brickell。</p>
                     </a>
                 </li>
                 <li>
                     <a class="trip" href="2024/la_trip_240127_240128.html">
-                        <p class="trip-date">🇺🇸 · 两天 · 自驾</p>
+                        <p class="trip-tags"><span class="trip-tag trip-tag--flag">🇺🇸</span><span class="trip-tag">两天</span><span class="trip-tag">自驾</span></p>
                         <h3>美国 Los Angeles 2024/01/27–2024/01/28</h3>
                         <p>Marina del Rey 出发，Alhambra 买零食、泰餐，Raahauge's 打靶后去 Joshua Tree 观景与观星；Koreatown 晚饭后回住地。次日一整天在环球影城。</p>
                     </a>
@@ -341,6 +462,44 @@
                 <p class="place-name">${place.flag} ${place.name}</p>
                 <p class="place-meta">最近 ${place.lastYear} 年 · ${place.visits} 次</p>
             </li>`).join("");
+
+        const yearTabs = Array.from(document.querySelectorAll(".year-tab"));
+        const yearPanels = yearTabs.map((tab) => document.getElementById(tab.getAttribute("aria-controls")));
+
+        function selectYear(index, { focus = false, updateHash = false } = {}) {
+            yearTabs.forEach((tab, i) => {
+                const isActive = i === index;
+                tab.classList.toggle("is-active", isActive);
+                tab.setAttribute("aria-selected", String(isActive));
+                tab.tabIndex = isActive ? 0 : -1;
+                yearPanels[i].hidden = !isActive;
+            });
+            if (focus) yearTabs[index].focus();
+            if (updateHash) history.replaceState(null, "", `#${yearTabs[index].dataset.year}`);
+        }
+
+        function indexFromHash() {
+            const year = decodeURIComponent(window.location.hash.slice(1));
+            return yearTabs.findIndex((tab) => tab.dataset.year === year);
+        }
+
+        yearTabs.forEach((tab, index) => {
+            tab.addEventListener("click", () => selectYear(index, { updateHash: true }));
+            tab.addEventListener("keydown", (event) => {
+                const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+                if (!step) return;
+                event.preventDefault();
+                selectYear((index + step + yearTabs.length) % yearTabs.length, { focus: true, updateHash: true });
+            });
+        });
+
+        window.addEventListener("hashchange", () => {
+            const index = indexFromHash();
+            if (index >= 0) selectYear(index);
+        });
+
+        const initialYear = indexFromHash();
+        selectYear(initialYear >= 0 ? initialYear : 0);
     </script>
 </body>
 </html>
