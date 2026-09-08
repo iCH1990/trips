@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8">
-    <title>澳大利亚 Southern Highlands / Canberra 2025/10/05–2025/10/06</title>
+    <title>澳大利亚 Blue Mountains 2025/05/10–2025/05/11</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -10,9 +10,9 @@
         :root {
             --ink: #1a365d;
             --muted: #4a5568;
-            --line: #e2e8f0;
-            --accent: #c53030;
-            --accent-soft: #fff5f5;
+            --line: #c6d9c9;
+            --accent: #2f6f4e;
+            --accent-soft: #edf7f0;
             --warm: #c05621;
             --warm-soft: #feebc8;
             --stay: #6b4ea0;
@@ -178,232 +178,188 @@
 <body>
     <aside class="info-panel" id="panel">
         <button class="toggle" id="togglePanel" type="button" aria-expanded="true">收起行程</button>
-        <h1>澳大利亚 Southern Highlands / Canberra 2025/10/05–2025/10/06</h1>
-        <p class="subtitle">🇦🇺 · 两天 · 自驾 · 郁金香节与首都</p>
+        <h1>澳大利亚 Blue Mountains 2025/05/10–2025/05/11</h1>
+        <p class="subtitle">🇦🇺 · 两天 · 自驾 · Leura 与 Blackheath</p>
         <div class="stats">
             <span class="stat">2 天 1 晚</span>
-            <span class="stat">Tulip Time 末日周末</span>
-            <span class="stat">Midnight Hotel</span>
+            <span class="stat">Leisure Inn Spires</span>
+            <span class="stat">Scenic World</span>
             <span class="stat" id="routeStat">正在规划当日路线…</span>
         </div>
         <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
         <section class="day-summary" id="daySummary"></section>
         <ol class="itinerary" id="itinerary"></ol>
-        <p class="hint">驾驶时间按 OSRM 常规路况估算。10 月 5 日已进入夏令时。Harry's 周日午餐 12:00 场需订位；Corbett Gardens 当日 16:30 关门。Questacon、国会与国家博物馆均 9:00–17:00。Cabramatta 火锅周一晚餐多在 22:00 前后停客，观景台建议 18:20 前离开。热门餐厅建议提前订位。</p>
+        <p class="hint">驾驶时间按 OSRM 常规路况估算。5 月中旬日落约 17:05。酒店入住多从 15:00 起；Scenic World 建议提前买票。Jiggle、Sorensen's 与 Unique 建议订位。Lincoln's Rock 临崖无护栏，看日落时看管小朋友。观星看当晚天气与云量。Burwood Chinatown 夜市周四至周日约 17:00–22:00。</p>
     </aside>
-    <div id="map" role="application" aria-label="Southern Highlands 与 Canberra 两日自驾地图"></div>
+    <div id="map" role="application" aria-label="Blue Mountains 两日自驾地图"></div>
 
     <script>
         const days = [
             {
-                date: "10/5",
-                weekday: "周日",
-                title: "Bowral 郁金香节，徒步瀑布，袋鼠谷日落后再去 Canberra",
-                meta: "St Leonards 出发 · Harry's brunch · Dirty Janes · Corbett Gardens · Fitzroy Falls · 袋鼠谷 · Moss Vale 晚餐后入住",
-                color: "#c53030",
+                date: "5/10",
+                weekday: "周六",
+                title: "Chatswood 午餐后入住 Leura，徒步与日落",
+                meta: "Westfield 午餐 · 入住 Leisure Inn Spires · Wentworth Falls · Lincoln's Rock 日落 · Jiggle 韩料后回房观星",
+                color: "#2f6f4e",
                 stops: [
                     {
-                        name: "St Leonards",
-                        time: "09:00 出发",
-                        lat: -33.8247, lng: 151.1967,
+                        name: "Westfield Chatswood",
+                        time: "11:30–13:15",
+                        lat: -33.79715, lng: 151.18291,
                         activities: [
-                            { time: "09:00", text: "出发前往 Bowral，车程约 1 小时 50 分" }
-                        ]
-                    },
-                    {
-                        name: "Harry's on Green Lane",
-                        time: "11:00–13:15",
-                        drive: "开车约 1 小时 50 分",
-                        kind: "highlight",
-                        lat: -34.48164, lng: 150.41746,
-                        activities: [
-                            { time: "11:00", text: "抵达 Banyette St，Green Lane 停车" },
-                            { time: "12:00–13:15", text: "Harry's on Green Lane Brunch · 21 Banyette St" }
+                            { time: "11:30–12:45", text: "商场午餐" },
+                            { time: "12:45–13:15", text: "买路上喝的，出发去 Leura" }
                         ],
-                        note: "周日两场午餐 12:00 / 14:00，订 12:00 场。若想更早吃，隔壁 Plantation Cafe 约 8:00 起供应早午餐"
+                        note: "1 Anderson Street, Chatswood"
                     },
                     {
-                        name: "Dirty Janes Bowral",
-                        time: "13:20–14:10",
-                        lat: -34.4815, lng: 150.4172,
-                        activities: [
-                            { time: "13:20–14:10", text: "逛古董市集，家具、家居与旧物" }
-                        ],
-                        note: "13–15 Banyette St · 紧挨 Green Lane，每日 10:00–17:00"
-                    },
-                    {
-                        name: "Corbett Gardens",
-                        time: "14:15–15:40",
-                        kind: "highlight",
-                        lat: -34.47854, lng: 150.41992,
-                        activities: [
-                            { time: "14:15–15:40", text: "Tulip Time 郁金香节拍照打卡" }
-                        ],
-                        note: "Bendooley St。2025 年节期至 10 月 6 日，当日 9:30–16:30；步行约 5 分钟，16:00 前离开即可"
-                    },
-                    {
-                        name: "Fitzroy Falls",
-                        time: "16:10–17:30",
-                        drive: "开车约 25 分钟",
-                        kind: "highlight",
-                        lat: -34.6462, lng: 150.4789,
-                        activities: [
-                            { time: "16:10–16:25", text: "Visitor Centre 与瀑布观景台" },
-                            { time: "16:25–17:30", text: "East Rim 步道观峡谷（约 1 小时，不必走完整环线）" }
-                        ]
-                    },
-                    {
-                        name: "Kangaroo Valley",
-                        time: "18:00–19:10",
-                        drive: "开车约 25 分钟",
-                        kind: "highlight",
-                        lat: -34.74057, lng: 150.47206,
-                        activities: [
-                            { time: "18:00–19:10", text: "Bendeela Recreation Area 看落日、袋鼠和袋熊" }
-                        ],
-                        note: "日落约 19:05。暮光时袋鼠、袋熊较活跃；开车慢行，勿投喂"
-                    },
-                    {
-                        name: "Thai Som Boon",
-                        time: "19:45–21:00",
-                        drive: "开车约 35 分钟",
-                        lat: -34.54873, lng: 150.37246,
-                        activities: [
-                            { time: "19:45–21:00", text: "Moss Vale 泰餐晚餐" }
-                        ],
-                        note: "Shop 11/254 Argyle St（Clarence St 转角）。周日晚餐至约 21:00–21:30，建议订位"
-                    },
-                    {
-                        name: "Midnight Hotel",
-                        time: "约 22:50 入住",
-                        drive: "开车约 1 小时 50 分",
+                        name: "Leisure Inn Spires",
+                        time: "15:00 入住",
+                        drive: "开车约 1 小时 30 分",
                         kind: "stay",
-                        lat: -35.27501, lng: 149.13683,
+                        lat: -33.7118, lng: 150.3315,
                         activities: [
-                            { time: "21:00", text: "吃完直接开往 Canberra" },
-                            { time: "22:50", text: "办理入住，休息" }
+                            { time: "14:45", text: "抵达 Leura，办理入住，放下行李" },
+                            { time: "20:15", text: "晚餐后回房休息；天气好就看星星" }
                         ],
-                        note: "Midnight Hotel, Autograph Collection · 1 Elouera St, Braddon"
+                        note: "100 Leura Mall, Leura NSW 2780"
+                    },
+                    {
+                        name: "Wentworth Falls",
+                        time: "15:20–16:40",
+                        drive: "开车约 10 分钟",
+                        kind: "highlight",
+                        lat: -33.7265, lng: 150.3722,
+                        activities: [
+                            { time: "15:20", text: "Falls Rd / 观景台附近停车" },
+                            { time: "15:25–16:40", text: "Wentworth Falls 徒步看瀑布" }
+                        ],
+                        note: "Wentworth Falls Lookout, Falls Road"
+                    },
+                    {
+                        name: "Lincoln's Rock",
+                        time: "16:55–17:30",
+                        drive: "开车约 10 分钟",
+                        kind: "highlight",
+                        lat: -33.74006, lng: 150.37207,
+                        activities: [
+                            { time: "16:55", text: "Little Switzerland Dr 停车场步行约 5 分钟" },
+                            { time: "17:00–17:30", text: "打卡日落，俯瞰 Jamison Valley" }
+                        ],
+                        note: "51 Little Switzerland Drive, Wentworth Falls · 临崖无护栏"
+                    },
+                    {
+                        name: "Jiggle Korean BBQ",
+                        time: "18:00–20:00",
+                        drive: "开车约 15 分钟",
+                        lat: -33.7141, lng: 150.3319,
+                        activities: [
+                            { time: "17:45", text: "Picklemouse Corner 停车 · 1/152 Megalong St" },
+                            { time: "18:00–20:00", text: "韩式烤肉晚餐，之后回酒店休息" }
+                        ],
+                        note: "Leura, Blue Mountains"
                     }
                 ]
             },
             {
-                date: "10/6",
-                weekday: "周一",
-                title: "首都馆所与游乐场，落日后再经 Lake George 回家",
-                meta: "酒店早餐 · Questacon · Parliament House · Lunetta · Pod Playground · 国家博物馆 · Mount Pleasant · Cabramatta 火锅",
+                date: "5/11",
+                weekday: "周日",
+                title: "花园早餐、Scenic World，Blackheath 枫叶后回家",
+                meta: "Sorensen's 早餐 · Scenic World · Unique 肉骨茶 · Blackheath 枫叶与公园 · Govetts Leap · Burwood 夜市",
                 color: "#2b6cb0",
                 stops: [
                     {
-                        name: "Midnight Hotel",
-                        time: "08:00–08:45 早餐",
-                        kind: "stay",
-                        lat: -35.27501, lng: 149.13683,
-                        activities: [
-                            { time: "08:00–08:45", text: "酒店吃早餐，8:45 前出发" }
-                        ],
-                        note: "1 Elouera St, Braddon"
-                    },
-                    {
-                        name: "Questacon",
-                        time: "09:00–11:00",
-                        drive: "开车约 10 分钟",
+                        name: "Sorensen's Glasshouse and Gardens",
+                        time: "09:00–10:15",
                         kind: "highlight",
-                        lat: -35.29851, lng: 149.13125,
+                        lat: -33.7085, lng: 150.3378,
                         activities: [
-                            { time: "09:00–11:00", text: "National Science and Technology Centre，动手展项给小朋友" }
+                            { time: "09:00", text: "退房后把行李放车上，过去吃早餐" },
+                            { time: "09:00–10:15", text: "花园与玻璃房早餐" }
                         ],
-                        note: "King Edward Terrace, Parkes · 9:00–17:00，建议提前买票"
+                        note: "8 Herbert Street, Leura · 周末 9:00 开门"
                     },
                     {
-                        name: "Parliament House",
-                        time: "11:15–12:20",
-                        drive: "开车约 5 分钟",
-                        kind: "highlight",
-                        lat: -35.30756, lng: 149.12460,
-                        activities: [
-                            { time: "11:15–12:20", text: "国会大厦公共区域与观景草坡" }
-                        ],
-                        note: "非开会日通常 9:00–17:00；地下停车场可停"
-                    },
-                    {
-                        name: "Lunetta Trattoria",
-                        time: "12:40–14:00",
-                        drive: "开车约 10 分钟",
-                        lat: -35.32582, lng: 149.11499,
-                        activities: [
-                            { time: "12:40–14:00", text: "Red Hill 意大利午餐，俯瞰 Canberra" }
-                        ],
-                        note: "60 Red Hill Dr。常规周三至周日 11:30 起；周一若未开可改订 Red Hill 或 Civic 午餐"
-                    },
-                    {
-                        name: "Pod Playground",
-                        time: "14:20–15:20",
+                        name: "Scenic World",
+                        time: "10:35–12:00",
                         drive: "开车约 15 分钟",
                         kind: "highlight",
-                        lat: -35.28794, lng: 149.06924,
+                        lat: -33.72862, lng: 150.30090,
                         activities: [
-                            { time: "14:20–15:20", text: "National Arboretum 的巨型橡果游乐场，带小朋友玩一会儿" }
+                            { time: "10:35", text: "Violet St 停车场停车" },
+                            { time: "10:40–12:00", text: "Scenic Railway / Cableway / Skyway 与雨林步道" }
                         ],
-                        note: "Forest Dr，Village Centre 旁。夏令时约 6:00–20:30"
+                        note: "1 Violet Street, Katoomba"
                     },
                     {
-                        name: "National Museum of Australia",
-                        time: "15:40–17:00",
-                        drive: "开车约 15 分钟",
-                        kind: "highlight",
-                        lat: -35.29294, lng: 149.12136,
-                        activities: [
-                            { time: "15:40–17:00", text: "看完闭馆前的常设展" }
-                        ],
-                        note: "Lawson Cres, Acton · 9:00–17:00，15:30 前入馆较从容"
-                    },
-                    {
-                        name: "Mount Pleasant Lookout",
-                        time: "17:20–18:20",
+                        name: "Unique Patisserie",
+                        time: "12:20–13:45",
                         drive: "开车约 10 分钟",
+                        lat: -33.7161, lng: 150.3110,
+                        activities: [
+                            { time: "12:20", text: "Pryor Place Car Park 停车" },
+                            { time: "12:30–13:30", text: "午餐：肉骨茶与点心" },
+                            { time: "13:30–13:45", text: "歇一会儿再出发" }
+                        ],
+                        note: "169 Katoomba Street, Katoomba"
+                    },
+                    {
+                        name: "Blackheath",
+                        time: "14:15–15:00",
+                        drive: "开车约 20 分钟",
                         kind: "highlight",
-                        lat: -35.29868, lng: 149.15805,
+                        lat: -33.6339, lng: 150.2847,
                         activities: [
-                            { time: "17:20–18:20", text: "拍金色光线和 Canberra 全城景色" }
-                        ],
-                        note: "General Bridges Dr，可开车到山顶。日落约 19:10；为赶上火锅 18:20 前离开，黄金时段仍够拍照"
+                            { time: "14:15–15:00", text: "逛小镇看枫叶，沿 Govetts Leap Rd 一带拍秋色" }
+                        ]
                     },
                     {
-                        name: "Kevin Wheatley VC Rest Area",
-                        time: "18:50–19:05",
-                        drive: "开车约 30 分钟",
-                        lat: -35.06724, lng: 149.37415,
+                        name: "Blackheath Memorial Park",
+                        time: "15:05–16:15",
+                        lat: -33.63602, lng: 150.28906,
                         activities: [
-                            { time: "18:50–19:05", text: "停一下看 Lake George" }
+                            { time: "15:05–16:15", text: "带小朋友在公园玩一会儿" }
                         ],
-                        note: "Federal Highway / Remembrance Driveway。部分入口偏南行；北返若不好进，可改停对向看湖的 VC 停车区"
+                        note: "Park Avenue & Gardiner Crescent, Blackheath"
                     },
                     {
-                        name: "Fresh Beef Hotpot",
-                        time: "21:30–22:45",
-                        drive: "开车约 2 小时 20 分",
-                        lat: -33.89452, lng: 150.93354,
+                        name: "Govetts Leap Lookout",
+                        time: "16:25–17:10",
+                        drive: "开车约 8 分钟",
+                        kind: "highlight",
+                        lat: -33.6278, lng: 150.3114,
                         activities: [
-                            { time: "21:30–22:45", text: "鲜潮汕牛肉火锅自助晚餐 · Buffet All You Can Eat" }
+                            { time: "16:25", text: "观景台停车" },
+                            { time: "16:30–17:10", text: "俯瞰 Grose Valley，之后返程" }
                         ],
-                        note: "117A John St, Cabramatta。周一晚餐约 17:00–22:00，最迟约 21:30 入座；请提前订位并核对打烊"
+                        note: "Govetts Leap Road, Blackheath"
+                    },
+                    {
+                        name: "Burwood Chinatown",
+                        time: "19:00–20:30",
+                        drive: "开车约 1 小时 40 分",
+                        lat: -33.8772, lng: 151.1045,
+                        activities: [
+                            { time: "17:15", text: "从 Govetts Leap 出发回 Sydney" },
+                            { time: "19:00–20:30", text: "Chinatown 夜市晚餐" }
+                        ],
+                        note: "127–133 Burwood Road · 夜市周四至周日约 17:00–22:00"
                     },
                     {
                         name: "St Leonards",
-                        time: "约 23:30 行程结束",
-                        drive: "开车约 40 分钟",
+                        time: "21:00 行程结束",
+                        drive: "开车约 20 分钟",
                         lat: -33.8247, lng: 151.1967,
                         activities: [
-                            { time: "22:45", text: "从 Cabramatta 返程" },
-                            { time: "23:30", text: "回到 St Leonards，行程结束" }
+                            { time: "20:30", text: "从 Burwood 回家" },
+                            { time: "21:00", text: "到家，行程结束" }
                         ]
                     }
                 ]
             }
         ];
 
-        const map = L.map("map", { zoomControl: true }).setView([-34.6, 150.6], 8);
+        const map = L.map("map", { zoomControl: true }).setView([-33.7, 150.35], 10);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,
             attribution: "&copy; OpenStreetMap contributors"
