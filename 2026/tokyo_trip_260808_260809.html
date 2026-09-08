@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>日本 Tokyo 2026/08/08–2026/08/09</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --ink: #1a2744;
+            --muted: #5a6a7a;
+            --line: #dce5ec;
+            --accent: #c23b3b;
+            --accent-soft: #fdeaea;
+            --warm: #b45f24;
+            --warm-soft: #fff0df;
+            --stay: #6b4ea0;
+            --stay-soft: #f0eafa;
+            --panel: rgba(255, 255, 255, 0.97);
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            height: 100%;
+            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        }
+        button { font: inherit; }
+        #map { width: 100%; height: 100%; }
+        .info-panel {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            width: min(400px, calc(100vw - 32px));
+            max-height: calc(100vh - 32px);
+            overflow: auto;
+            padding: 17px 18px 15px;
+            border-radius: 14px;
+            background: var(--panel);
+            box-shadow: 0 10px 32px rgba(15, 35, 55, 0.18);
+            backdrop-filter: blur(8px);
+        }
+        h1 { margin: 0; color: var(--ink); font-size: 19px; line-height: 1.35; }
+        .subtitle { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+        .stats { display: flex; flex-wrap: wrap; gap: 7px; margin: 11px 0; }
+        .stat {
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #edf3f7;
+            color: var(--ink);
+            font-size: 11px;
+        }
+        .day-tabs {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 4px;
+            margin: 8px 0 10px;
+        }
+        .day-tab {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 7px 3px;
+            background: #fff;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 11px;
+            line-height: 1.25;
+        }
+        .day-tab:hover, .day-tab:focus-visible { border-color: var(--accent); outline: none; }
+        .day-tab.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+        .day-summary {
+            margin: 0 0 8px;
+            padding: 9px 10px;
+            border-left: 3px solid var(--accent);
+            border-radius: 5px;
+            background: #f5f9fb;
+        }
+        .day-title { margin: 0; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .day-meta { margin: 3px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+        .itinerary { margin: 0; padding: 0; list-style: none; }
+        .stop-wrap + .stop-wrap { border-top: 1px solid var(--line); }
+        .stop {
+            display: grid;
+            grid-template-columns: 28px 1fr;
+            gap: 9px;
+            width: 100%;
+            padding: 10px 5px 6px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+        .stop:hover, .stop:focus-visible, .stop.is-active { background: var(--accent-soft); outline: none; }
+        .badge, .num-marker {
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+        }
+        .badge { width: 26px; height: 26px; margin-top: 1px; font-size: 12px; }
+        .num-marker {
+            width: 29px;
+            height: 29px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.27);
+            font-size: 12px;
+        }
+        .badge.is-stay, .num-marker.is-stay { background: var(--stay); }
+        .badge.is-highlight, .num-marker.is-highlight { background: var(--warm); }
+        .stop-title { color: var(--ink); font-size: 14px; font-weight: 650; }
+        .stop-meta { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+        .tag {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: var(--warm-soft);
+            color: var(--warm);
+            font-size: 10px;
+            font-weight: 700;
+            vertical-align: 1px;
+        }
+        .tag--stay { background: var(--stay-soft); color: var(--stay); }
+        .activities {
+            margin: 0 0 9px 19px;
+            padding: 2px 0 3px 14px;
+            border-left: 2px solid var(--line);
+            list-style: none;
+        }
+        .activity {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 7px;
+            padding: 3px 0;
+            font-size: 11.5px;
+            line-height: 1.45;
+        }
+        .activity-time { color: var(--accent); font-variant-numeric: tabular-nums; }
+        .activity-text { color: var(--muted); }
+        .note {
+            display: block;
+            margin-top: 4px;
+            color: var(--warm);
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        .hint { margin: 10px 0 0; color: #6c7d8e; font-size: 11px; line-height: 1.5; }
+        .popup-title { margin: 0 0 4px; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .popup-meta { margin: 0; color: var(--muted); font-size: 12px; }
+        .activities--popup { margin: 7px 0 0; padding-left: 10px; }
+        .leaflet-popup-content { margin: 10px 13px; min-width: 235px; }
+        .toggle {
+            display: none;
+            width: 100%;
+            margin-bottom: 8px;
+            padding: 8px;
+            border: 0;
+            border-radius: 8px;
+            background: #edf3f7;
+            cursor: pointer;
+        }
+        @media (max-width: 680px) {
+            .info-panel { top: auto; right: 10px; bottom: 10px; left: 10px; width: auto; max-height: 52vh; }
+            .toggle { display: block; }
+            .info-panel.is-collapsed .stats,
+            .info-panel.is-collapsed .day-tabs,
+            .info-panel.is-collapsed .day-summary,
+            .info-panel.is-collapsed .itinerary,
+            .info-panel.is-collapsed .hint { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="info-panel" id="panel">
+        <button class="toggle" id="togglePanel" type="button" aria-expanded="true">收起行程</button>
+        <h1>日本 Tokyo 2026/08/08–2026/08/09</h1>
+        <p class="subtitle">两天 · 步行 + 地铁</p>
+        <div class="stats">
+            <span class="stat">2 天 · 住 Shibuya</span>
+            <span class="stat">Omotesando · Ginza · Ueno · Akihabara</span>
+            <span class="stat" id="routeStat">正在规划当日路线…</span>
+        </div>
+        <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+        <section class="day-summary" id="daySummary"></section>
+        <ol class="itinerary" id="itinerary"></ol>
+        <p class="hint">实线为步行（OSRM）。虚线为地铁或打车示意。Tokyo National Museum 周日通常 17:00 闭馆、16:30 停止入场，浮世绘体验需提前确认场次。Yakitori Tsukada 建议预约。</p>
+    </aside>
+    <div id="map" role="application" aria-label="Tokyo 行程地图"></div>
+
+    <script>
+        const days = [
+            {
+                date: "8/8",
+                weekday: "周六",
+                title: "Shibuya 出发：Omotesando 逛街，Ginza，晚上回 Shibuya",
+                meta: "步行 Omotesando → 地铁 Ginza → 地铁回 Shibuya 吃牛排、逛 MEGA Don Quijote",
+                color: "#c23b3b",
+                zoom: 14,
+                stops: [
+                    {
+                        name: "Shibuya Hotel",
+                        time: "10:00 出发",
+                        kind: "stay",
+                        lat: 35.65838, lng: 139.70222,
+                        activities: [
+                            { time: "10:00", text: "从 Shibuya 步行出发，往 Omotesando 走" }
+                        ],
+                        note: "标在 Shibuya Scramble Square 附近，店名未写"
+                    },
+                    {
+                        name: "Omotesando Hills",
+                        time: "10:25–11:20",
+                        drive: "步行约 20 分",
+                        kind: "highlight",
+                        lat: 35.66721, lng: 139.70890,
+                        activities: [
+                            { time: "10:25–11:20", text: "从 Omotesando Hills 开始沿 Omotesando 逛" }
+                        ],
+                        note: "Jingumae 4-12-10"
+                    },
+                    {
+                        name: "BEAMS / Cat Street",
+                        time: "11:20–12:30",
+                        drive: "沿 Omotesando 走到 Cat Street",
+                        kind: "highlight",
+                        lat: 35.66855, lng: 139.70580,
+                        activities: [
+                            { time: "11:20–12:30", text: "BEAMS 及附近潮牌，从 Hills 一路逛过来" }
+                        ],
+                        note: "BEAMS Harajuku · Jingumae 3-24-7 一带"
+                    },
+                    {
+                        name: "Red Rock Harajuku",
+                        time: "12:40–13:45",
+                        drive: "步行约 5 分",
+                        kind: "highlight",
+                        lat: 35.66840, lng: 139.70670,
+                        activities: [
+                            { time: "12:40–13:45", text: "在 Omotesando 吃 Red Rock，烤牛肉丼" }
+                        ],
+                        note: "Jingumae 3-25-12 Fuji Building B1 · 11:30 开"
+                    },
+                    {
+                        name: "Ginza",
+                        time: "14:10–17:30",
+                        drive: "地铁约 20 分",
+                        leg: "metro",
+                        kind: "highlight",
+                        lat: 35.66953, lng: 139.76405,
+                        activities: [
+                            { time: "14:10–17:30", text: "GINZA SIX 与 Chuo-dori 逛街" }
+                        ],
+                        note: "Omotesando / Meiji-jingumae → Ginza"
+                    },
+                    {
+                        name: "Steak Lodge Shibuya Dogenzaka",
+                        time: "18:00–19:30",
+                        drive: "地铁约 20 分回 Shibuya",
+                        leg: "metro",
+                        kind: "highlight",
+                        lat: 35.65835, lng: 139.69850,
+                        activities: [
+                            { time: "18:00–19:30", text: "回 Shibuya 吃 Steak Lodge" }
+                        ],
+                        note: "Dogenzaka 2-6-3 · 不接受订座"
+                    },
+                    {
+                        name: "MEGA Don Quijote Shibuya",
+                        time: "19:45–20:45",
+                        drive: "步行约 8 分",
+                        lat: 35.66051, lng: 139.69788,
+                        activities: [
+                            { time: "19:45–20:45", text: "MEGA 买东西" }
+                        ],
+                        note: "Udagawacho 28-6 · 24 小时"
+                    },
+                    {
+                        name: "Shibuya Hotel",
+                        time: "21:00 休息",
+                        kind: "stay",
+                        lat: 35.65838, lng: 139.70222,
+                        activities: [
+                            { time: "21:00", text: "回酒店休息" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "8/9",
+                weekday: "周日",
+                title: "Ueno 节庆与博物馆，Akihabara，晚上烧鸟",
+                meta: "酒店早餐后去 Ueno · 下午博物馆 · 打车 Akihabara · 地铁回 Shibuya 吃烧鸟",
+                color: "#2b6cb0",
+                zoom: 13,
+                stops: [
+                    {
+                        name: "Shibuya Hotel",
+                        time: "08:00–08:45 早餐",
+                        kind: "stay",
+                        lat: 35.65838, lng: 139.70222,
+                        activities: [
+                            { time: "08:00–08:45", text: "酒店吃早餐后出发" }
+                        ]
+                    },
+                    {
+                        name: "Ueno Park Fountain Plaza",
+                        time: "09:50–12:30",
+                        drive: "Yamanote Line 约 30 分",
+                        leg: "metro",
+                        kind: "highlight",
+                        lat: 35.71083, lng: 139.77444,
+                        activities: [
+                            { time: "09:50–12:30", text: "逛 Ueno Park，看 Pakistan Japan Friendship Festival 2026" }
+                        ],
+                        note: "Takenodai / Fountain Plaza · 8/6–8/9 约 10:00–19:00"
+                    },
+                    {
+                        name: "Tokyo National Museum",
+                        time: "13:00–16:30",
+                        drive: "公园内步行约 10 分",
+                        kind: "highlight",
+                        lat: 35.71904, lng: 139.77597,
+                        activities: [
+                            { time: "13:00–15:00", text: "先逛一圈 Honkan 与 Toyokan" },
+                            { time: "15:00–16:30", text: "馆内打卡集章，并做浮世绘体验" }
+                        ],
+                        note: "周日多 17:00 闭馆、16:30 停入场；体验场次出发前确认"
+                    },
+                    {
+                        name: "Akihabara Radio Kaikan",
+                        time: "17:00–18:30",
+                        drive: "打车约 15 分",
+                        leg: "taxi",
+                        kind: "highlight",
+                        lat: 35.69788, lng: 139.77195,
+                        activities: [
+                            { time: "17:00–18:30", text: "逛手办、模型店" }
+                        ],
+                        note: "Soto-Kanda 1-15-16 一带"
+                    },
+                    {
+                        name: "Cafe near Akihabara",
+                        time: "18:30–19:15",
+                        drive: "步行",
+                        lat: 35.69840, lng: 139.77380,
+                        activities: [
+                            { time: "18:30–19:15", text: "手办逛完，在附近喝咖啡歇脚" }
+                        ]
+                    },
+                    {
+                        name: "Yakitori Tsukada Shibuya",
+                        time: "20:15–22:00",
+                        drive: "地铁约 25 分回 Shibuya",
+                        leg: "metro",
+                        kind: "highlight",
+                        lat: 35.65770, lng: 139.69920,
+                        activities: [
+                            { time: "20:15–22:00", text: "Yakitori Omakase / course" }
+                        ],
+                        note: "Dogenzaka 1-6-8 Kusumoto No. 2 Building 2F · 土日 16:00 开，建议预约"
+                    },
+                    {
+                        name: "Shibuya Hotel",
+                        time: "22:20 休息",
+                        kind: "stay",
+                        lat: 35.65838, lng: 139.70222,
+                        activities: [
+                            { time: "22:20", text: "结束，回酒店休息" }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const map = L.map("map", { zoomControl: true }).setView([35.68, 139.74], 13);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        const tabsEl = document.getElementById("dayTabs");
+        const summaryEl = document.getElementById("daySummary");
+        const itineraryEl = document.getElementById("itinerary");
+        const routeStatEl = document.getElementById("routeStat");
+        let routeLines = [];
+        let markers = [];
+        let activeDay = 0;
+
+        days.forEach((day, index) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "day-tab";
+            button.innerHTML = `${escapeHtml(day.date)}<br>${escapeHtml(day.weekday)}`;
+            button.addEventListener("click", () => renderDay(index));
+            tabsEl.appendChild(button);
+        });
+
+        document.getElementById("togglePanel").addEventListener("click", () => {
+            const panel = document.getElementById("panel");
+            const collapsed = panel.classList.toggle("is-collapsed");
+            const button = document.getElementById("togglePanel");
+            button.textContent = collapsed ? "展开行程" : "收起行程";
+            button.setAttribute("aria-expanded", String(!collapsed));
+        });
+
+        itineraryEl.addEventListener("click", (event) => {
+            const button = event.target.closest(".stop");
+            if (!button) return;
+            const index = Number(button.dataset.index);
+            document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+            const zoom = days[activeDay].zoom || 14;
+            map.flyTo(markers[index].getLatLng(), zoom, { duration: 0.7 });
+            markers[index].openPopup();
+        });
+
+        function stopLeg(stop) {
+            return stop.leg || "walk";
+        }
+
+        function splitLegs(day, coords) {
+            const groups = [];
+            let current = { type: "walk", points: [coords[0]] };
+            for (let i = 1; i < day.stops.length; i++) {
+                const type = stopLeg(day.stops[i]);
+                if (type === current.type) {
+                    current.points.push(coords[i]);
+                } else {
+                    groups.push(current);
+                    current = { type, points: [coords[i - 1], coords[i]] };
+                }
+            }
+            groups.push(current);
+            return groups.filter((group) => group.points.length > 1);
+        }
+
+        async function renderDay(dayIndex) {
+            activeDay = dayIndex;
+            const day = days[dayIndex];
+            document.querySelectorAll(".day-tab").forEach((tab, index) => {
+                tab.classList.toggle("is-active", index === dayIndex);
+            });
+            summaryEl.innerHTML = `
+                <p class="day-title">${escapeHtml(day.date)} ${escapeHtml(day.weekday)} · ${escapeHtml(day.title)}</p>
+                <p class="day-meta">${escapeHtml(day.meta)}</p>`;
+            itineraryEl.innerHTML = "";
+            markers.forEach((marker) => marker.remove());
+            markers = [];
+            routeLines.forEach((line) => line.remove());
+            routeLines = [];
+
+            const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
+
+            day.stops.forEach((stop, index) => {
+                const number = index + 1;
+                const kindClass = stop.kind ? ` is-${stop.kind}` : "";
+                const label = stop.kind === "stay"
+                    ? '<span class="tag tag--stay">住宿</span>'
+                    : stop.kind === "highlight"
+                        ? '<span class="tag">重点</span>'
+                        : "";
+                const activityRows = stop.activities.map((activity) => `
+                    <li class="activity">
+                        <span class="activity-time">${escapeHtml(activity.time)}</span>
+                        <span class="activity-text">${escapeHtml(activity.text)}</span>
+                    </li>`).join("");
+                const meta = [stop.drive, stop.time].filter(Boolean).join(" · ");
+                const note = stop.note ? `<span class="note">${escapeHtml(stop.note)}</span>` : "";
+
+                const marker = L.marker([stop.lat, stop.lng], {
+                    icon: L.divIcon({
+                        className: "",
+                        html: `<div class="num-marker${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</div>`,
+                        iconSize: [29, 29],
+                        iconAnchor: [14, 14],
+                        popupAnchor: [0, -16]
+                    })
+                }).addTo(map);
+                marker.bindPopup(`
+                    <p class="popup-title">${number}. ${escapeHtml(stop.name)}${label}</p>
+                    <p class="popup-meta">${escapeHtml(meta)}</p>
+                    ${note}
+                    <ul class="activities activities--popup">${activityRows}</ul>`);
+                marker.on("click", () => {
+                    document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+                });
+                markers.push(marker);
+
+                const item = document.createElement("li");
+                item.className = "stop-wrap";
+                item.innerHTML = `
+                    <button class="stop" type="button" data-index="${index}">
+                        <span class="badge${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</span>
+                        <span>
+                            <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
+                            <span class="stop-meta">${escapeHtml(meta)}</span>
+                            ${note}
+                        </span>
+                    </button>
+                    <ul class="activities">${activityRows}</ul>`;
+                itineraryEl.appendChild(item);
+            });
+
+            const fallback = L.polyline(coords, {
+                color: day.color,
+                weight: 4,
+                opacity: 0.82,
+                dashArray: "8, 8"
+            }).addTo(map);
+            routeLines.push(fallback);
+            map.fitBounds(fallback.getBounds().pad(0.18));
+            await loadRoute(day, coords, dayIndex, fallback);
+        }
+
+        async function loadRoute(day, coords, expectedDay, fallback) {
+            routeStatEl.textContent = "正在规划当日路线…";
+            const groups = splitLegs(day, coords);
+            let walkKm = 0;
+            let walkMin = 0;
+            let walked = false;
+            let transit = false;
+
+            for (const group of groups) {
+                if (group.type === "metro" || group.type === "taxi") {
+                    transit = true;
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 3,
+                        opacity: 0.75,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                    continue;
+                }
+                const path = group.points.map(([lat, lng]) => `${lng},${lat}`).join(";");
+                const url = `https://router.project-osrm.org/route/v1/foot/${path}?overview=full&geometries=geojson`;
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error("route request failed");
+                    const data = await response.json();
+                    if (activeDay !== expectedDay) return;
+                    const route = data.routes && data.routes[0];
+                    if (!route) throw new Error("no route returned");
+                    const line = L.polyline(
+                        route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+                        { color: day.color, weight: 4, opacity: 0.85 }
+                    ).addTo(map);
+                    routeLines.push(line);
+                    walkKm += route.distance / 1000;
+                    walkMin += route.duration / 60;
+                    walked = true;
+                } catch (error) {
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 4,
+                        opacity: 0.82,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                }
+            }
+
+            if (activeDay !== expectedDay) return;
+            if (fallback) {
+                fallback.remove();
+                routeLines = routeLines.filter((line) => line !== fallback);
+            }
+
+            const parts = [];
+            if (walked) {
+                const minutes = Math.round(walkMin);
+                const time = minutes >= 60
+                    ? `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分`
+                    : `${minutes} 分`;
+                parts.push(`步行约 ${walkKm.toFixed(1)} km · ${time}`);
+            }
+            if (transit) parts.push("地铁 / 打车为示意线");
+            if (!parts.length) parts.push("路线暂不可用，显示直线示意");
+            routeStatEl.textContent = parts.join(" · ");
+
+            const bounds = routeLines.reduce((acc, line) => acc.extend(line.getBounds()), routeLines[0].getBounds());
+            map.fitBounds(bounds.pad(0.15));
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        renderDay(0);
+    </script>
+</body>
+</html>
