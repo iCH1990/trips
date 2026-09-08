@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8">
-    <title>法国 巴黎 2025/01/17–2025/01/18</title>
+    <title>法国 Paris 2025/01/17–2025/01/18</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -178,7 +178,7 @@
 <body>
     <aside class="info-panel" id="panel">
         <button class="toggle" id="togglePanel" type="button" aria-expanded="true">收起行程</button>
-        <h1>法国 巴黎 2025/01/17–2025/01/18</h1>
+        <h1>法国 Paris 2025/01/17–2025/01/18</h1>
         <p class="subtitle">两天 · 步行</p>
         <div class="stats">
             <span class="stat">2 天 1 晚</span>
@@ -188,17 +188,17 @@
         <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
         <section class="day-summary" id="daySummary"></section>
         <ol class="itinerary" id="itinerary"></ol>
-        <p class="hint">17 日抵达入住。18 日从酒店出发，按实际步行顺序标点；下午在 La Grille Montorgueil 午餐后，从北站搭欧洲之星回伦敦。</p>
+        <p class="hint">17 日抵达入住。18 日从酒店出发，按实际步行顺序标点；下午在 La Grille Montorgueil 午餐后，从 Gare du Nord 搭 Eurostar 回 London。</p>
     </aside>
-    <div id="map" role="application" aria-label="巴黎行程地图"></div>
+    <div id="map" role="application" aria-label="Paris 行程地图"></div>
 
     <script>
         const days = [
             {
                 date: "1/17",
                 weekday: "周五",
-                title: "伦敦 → 巴黎，入住",
-                meta: "欧洲之星 · 抵达后入住 Hôtel du Louvre - The Unbound Collection by Hyatt",
+                title: "London → Paris，入住",
+                meta: "Eurostar · 抵达后入住 Hôtel du Louvre - The Unbound Collection by Hyatt",
                 color: "#3d5a80",
                 mode: "eurostar",
                 zoom: 8,
@@ -208,13 +208,13 @@
                         time: "出发",
                         lat: 51.5308, lng: -0.1253,
                         activities: [
-                            { time: "当天", text: "欧洲之星从圣潘克拉斯出发" }
+                            { time: "当天", text: "Eurostar 从 St Pancras 出发" }
                         ]
                     },
                     {
                         name: "Paris Gare du Nord",
                         time: "抵达",
-                        drive: "欧洲之星约 2 小时 15 分",
+                        drive: "Eurostar 约 2 小时 15 分",
                         lat: 48.8809, lng: 2.3553,
                         activities: [
                             { time: "抵达后", text: "出站，前往酒店" }
@@ -235,8 +235,8 @@
             {
                 date: "1/18",
                 weekday: "周六",
-                title: "步行一天，午餐后回伦敦",
-                meta: "酒店出发 · 全天步行 · 午餐后北站搭欧洲之星",
+                title: "步行一天，午餐后回 London",
+                meta: "酒店出发 · 全天步行 · 午餐后 Gare du Nord 搭 Eurostar",
                 color: "#b45f24",
                 mode: "foot",
                 zoom: 15,
@@ -250,17 +250,17 @@
                         note: "Place André Malraux, 75001 Paris"
                     },
                     {
-                        name: "卢浮宫",
+                        name: "Musée du Louvre",
                         time: "上午",
                         kind: "highlight",
                         lat: 48.8606, lng: 2.3376,
-                        activities: [{ time: "途经", text: "Musée du Louvre" }]
+                        activities: [{ time: "途经", text: "卢浮宫外墙看看" }]
                     },
                     {
                         name: "Palais de Justice de Paris",
                         time: "上午",
                         lat: 48.8557, lng: 2.3450,
-                        activities: [{ time: "途经", text: "巴黎司法宫，西岱岛" }]
+                        activities: [{ time: "途经", text: "司法宫，Île de la Cité" }]
                     },
                     {
                         name: "Sainte-Chapelle",
@@ -312,7 +312,7 @@
                         name: "Military School",
                         time: "下午",
                         lat: 48.8528, lng: 2.3043,
-                        activities: [{ time: "途经", text: "École Militaire 军事学院" }]
+                        activities: [{ time: "途经", text: "军事学院" }]
                     },
                     {
                         name: "Champ de Mars",
@@ -343,7 +343,7 @@
                         name: "Musée national des arts asiatiques - Guimet",
                         time: "下午",
                         lat: 48.86528, lng: 2.29389,
-                        activities: [{ time: "途经", text: "吉美亚洲艺术博物馆 · 6 Place d'Iéna" }]
+                        activities: [{ time: "途经", text: "亚洲艺术博物馆 · 6 Place d'Iéna" }]
                     },
                     {
                         name: "Palais de Tokyo",
@@ -368,7 +368,7 @@
                         name: "Avenue des Champs-Élysées",
                         time: "下午",
                         lat: 48.8698, lng: 2.3078,
-                        activities: [{ time: "途经", text: "沿香榭丽舍大街向东走" }]
+                        activities: [{ time: "途经", text: "沿 Champs-Élysées 向东走" }]
                     },
                     {
                         name: "Grand Palais",
@@ -400,21 +400,21 @@
                         time: "下午",
                         kind: "highlight",
                         lat: 48.8719, lng: 2.3316,
-                        activities: [{ time: "途经", text: "加尼叶歌剧院，之后去午餐" }]
+                        activities: [{ time: "途经", text: "歌剧院，之后去午餐" }]
                     },
                     {
                         name: "La Grille Montorgueil",
                         time: "下午午餐",
                         kind: "highlight",
                         lat: 48.8650, lng: 2.3473,
-                        activities: [{ time: "下午", text: "午餐，吃完后前往北站回伦敦" }],
+                        activities: [{ time: "下午", text: "午餐，吃完后前往 Gare du Nord 回 London" }],
                         note: "50 Rue Montorgueil, 75002 Paris"
                     },
                     {
                         name: "Paris Gare du Nord",
                         time: "返程",
                         lat: 48.8809, lng: 2.3553,
-                        activities: [{ time: "午餐后", text: "前往北站，欧洲之星回伦敦" }]
+                        activities: [{ time: "午餐后", text: "前往 Gare du Nord，Eurostar 回 London" }]
                     }
                 ]
             }
@@ -539,7 +539,7 @@
 
         async function loadRoute(day, coords, expectedDay) {
             if (day.mode === "eurostar") {
-                routeStatEl.textContent = "欧洲之星 · 约 2 小时 15 分（示意线）";
+                routeStatEl.textContent = "Eurostar · 约 2 小时 15 分（示意线）";
                 return;
             }
             routeStatEl.textContent = "正在规划步行路线…";

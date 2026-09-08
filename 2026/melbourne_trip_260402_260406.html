@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8">
-    <title>澳大利亚 Melbourne / 大洋路 2026/04/02–2026/04/06</title>
+    <title>澳大利亚 Melbourne / Great Ocean Road 2026/04/02–2026/04/06</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -178,37 +178,37 @@
 <body>
     <aside class="info-panel" id="panel">
         <button class="toggle" id="togglePanel" type="button" aria-expanded="true">收起行程</button>
-        <h1>澳大利亚 Melbourne / 大洋路 2026/04/02–2026/04/06</h1>
+        <h1>澳大利亚 Melbourne / Great Ocean Road 2026/04/02–2026/04/06</h1>
         <p class="subtitle">五天 · 自驾</p>
         <div class="stats">
             <span class="stat">5 天 4 晚</span>
             <span class="stat">Sandy Point 1 晚 · Apollo Bay 2 晚 · Docklands Marriott 1 晚</span>
-            <span class="stat">Wilsons Prom · 十二门徒</span>
+            <span class="stat">Wilsons Prom · Twelve Apostles</span>
             <span class="stat" id="routeStat">正在规划当日路线…</span>
         </div>
         <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
         <section class="day-summary" id="daySummary"></section>
         <ol class="itinerary" id="itinerary"></ol>
-        <p class="hint">去程 QF415 约 07:45 悉尼起飞、09:20 抵 MEL；返程 QF490 约 19:35 离 MEL、21:00 抵悉尼（3 月 30 日起时刻，出发前再核对）。大洋路务必选沿海线，不要走最快路线。驾驶路段按 OSRM 估算。</p>
+        <p class="hint">去程 QF415 约 07:45 Sydney 起飞、09:20 抵 MEL；返程 QF490 约 19:35 离 MEL、21:00 抵 Sydney（3 月 30 日起时刻，出发前再核对）。Great Ocean Road 务必选沿海线，不要走最快路线。驾驶路段按 OSRM 估算。</p>
     </aside>
-    <div id="map" role="application" aria-label="Melbourne 与大洋路行程地图"></div>
+    <div id="map" role="application" aria-label="Melbourne 与 Great Ocean Road 行程地图"></div>
 
     <script>
         const days = [
             {
                 date: "4/2",
                 weekday: "周四",
-                title: "QF415 抵墨，CBD 早午餐后去 Prom",
+                title: "QF415 抵 Melbourne，CBD 早午餐后去 Prom",
                 meta: "Code Black 早午餐 · 下午 Wilsons Prom 徒步 · 入住 Sandy Point · 傍晚 Waratah Bay",
                 color: "#0e7490",
-                flightStat: "QF415 悉尼 → Melbourne",
+                flightStat: "QF415 Sydney → Melbourne",
                 stops: [
                     {
                         name: "Sydney Airport",
                         time: "07:45 起飞",
                         lat: -33.94989, lng: 151.18197,
                         activities: [
-                            { time: "07:45", text: "QF415 从悉尼出发，飞往 Melbourne" }
+                            { time: "07:45", text: "QF415 从 Sydney 出发，飞往 Melbourne" }
                         ]
                     },
                     {
@@ -242,7 +242,7 @@
                         note: "航班落地后再 brunch，约中午前后出城，目标下午到公园"
                     },
                     {
-                        name: "住宿 · Sandy Point",
+                        name: "Sandy Point",
                         time: "16:00 入住",
                         kind: "stay",
                         lat: -38.81884, lng: 146.12156,
@@ -264,12 +264,12 @@
             {
                 date: "4/3",
                 weekday: "周五",
-                title: "Prom 区域 → 上大洋路 → Apollo Bay",
+                title: "Prom 区域 → Great Ocean Road → Apollo Bay",
                 meta: "Tidal River、Whisky Bay · Leongatha brunch · 川菜午餐 · Geelong 加油后沿海开到 Apollo Bay",
                 color: "#0369a1",
                 stops: [
                     {
-                        name: "住宿 · Sandy Point",
+                        name: "Sandy Point",
                         time: "07:30–08:00 出发",
                         kind: "stay",
                         lat: -38.81884, lng: 146.12156,
@@ -317,9 +317,9 @@
                         time: "约 13:30",
                         lat: -38.14932, lng: 144.35982,
                         activities: [
-                            { time: "13:30", text: "到 Geelong，正式上大洋路" }
+                            { time: "13:30", text: "到 Geelong，正式上 Great Ocean Road" }
                         ],
-                        note: "导航选沿海线，不要走最快路线。Geelong 或 Torquay 必加满油：进入大洋路前最后的城区油价洼地（91 ULP 预计约 1.85–1.95/L），后段沿线站点稀少且贵"
+                        note: "导航选沿海线，不要走最快路线。Geelong 或 Torquay 必加满油：进入 Great Ocean Road 前最后的城区油价洼地（91 ULP 预计约 1.85–1.95/L），后段沿线站点稀少且贵"
                     },
                     {
                         name: "Bells Beach",
@@ -331,7 +331,7 @@
                         ]
                     },
                     {
-                        name: "住宿 · Apollo Bay",
+                        name: "Apollo Bay",
                         time: "约 18:00 check-in",
                         kind: "stay",
                         lat: -38.75474, lng: 143.66915,
@@ -346,17 +346,17 @@
             {
                 date: "4/4",
                 weekday: "周六",
-                title: "十二门徒 / Loch Ard Gorge，当晚回 Apollo Bay",
-                meta: "可选 Kennett River 考拉 · 早晨顺光看门徒 · Port Campbell 午饭补油 · 回程 Mait's Rest",
+                title: "Twelve Apostles / Loch Ard Gorge，当晚回 Apollo Bay",
+                meta: "可选 Kennett River 考拉 · 早晨顺光看 Twelve Apostles · Port Campbell 午饭补油 · 回程 Mait's Rest",
                 color: "#b45309",
                 stops: [
                     {
-                        name: "住宿 · Apollo Bay",
+                        name: "Apollo Bay",
                         time: "07:00 出发",
                         kind: "stay",
                         lat: -38.75474, lng: 143.66915,
                         activities: [
-                            { time: "07:00", text: "出发直奔十二门徒，约 100 km / 1.5 小时" }
+                            { time: "07:00", text: "出发直奔 Twelve Apostles，约 100 km / 1.5 小时" }
                         ]
                     },
                     {
@@ -366,7 +366,7 @@
                         activities: [
                             { time: "可选", text: "野生考拉：距 Apollo Bay 约 20 km，停路边抬头找桉树，基本必看到，约 20–30 分钟" }
                         ],
-                        note: "在十二门徒反方向，去的话先东再折回西行"
+                        note: "在 Twelve Apostles 反方向，去的话先东再折回西行"
                     },
                     {
                         name: "Twelve Apostles",
@@ -374,7 +374,7 @@
                         kind: "highlight",
                         lat: -38.66215, lng: 143.10510,
                         activities: [
-                            { time: "08:30", text: "十二门徒。早晨东侧顺光，人极少，强推此时段" }
+                            { time: "08:30", text: "Twelve Apostles。早晨东侧顺光，人极少，强推此时段" }
                         ]
                     },
                     {
@@ -383,7 +383,7 @@
                         kind: "highlight",
                         lat: -38.64641, lng: 143.07033,
                         activities: [
-                            { time: "上午", text: "和十二门徒连看" }
+                            { time: "上午", text: "和 Twelve Apostles 连看" }
                         ]
                     },
                     {
@@ -401,7 +401,7 @@
                         activities: [
                             { time: "11:30", text: "镇上午餐 + 休息" }
                         ],
-                        note: "十二门徒来回约 200 km，午饭时顺带补油（预计 20–25 L）。沿线贵约 10–15c/L，但之后路段无稳定站点"
+                        note: "Twelve Apostles 来回约 200 km，午饭时顺带补油（预计 20–25 L）。沿线贵约 10–15c/L，但之后路段无稳定站点"
                     },
                     {
                         name: "Mait's Rest Rainforest Walk",
@@ -413,7 +413,7 @@
                         ]
                     },
                     {
-                        name: "住宿 · Apollo Bay",
+                        name: "Apollo Bay",
                         time: "15:00–15:30 回到",
                         kind: "stay",
                         lat: -38.75474, lng: 143.66915,
@@ -431,12 +431,12 @@
                 color: "#0f766e",
                 stops: [
                     {
-                        name: "住宿 · Apollo Bay",
+                        name: "Apollo Bay",
                         time: "早饭后出发",
                         kind: "stay",
                         lat: -38.75474, lng: 143.66915,
                         activities: [
-                            { time: "早上", text: "在 Apollo Bay 吃早饭，之后走内陆线回墨" }
+                            { time: "早上", text: "在 Apollo Bay 吃早饭，之后走内陆线回 Melbourne" }
                         ]
                     },
                     {
@@ -489,10 +489,10 @@
             {
                 date: "4/6",
                 weekday: "周一",
-                title: "州立图书馆、Brighton，晚上 QF490 回悉尼",
-                meta: "State Library Victoria · Dendy Park · Brighton bathing boxes · 机场还车乘 QF490",
+                title: "State Library Victoria、Brighton，晚上 QF490 回 Sydney",
+                meta: "State Library Victoria · Dendy Park · Brighton Bathing Boxes · 机场还车乘 QF490",
                 color: "#4f6d7a",
-                flightStat: "QF490 Melbourne → 悉尼",
+                flightStat: "QF490 Melbourne → Sydney",
                 stops: [
                     {
                         name: "Melbourne Marriott Hotel Docklands",
@@ -528,7 +528,7 @@
                         kind: "highlight",
                         lat: -37.91756, lng: 144.98641,
                         activities: [
-                            { time: "中午前后", text: "去 Brighton 看 bathing boxes，之后去机场" }
+                            { time: "中午前后", text: "去 Brighton Bathing Boxes 看彩棚，之后去机场" }
                         ]
                     },
                     {
@@ -546,7 +546,7 @@
                         leg: "flight",
                         lat: -33.94989, lng: 151.18197,
                         activities: [
-                            { time: "21:00", text: "QF490 回到悉尼，行程结束" }
+                            { time: "21:00", text: "QF490 回到 Sydney，行程结束" }
                         ]
                     }
                 ]

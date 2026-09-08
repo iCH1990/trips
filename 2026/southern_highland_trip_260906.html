@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8">
-    <title>澳大利亚 南部高地 2026/09/06</title>
+    <title>澳大利亚 Southern Highlands 2026/09/06</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -172,7 +172,7 @@
 <body>
     <div class="info-panel" id="panel">
         <button class="toggle" id="togglePanel" type="button" aria-expanded="true">收起行程</button>
-        <h1>澳大利亚 南部高地 2026/09/06</h1>
+        <h1>澳大利亚 Southern Highlands 2026/09/06</h1>
         <p class="subtitle">一天 · 自驾</p>
         <div class="stats" id="stats">
             <span class="stat">6 站 + 2 可选</span>
@@ -180,7 +180,7 @@
             <span class="stat" id="returnStat">正在规划返程…</span>
         </div>
         <ol class="itinerary" id="itinerary"></ol>
-        <p class="hint">蓝线为去程。时段按 OSRM 估算。晚餐改到 20:00 后，Bowral 与 Fitzroy Falls 可走得更慢。南岸约 17:45 前离开，经海崖大桥赶上 Me-Gal。南天寺 17:00 关门，高地放慢后更难赶上，需压缩袋鼠谷并跳过 Gerringong。</p>
+        <p class="hint">蓝线为去程。时段按 OSRM 估算。晚餐改到 20:00 后，Bowral 与 Fitzroy Falls 可走得更慢。Kiama 约 17:45 前离开，经 Sea Cliff Bridge 赶上 Me-Gal。Nan Tien Temple 17:00 关门，高地放慢后更难赶上，需压缩 Kangaroo Valley 并跳过 Gerringong。</p>
     </div>
     <div id="map" role="application" aria-label="一日游路线地图"></div>
 
@@ -193,7 +193,7 @@
                 lat: -33.8573,
                 lng: 151.2093,
                 activities: [
-                    { time: "09:00", text: "The Rocks 岩石区取车出发" },
+                    { time: "09:00", text: "The Rocks 取车出发" },
                     { time: "21:50", text: "晚餐后返抵酒店（开车约 20 分钟）" }
                 ]
             },
@@ -215,7 +215,7 @@
                 lat: -34.6462,
                 lng: 150.4789,
                 activities: [
-                    { time: "12:45–13:10", text: "游客中心与瀑布观景台" },
+                    { time: "12:45–13:10", text: "Visitor Centre 与瀑布观景台" },
                     { time: "13:10–14:20", text: "East Rim 步道观峡谷（约 1 小时，不必走完整环线）" }
                 ]
             },
@@ -236,7 +236,7 @@
                 time: "16:30–16:55",
                 drive: "开车约 40 分钟",
                 optional: true,
-                note: "袋鼠谷出海顺路打卡。若赶南天寺请跳过，直去 Kiama",
+                note: "Kangaroo Valley 出海顺路打卡。若赶 Nan Tien Temple 请跳过，直去 Kiama",
                 lat: -34.7468,
                 lng: 150.8339,
                 activities: [
@@ -248,7 +248,7 @@
                 name: "Kiama",
                 time: "17:10–17:45",
                 drive: "开车约 15 分钟",
-                note: "跳过 Gerringong 则可 16:35 抵达。17:45 须离开才能经海崖大桥赶上 20:00 晚餐",
+                note: "跳过 Gerringong 则可 16:35 抵达。17:45 须离开才能经 Sea Cliff Bridge 赶上 20:00 晚餐",
                 lat: -34.6719,
                 lng: 150.8631,
                 activities: [
@@ -257,33 +257,33 @@
                 ]
             },
             {
-                name: "南天寺",
+                name: "Nan Tien Temple",
                 time: "16:30–17:00",
                 drive: "开车约 30 分钟",
                 optional: true,
-                note: "17:00 关门。高地放慢后需压缩袋鼠谷、跳过 Gerringong，Kiama 只看喷水洞，16:00 前出发才赶得及；去不成则 17:45 从 Kiama 返程",
+                note: "17:00 关门。高地放慢后需压缩 Kangaroo Valley、跳过 Gerringong，Kiama 只看 Blowhole，16:00 前出发才赶得及；去不成则 17:45 从 Kiama 返程",
                 lat: -34.4772,
                 lng: 150.8522,
                 activities: [
-                    { time: "16:30–16:50", text: "大雄宝殿与万佛塔" },
+                    { time: "16:30–16:50", text: "Main Shrine 与 Pagoda of Ten Thousand Buddhas" },
                     { time: "16:50–17:00", text: "园林短走（关门前离开）" }
                 ]
             },
             {
                 name: "Taronga",
                 time: "20:00–21:30",
-                drive: "经海崖大桥约 2 小时",
+                drive: "经 Sea Cliff Bridge 约 2 小时",
                 lat: -33.8435,
                 lng: 151.2438,
                 activities: [
-                    { time: "20:00–21:30", text: "Me-Gal 晚餐，俯瞰悉尼港" },
+                    { time: "20:00–21:30", text: "Me-Gal 晚餐，俯瞰 Sydney Harbour" },
                     { time: "21:30", text: "驱车返回 Park Hyatt" }
                 ]
             }
         ];
 
-        // 返程绕经 Grand Pacific Drive 上的海崖大桥，OSRM 会把它作为必经点。
-        const seaCliffBridge = { name: "海崖大桥 Sea Cliff Bridge", desc: "返程途经 · 悬于海崖之上的观景桥", lat: -34.2543, lng: 150.9734 };
+        // 返程绕经 Grand Pacific Drive 上的 Sea Cliff Bridge，OSRM 会把它作为必经点。
+        const seaCliffBridge = { name: "Sea Cliff Bridge", desc: "返程途经 · 悬于海崖之上的观景桥", lat: -34.2543, lng: 150.9734 };
 
         const map = L.map("map", { zoomControl: true }).setView([-34.3, 150.7], 9);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -410,7 +410,7 @@
         async function loadDrivingRoutes() {
             await Promise.all([
                 drawLeg(outboundCoords, fallbackLine, "routeStat", "去程"),
-                drawLeg(returnCoords, returnLine, "returnStat", "返程经海崖大桥→Me-Gal")
+                drawLeg(returnCoords, returnLine, "returnStat", "返程经 Sea Cliff Bridge→Me-Gal")
             ]);
             const bounds = fallbackLine.getBounds().extend(returnLine.getBounds());
             map.fitBounds(bounds.pad(0.12));

@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8">
-    <title>澳大利亚 黄金海岸 / 布里斯班 2024/12/18–2024/12/22</title>
+    <title>澳大利亚 Gold Coast / Brisbane 2024/12/18–2024/12/22</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -178,37 +178,37 @@
 <body>
     <aside class="info-panel" id="panel">
         <button class="toggle" id="togglePanel" type="button" aria-expanded="true">收起行程</button>
-        <h1>澳大利亚 黄金海岸 / 布里斯班 2024/12/18–2024/12/22</h1>
+        <h1>澳大利亚 Gold Coast / Brisbane 2024/12/18–2024/12/22</h1>
         <p class="subtitle">五天 · 自驾</p>
         <div class="stats">
             <span class="stat">5 天 4 晚</span>
-            <span class="stat">黄金海岸 2 晚</span>
-            <span class="stat">布里斯班 2 晚</span>
+            <span class="stat">Gold Coast 2 晚</span>
+            <span class="stat">Brisbane 2 晚</span>
             <span class="stat" id="routeStat">正在规划当日路线…</span>
         </div>
         <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
         <section class="day-summary" id="daySummary"></section>
         <ol class="itinerary" id="itinerary"></ol>
-        <p class="hint">去程 QF594 约 13:30 从悉尼飞黄金海岸；返程 JQ823 从布里斯班回悉尼。驾驶路段按 OSRM 估算。瀑布、水上乐园与餐厅以当天实际开放为准。</p>
+        <p class="hint">去程 QF594 约 13:30 从 Sydney 飞 Gold Coast；返程 JQ823 从 Brisbane 回 Sydney。驾驶路段按 OSRM 估算。瀑布、水上乐园与餐厅以当天实际开放为准。</p>
     </aside>
-    <div id="map" role="application" aria-label="黄金海岸与布里斯班行程地图"></div>
+    <div id="map" role="application" aria-label="Gold Coast 与 Brisbane 行程地图"></div>
 
     <script>
         const days = [
             {
                 date: "12/18",
                 weekday: "周三",
-                title: "悉尼 → 黄金海岸，入住后晚餐",
-                meta: "QF594 · 黄金海岸机场租车 · 当晚只去 Surfers Paradise 吃晚饭",
+                title: "Sydney → Gold Coast，入住后晚餐",
+                meta: "QF594 · Gold Coast Airport 租车 · 当晚只去 Surfers Paradise 吃晚饭",
                 color: "#0e7490",
-                flightStat: "QF594 悉尼 → 黄金海岸",
+                flightStat: "QF594 Sydney → Gold Coast",
                 stops: [
                     {
                         name: "Sydney Airport",
                         time: "13:30 起飞",
                         lat: -33.9499, lng: 151.1820,
                         activities: [
-                            { time: "13:30", text: "QF594 从悉尼出发，飞往黄金海岸" }
+                            { time: "13:30", text: "QF594 从 Sydney 出发，飞往 Gold Coast" }
                         ]
                     },
                     {
@@ -246,7 +246,7 @@
                 date: "12/19",
                 weekday: "周四",
                 title: "Springbrook 瀑布与 Point Danger 日落",
-                meta: "Broadbeach 午饭 · 国家公园看瀑布 · 傍晚看日落 · 宿 Main Beach",
+                meta: "Broadbeach 午饭 · Springbrook 看瀑布 · 傍晚看日落 · 宿 Main Beach",
                 color: "#0369a1",
                 stops: [
                     {
@@ -264,7 +264,7 @@
                         lat: -28.0284, lng: 153.4345,
                         activities: [
                             { time: "中午", text: "在 Broadbeach 吃午饭" },
-                            { time: "约 13:00 后", text: "出发前往 Springbrook 国家公园" }
+                            { time: "约 13:00 后", text: "出发前往 Springbrook National Park" }
                         ],
                         note: "Oasis Shopping Centre，对着 Kurrawa Park · 2 Charles Ave, Broadbeach"
                     },
@@ -303,8 +303,8 @@
             {
                 date: "12/20",
                 weekday: "周五",
-                title: "海鲜午餐、水上乐园，傍晚去布里斯班",
-                meta: "退房后玩 Wet'n'Wild · 晚饭后开车北上 · 宿布里斯班",
+                title: "海鲜午餐、水上乐园，傍晚去 Brisbane",
+                meta: "退房后玩 Wet'n'Wild · 晚饭后开车北上 · 宿 Brisbane",
                 color: "#0891b2",
                 stops: [
                     {
@@ -340,7 +340,7 @@
                         time: "约 17:00 后",
                         lat: -27.8926, lng: 153.3130,
                         activities: [
-                            { time: "五点多", text: "Oxenford 吃意大利晚饭，之后开车去布里斯班" }
+                            { time: "五点多", text: "Oxenford 吃意大利晚饭，之后开车去 Brisbane" }
                         ],
                         note: "Shop 5, 100–106 Old Pacific Highway, Oxenford"
                     },
@@ -351,7 +351,7 @@
                         kind: "stay",
                         lat: -27.4718, lng: 153.0281,
                         activities: [
-                            { time: "晚上", text: "抵达布里斯班，办理入住" }
+                            { time: "晚上", text: "抵达 Brisbane，办理入住" }
                         ],
                         note: "99 Mary Street · 连住两晚"
                     }
@@ -360,8 +360,8 @@
             {
                 date: "12/21",
                 weekday: "周六",
-                title: "布里斯班市区步行一天",
-                meta: "Edward St 早餐 · Queen Street Mall · 植物园与南岸 · 宿布里斯班",
+                title: "Brisbane 市区步行一天",
+                meta: "Edward St 早餐 · Queen Street Mall · City Botanic Gardens 与 South Bank · 宿 Brisbane",
                 color: "#7c5b9f",
                 mode: "foot",
                 zoom: 15,
@@ -389,7 +389,7 @@
                         time: "下午",
                         lat: -27.4760, lng: 153.0302,
                         activities: [
-                            { time: "下午", text: "逛布里斯班市政植物园" }
+                            { time: "下午", text: "逛 City Botanic Gardens" }
                         ]
                     },
                     {
@@ -397,7 +397,7 @@
                         time: "下午",
                         lat: -27.4773, lng: 153.0225,
                         activities: [
-                            { time: "下午", text: "在南岸 Riverside Green 玩一会儿" }
+                            { time: "下午", text: "在 South Bank Riverside Green 玩一会儿" }
                         ]
                     },
                     {
@@ -414,10 +414,10 @@
             {
                 date: "12/22",
                 weekday: "周日",
-                title: "Mt Coot-tha 后返程悉尼",
-                meta: "植物园与观景咖啡 · 下午去机场 · JQ823 回悉尼",
+                title: "Mt Coot-tha 后返程 Sydney",
+                meta: "Botanic Gardens 与观景咖啡 · 下午去机场 · JQ823 回 Sydney",
                 color: "#4f6d7a",
-                flightStat: "JQ823 布里斯班 → 悉尼",
+                flightStat: "JQ823 Brisbane → Sydney",
                 stops: [
                     {
                         name: "Four Points by Sheraton Brisbane",
@@ -434,7 +434,7 @@
                         kind: "highlight",
                         lat: -27.4779, lng: 152.9746,
                         activities: [
-                            { time: "上午–下午", text: "逛 Mt Coot-tha 植物园" }
+                            { time: "上午–下午", text: "逛 Mt Coot-tha Botanic Gardens" }
                         ]
                     },
                     {
@@ -461,7 +461,7 @@
                         leg: "flight",
                         lat: -33.9499, lng: 151.1820,
                         activities: [
-                            { time: "抵达后", text: "JQ823 回到悉尼，行程结束" }
+                            { time: "抵达后", text: "JQ823 回到 Sydney，行程结束" }
                         ]
                     }
                 ]
