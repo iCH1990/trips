@@ -410,7 +410,7 @@
         async function loadDrivingRoutes() {
             await Promise.all([
                 drawLeg(outboundCoords, fallbackLine, "routeStat", "去程"),
-                drawLeg(returnCoords, returnLine, "returnStat", "返程经 Sea Cliff Bridge→Me-Gal")
+                drawLeg(returnCoords, returnLine, "returnStat", "返程经 Sea Cliff Bridge → Me-Gal")
             ]);
             const bounds = fallbackLine.getBounds().extend(returnLine.getBounds());
             map.fitBounds(bounds.pad(0.12));

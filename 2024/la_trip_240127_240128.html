@@ -2,19 +2,19 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8">
-    <title>澳大利亚 Dubbo 2026/10/31–2026/11/04</title>
+    <title>美国 Los Angeles 2024/01/27–2024/01/28</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root {
-            --ink: #17324d;
-            --muted: #52657a;
-            --line: #dce5ec;
-            --accent: #27756d;
-            --accent-soft: #e6f4f1;
-            --warm: #b45f24;
-            --warm-soft: #fff0df;
+            --ink: #3f2e1f;
+            --muted: #6d5646;
+            --line: #eadccb;
+            --accent: #c2410c;
+            --accent-soft: #fff1e6;
+            --warm: #b45309;
+            --warm-soft: #ffedd5;
             --stay: #6b4ea0;
             --stay-soft: #f0eafa;
             --panel: rgba(255, 255, 255, 0.97);
@@ -38,7 +38,7 @@
             padding: 17px 18px 15px;
             border-radius: 14px;
             background: var(--panel);
-            box-shadow: 0 10px 32px rgba(15, 35, 55, 0.18);
+            box-shadow: 0 10px 32px rgba(59, 36, 22, 0.18);
             backdrop-filter: blur(8px);
         }
         h1 { margin: 0; color: var(--ink); font-size: 19px; line-height: 1.35; }
@@ -47,13 +47,13 @@
         .stat {
             padding: 4px 8px;
             border-radius: 999px;
-            background: #edf3f7;
+            background: #f7efe6;
             color: var(--ink);
             font-size: 11px;
         }
         .day-tabs {
             display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 4px;
             margin: 8px 0 10px;
         }
@@ -74,7 +74,7 @@
             padding: 9px 10px;
             border-left: 3px solid var(--accent);
             border-radius: 5px;
-            background: #f5f9fb;
+            background: #fbf6f1;
         }
         .day-title { margin: 0; color: var(--ink); font-size: 14px; font-weight: 700; }
         .day-meta { margin: 3px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
@@ -149,7 +149,7 @@
             font-size: 11px;
             line-height: 1.4;
         }
-        .hint { margin: 10px 0 0; color: #6c7d8e; font-size: 11px; line-height: 1.5; }
+        .hint { margin: 10px 0 0; color: #8a7363; font-size: 11px; line-height: 1.5; }
         .popup-title { margin: 0 0 4px; color: var(--ink); font-size: 14px; font-weight: 700; }
         .popup-meta { margin: 0; color: var(--muted); font-size: 12px; }
         .activities--popup { margin: 7px 0 0; padding-left: 10px; }
@@ -161,7 +161,7 @@
             padding: 8px;
             border: 0;
             border-radius: 8px;
-            background: #edf3f7;
+            background: #f7efe6;
             cursor: pointer;
         }
         @media (max-width: 680px) {
@@ -178,269 +178,177 @@
 <body>
     <aside class="info-panel" id="panel">
         <button class="toggle" id="togglePanel" type="button" aria-expanded="true">收起行程</button>
-        <h1>澳大利亚 Dubbo 2026/10/31–2026/11/04</h1>
-        <p class="subtitle">五天 · 自驾</p>
+        <h1>美国 Los Angeles 2024/01/27–2024/01/28</h1>
+        <p class="subtitle">两天 · 自驾 · Joshua Tree 与环球影城</p>
         <div class="stats">
-            <span class="stat">5 天 4 晚</span>
-            <span class="stat">约 870 km</span>
-            <span class="stat">11/3 Zoofari Lodge</span>
+            <span class="stat">2 天 1 晚</span>
+            <span class="stat">住 Marina del Rey</span>
+            <span class="stat">Joshua Tree</span>
             <span class="stat" id="routeStat">正在规划当日路线…</span>
         </div>
         <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
         <section class="day-summary" id="daySummary"></section>
         <ol class="itinerary" id="itinerary"></ol>
-        <p class="hint">驾驶时间按 OSRM 常规路况估算，不含停车与拥堵。Zoofari Lodge 的专属导览时间以入住当天发放的行程为准；洞穴、住宿及热门餐厅建议提前预订。</p>
+        <p class="hint">靶场需带实体护照或驾照，现场订位后由教练带枪和弹药；靶场本身不提供。一月沙漠夜晚很冷，观星看当晚天气。驾驶时间按 OSRM 常规路况估算。</p>
     </aside>
-    <div id="map" role="application" aria-label="Chatswood 至 Dubbo 五日自驾地图"></div>
+    <div id="map" role="application" aria-label="Los Angeles 两日自驾地图"></div>
 
     <script>
         const days = [
             {
-                date: "10/31",
+                date: "1/27",
                 weekday: "周六",
-                title: "Chatswood → Blue Mountains → Mudgee",
-                meta: "约 280 km · 驾驶约 4 小时 20 分 · 宿 Mudgee",
-                color: "#27756d",
+                title: "Alhambra、打靶、Joshua Tree 观星，回 Koreatown 吃晚饭",
+                meta: "Marina del Rey 出发 · 99 Ranch · Bangkok Soul · 打靶 · Joshua Tree 观景 · 观星后回 Koreatown",
+                color: "#c2410c",
                 stops: [
                     {
-                        name: "Chatswood",
-                        time: "08:00 出发",
-                        lat: -33.7969, lng: 151.1833,
-                        activities: [
-                            { time: "08:00", text: "加满油后出发，经 M2 / M7 / M4 前往 Blue Mountains" }
-                        ]
-                    },
-                    {
-                        name: "Echo Point · Three Sisters",
-                        time: "09:45–10:35",
-                        drive: "驾驶约 1 小时 45 分",
-                        lat: -33.7321, lng: 150.3121,
-                        activities: [
-                            { time: "09:45–10:10", text: "Three Sisters 观景台" },
-                            { time: "10:10–10:35", text: "咖啡、洗手间与短走" }
-                        ]
-                    },
-                    {
-                        name: "Lithgow",
-                        time: "11:30–12:20",
-                        drive: "驾驶约 55 分钟",
-                        lat: -33.4801, lng: 150.1580,
-                        activities: [
-                            { time: "11:30–12:20", text: "午餐与休息；之后走 Castlereagh Highway" }
-                        ]
-                    },
-                    {
-                        name: "Mudgee",
-                        time: "14:05 后",
-                        drive: "驾驶约 1 小时 45 分",
+                        name: "Marina del Rey",
+                        time: "09:00 出发",
                         kind: "stay",
-                        lat: -32.5907, lng: 149.5878,
+                        lat: 33.9776848, lng: -118.4486470,
                         activities: [
-                            { time: "14:05–16:30", text: "入住市中心酒店；Lawson Park 河边散步或逛镇中心" },
-                            { time: "18:00", text: "Mudgee 市区晚餐（周六建议订位）" }
+                            { time: "09:00", text: "出发前往 Alhambra，车程约 45–60 分钟" }
+                        ]
+                    },
+                    {
+                        name: "99 Ranch Market",
+                        time: "10:00–10:40",
+                        drive: "开车约 50 分钟",
+                        lat: 34.0977955, lng: -118.1236212,
+                        activities: [
+                            { time: "10:00–10:40", text: "买零食和水，备下午去沙漠路上喝" }
                         ],
-                        note: "住宿建议选 Mudgee CBD，第二天出城方便；具体酒店可按预算预订。"
+                        note: "345 E Main St, Alhambra, CA 91801"
+                    },
+                    {
+                        name: "Bangkok Soul",
+                        time: "12:00–13:15",
+                        drive: "开车约 3 分钟",
+                        lat: 34.0990767, lng: -118.1200348,
+                        activities: [
+                            { time: "12:00–13:15", text: "泰餐午餐，之后出发去靶场" }
+                        ],
+                        note: "707 E Main St, Alhambra, CA 91801"
+                    },
+                    {
+                        name: "Raahauge's Shooting Range",
+                        time: "14:15–15:15",
+                        drive: "开车约 50 分钟",
+                        kind: "highlight",
+                        lat: 33.9234538, lng: -117.6199143,
+                        activities: [
+                            { time: "14:15", text: "现场预订靶位，出示实体护照或驾照" },
+                            { time: "14:20–15:15", text: "教练带枪和弹药过来打，靶场不提供枪弹" }
+                        ],
+                        note: "14995 River Rd, Eastvale, CA 92880"
+                    },
+                    {
+                        name: "Hidden Valley",
+                        time: "17:15–17:40",
+                        drive: "开车约 1 小时 50 分",
+                        kind: "highlight",
+                        lat: 34.0124, lng: -116.1680,
+                        activities: [
+                            { time: "17:15–17:40", text: "西门进园后第一站，岩石堆观景" }
+                        ]
+                    },
+                    {
+                        name: "Keys View",
+                        time: "17:55–18:15",
+                        drive: "开车约 15 分钟",
+                        kind: "highlight",
+                        lat: 33.9256, lng: -116.1869,
+                        activities: [
+                            { time: "17:55–18:15", text: "俯瞰 Coachella Valley，一月接近日落" }
+                        ]
+                    },
+                    {
+                        name: "Skull Rock",
+                        time: "18:30–18:45",
+                        drive: "开车约 20 分钟",
+                        lat: 33.9978, lng: -116.0594,
+                        activities: [
+                            { time: "18:30–18:45", text: "Park Blvd 路边骷髅石，之后出北门" }
+                        ]
+                    },
+                    {
+                        name: "Sky's The Limit Observatory and Nature Center",
+                        time: "19:00–19:30",
+                        drive: "开车约 15 分钟",
+                        kind: "highlight",
+                        lat: 34.0788761, lng: -116.0348237,
+                        activities: [
+                            { time: "19:00–19:30", text: "观星约半小时，结束后返程去 Koreatown" }
+                        ],
+                        note: "9697 Utah Trail, Twentynine Palms, CA 92277"
+                    },
+                    {
+                        name: "Sun Nong Dan",
+                        time: "22:00–23:15",
+                        drive: "开车约 2 小时 20 分",
+                        lat: 34.0629108, lng: -118.2975183,
+                        activities: [
+                            { time: "22:00–23:15", text: "Koreatown 韩式牛骨汤晚餐" }
+                        ],
+                        note: "3470 W 6th St, Los Angeles, CA 90020"
+                    },
+                    {
+                        name: "Marina del Rey",
+                        time: "23:50 回住地",
+                        drive: "开车约 25 分钟",
+                        kind: "stay",
+                        lat: 33.9776848, lng: -118.4486470,
+                        activities: [
+                            { time: "23:50", text: "回到 Marina del Rey" }
+                        ]
                     }
                 ]
             },
             {
-                date: "11/1",
+                date: "1/28",
                 weekday: "周日",
-                title: "Mudgee → Wellington Caves → Dubbo",
-                meta: "约 160 km · 驾驶约 2 小时 20 分 · 宿 Dubbo",
-                color: "#2f6f9f",
+                title: "一整天在环球影城",
+                meta: "Marina del Rey 出发 · Universal Studios Hollywood · 晚上 7 点返程",
+                color: "#9a3412",
+                zoom: 13,
                 stops: [
                     {
-                        name: "Mudgee",
-                        time: "08:30–10:15",
-                        lat: -32.5907, lng: 149.5878,
-                        activities: [
-                            { time: "08:30–09:30", text: "早餐与退房" },
-                            { time: "09:30–10:15", text: "市区历史街区或当地食品采购" }
-                        ]
-                    },
-                    {
-                        name: "Wellington Caves",
-                        time: "11:40–14:30",
-                        drive: "驾驶约 1 小时 25 分",
-                        kind: "highlight",
-                        lat: -32.6213, lng: 148.9410,
-                        activities: [
-                            { time: "11:40–12:20", text: "Visitor Experience Centre 午餐" },
-                            { time: "12:30–14:00", text: "预约 Cathedral Cave 或 Gaden Cave 导览" },
-                            { time: "14:00–14:30", text: "Ancient Landscapes 展览 / Fossil Lab" }
-                        ],
-                        note: "开放约 09:00–16:15；洞穴只能跟导览，务必按实际场次提前订票。"
-                    },
-                    {
-                        name: "Dubbo CBD",
-                        time: "15:25 后",
-                        drive: "驾驶约 55 分钟",
+                        name: "Marina del Rey",
+                        time: "09:00 出发",
                         kind: "stay",
-                        lat: -32.2569, lng: 148.6011,
+                        lat: 33.9776848, lng: -118.4486470,
                         activities: [
-                            { time: "15:25–17:00", text: "入住 Dubbo 市区酒店，Macquarie River 河边散步" },
-                            { time: "18:00", text: "市中心晚餐" }
-                        ],
-                        note: "建议连续住 11/1、11/2 两晚，11/3 再换到动物园内。"
-                    }
-                ]
-            },
-            {
-                date: "11/2",
-                weekday: "周一",
-                title: "Dubbo 城市文化日",
-                meta: "市区短途 · Old Dubbo Gaol、RFDS、日落散步 · 宿 Dubbo",
-                color: "#7c5b9f",
-                stops: [
+                            { time: "09:00", text: "出发前往环球影城，车程约 35–45 分钟" }
+                        ]
+                    },
                     {
-                        name: "Old Dubbo Gaol",
-                        time: "09:00–11:15",
+                        name: "Universal Studios Hollywood",
+                        time: "09:45–19:00",
+                        drive: "开车约 40 分钟",
                         kind: "highlight",
-                        lat: -32.2498, lng: 148.6015,
+                        lat: 34.1392322, lng: -118.3543834,
                         activities: [
-                            { time: "09:00–10:30", text: "牢房、展览与历史庭院" },
-                            { time: "10:30–11:15", text: "看当天 theatrical display / guided talk" }
+                            { time: "09:45–19:00", text: "一整天都在园内" },
+                            { time: "19:00", text: "出园，返回 Marina del Rey" }
                         ],
-                        note: "官方通常每日 09:00–17:00，现场表演时间以当天公告为准。"
+                        note: "100 Universal Hollywood Drive, Universal City, CA 91608"
                     },
                     {
-                        name: "Dubbo CBD",
-                        time: "11:15–13:15",
-                        lat: -32.2569, lng: 148.6011,
-                        activities: [
-                            { time: "11:15–12:00", text: "Macquarie Street 与本地店铺" },
-                            { time: "12:00–13:15", text: "市中心午餐" }
-                        ]
-                    },
-                    {
-                        name: "Royal Flying Doctor Visitor Experience",
-                        time: "13:30–15:15",
-                        drive: "驾驶约 10 分钟",
-                        kind: "highlight",
-                        lat: -32.2157, lng: 148.5748,
-                        activities: [
-                            { time: "13:30–15:15", text: "互动展览，了解 Royal Flying Doctor Service" }
-                        ],
-                        note: "地址：21 Judy Jakins Dr；周一通常 09:00–17:00。"
-                    },
-                    {
-                        name: "Tracker Riley Cycleway",
-                        time: "16:00–17:30",
-                        lat: -32.2526, lng: 148.5947,
-                        activities: [
-                            { time: "16:00–17:30", text: "Macquarie River 河边步道，按体力散步或骑行" },
-                            { time: "18:00", text: "晚餐后早休息，为次日动物园留体力" }
-                        ]
-                    }
-                ]
-            },
-            {
-                date: "11/3",
-                weekday: "周二",
-                title: "动物园全天 + Zoofari Lodge",
-                meta: "Taronga Western Plains Zoo · 14:00–15:00 入住园内",
-                color: "#b45f24",
-                stops: [
-                    {
-                        name: "Dubbo CBD",
-                        time: "08:00–08:45",
-                        lat: -32.2569, lng: 148.6011,
-                        activities: [
-                            { time: "08:00–08:45", text: "早餐、退房；行李直接放车内" }
-                        ]
-                    },
-                    {
-                        name: "Taronga Western Plains Zoo",
-                        time: "09:00–13:30",
-                        drive: "驾驶约 15 分钟",
-                        kind: "highlight",
-                        lat: -32.2725, lng: 148.5800,
-                        activities: [
-                            { time: "09:00–11:30", text: "自驾或步行探索 6 km 环线，优先看当天 keeper talks" },
-                            { time: "11:30–12:15", text: "园内午餐" },
-                            { time: "12:15–13:30", text: "补看上午错过的展区，再前往 lodge 专用入口" }
-                        ]
-                    },
-                    {
-                        name: "Zoofari Lodge",
-                        time: "14:00 入住–翌日 10:00",
-                        drive: "从主园入口约 10 分钟",
+                        name: "Marina del Rey",
+                        time: "19:40 行程结束",
+                        drive: "开车约 40 分钟",
                         kind: "stay",
-                        lat: -32.2815, lng: 148.5915,
+                        lat: 33.9776848, lng: -118.4486470,
                         activities: [
-                            { time: "14:00–15:00", text: "Main House 办理入住，领取专属行程" },
-                            { time: "下午", text: "专属 safari 导览 / 动物体验（以现场安排为准）" },
-                            { time: "晚上", text: "住宿套餐所含晚餐及夜间体验" }
-                        ],
-                        note: "Zoofari 包含 1 晚住宿、2 日动物园门票、专属导览、晚餐、早餐及次日自行车。专用入口在 Obley Rd，需使用邮件中的闸门 PIN。"
-                    }
-                ]
-            },
-            {
-                date: "11/4",
-                weekday: "周三",
-                title: "晨间 Safari → Orange → Bathurst → Chatswood",
-                meta: "约 400 km · 驾驶约 6 小时 · 预计 20:30–21:00 到家",
-                color: "#4f6d7a",
-                stops: [
-                    {
-                        name: "Zoofari Lodge",
-                        time: "清晨–10:00",
-                        kind: "stay",
-                        lat: -32.2815, lng: 148.5915,
-                        activities: [
-                            { time: "清晨", text: "专属 sunrise safari（准确时间入住时确认）" },
-                            { time: "早餐", text: "Main House 早餐" },
-                            { time: "10:00", text: "退房" }
-                        ]
-                    },
-                    {
-                        name: "Taronga Western Plains Zoo",
-                        time: "10:00–11:30",
-                        kind: "highlight",
-                        lat: -32.2725, lng: 148.5800,
-                        activities: [
-                            { time: "10:00–11:30", text: "使用套餐所含自行车，补看喜欢的动物展区" },
-                            { time: "11:30", text: "最晚离园，开始返程" }
-                        ],
-                        note: "返程较长；若当天疲劳，可取消骑行并提前出发。"
-                    },
-                    {
-                        name: "Orange",
-                        time: "13:35–14:35",
-                        drive: "驾驶约 2 小时",
-                        lat: -33.2830, lng: 149.1000,
-                        activities: [
-                            { time: "13:35–14:20", text: "市中心午餐" },
-                            { time: "14:20–14:35", text: "Cook Park 短走、加油" }
-                        ]
-                    },
-                    {
-                        name: "Mount Panorama · Bathurst",
-                        time: "15:30–16:10",
-                        drive: "驾驶约 55 分钟",
-                        kind: "highlight",
-                        lat: -33.4456, lng: 149.5561,
-                        activities: [
-                            { time: "15:30–16:10", text: "按限速自驾赛道一圈，在观景处短停" }
-                        ]
-                    },
-                    {
-                        name: "Chatswood",
-                        time: "20:30–21:00 抵达",
-                        drive: "驾驶约 3 小时 10 分，另留晚餐与休息",
-                        lat: -33.7969, lng: 151.1833,
-                        activities: [
-                            { time: "途中", text: "Blue Mountains 或 Penrith 安排 30–40 分钟晚餐 / 休息" },
-                            { time: "约 21:00", text: "回到 Chatswood，行程结束" }
+                            { time: "19:40", text: "回到 Marina del Rey，行程结束" }
                         ]
                     }
                 ]
             }
         ];
 
-        const map = L.map("map", { zoomControl: true }).setView([-33.2, 149.7], 7);
+        const map = L.map("map", { zoomControl: true }).setView([34.0, -117.5], 8);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,
             attribution: "&copy; OpenStreetMap contributors"
@@ -450,7 +358,7 @@
         const summaryEl = document.getElementById("daySummary");
         const itineraryEl = document.getElementById("itinerary");
         const routeStatEl = document.getElementById("routeStat");
-        let routeLine = null;
+        let routeLines = [];
         let markers = [];
         let activeDay = 0;
 
@@ -476,9 +384,26 @@
             if (!button) return;
             const index = Number(button.dataset.index);
             document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
-            map.flyTo(markers[index].getLatLng(), 11, { duration: 0.7 });
+            const zoom = days[activeDay].zoom || 12;
+            map.flyTo(markers[index].getLatLng(), zoom, { duration: 0.7 });
             markers[index].openPopup();
         });
+
+        function splitLegs(day, coords) {
+            const groups = [];
+            let current = { type: "drive", points: [coords[0]] };
+            for (let i = 1; i < day.stops.length; i++) {
+                const type = day.stops[i].leg === "flight" ? "flight" : "drive";
+                if (type === current.type) {
+                    current.points.push(coords[i]);
+                } else {
+                    groups.push(current);
+                    current = { type, points: [coords[i - 1], coords[i]] };
+                }
+            }
+            groups.push(current);
+            return groups.filter((group) => group.points.length > 1);
+        }
 
         async function renderDay(dayIndex) {
             activeDay = dayIndex;
@@ -492,15 +417,10 @@
             itineraryEl.innerHTML = "";
             markers.forEach((marker) => marker.remove());
             markers = [];
-            if (routeLine) routeLine.remove();
+            routeLines.forEach((line) => line.remove());
+            routeLines = [];
 
             const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
-            routeLine = L.polyline(coords, {
-                color: day.color,
-                weight: 4,
-                opacity: 0.82,
-                dashArray: "8, 8"
-            }).addTo(map);
 
             day.stops.forEach((stop, index) => {
                 const number = index + 1;
@@ -552,33 +472,91 @@
                 itineraryEl.appendChild(item);
             });
 
-            map.fitBounds(routeLine.getBounds().pad(0.18));
-            await loadRoute(day, coords, dayIndex);
+            const fallback = L.polyline(coords, {
+                color: day.color,
+                weight: 4,
+                opacity: 0.82,
+                dashArray: "8, 8"
+            }).addTo(map);
+            routeLines.push(fallback);
+            map.fitBounds(fallback.getBounds().pad(0.18));
+            await loadRoute(day, coords, dayIndex, fallback);
         }
 
-        async function loadRoute(day, coords, expectedDay) {
-            routeStatEl.textContent = "正在规划当日路线…";
-            const path = coords.map(([lat, lng]) => `${lng},${lat}`).join(";");
-            const url = `https://router.project-osrm.org/route/v1/driving/${path}?overview=full&geometries=geojson`;
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error("route request failed");
-                const data = await response.json();
-                if (activeDay !== expectedDay) return;
-                const route = data.routes && data.routes[0];
-                if (!route) throw new Error("no route returned");
-                routeLine.setLatLngs(route.geometry.coordinates.map(([lng, lat]) => [lat, lng]));
-                routeLine.setStyle({ dashArray: null });
-                const km = Math.round(route.distance / 1000);
-                const minutes = Math.round(route.duration / 60);
+        async function loadRoute(day, coords, expectedDay, fallback) {
+            const groups = splitLegs(day, coords);
+            const profile = day.mode === "foot" ? "foot" : "driving";
+            const waiting = day.mode === "foot" ? "正在规划步行路线…" : "正在规划当日路线…";
+            routeStatEl.textContent = waiting;
+
+            let driveKm = 0;
+            let driveMin = 0;
+            let hasFlight = false;
+            let routed = false;
+
+            for (const group of groups) {
+                if (group.type === "flight") {
+                    hasFlight = true;
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 3,
+                        opacity: 0.75,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                    continue;
+                }
+                const path = group.points.map(([lat, lng]) => `${lng},${lat}`).join(";");
+                const url = `https://router.project-osrm.org/route/v1/${profile}/${path}?overview=full&geometries=geojson`;
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error("route request failed");
+                    const data = await response.json();
+                    if (activeDay !== expectedDay) return;
+                    const route = data.routes && data.routes[0];
+                    if (!route) throw new Error("no route returned");
+                    const line = L.polyline(
+                        route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+                        { color: day.color, weight: 4, opacity: 0.85 }
+                    ).addTo(map);
+                    routeLines.push(line);
+                    driveKm += route.distance / 1000;
+                    driveMin += route.duration / 60;
+                    routed = true;
+                } catch (error) {
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 4,
+                        opacity: 0.82,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                }
+            }
+
+            if (activeDay !== expectedDay) return;
+            if (fallback) {
+                fallback.remove();
+                routeLines = routeLines.filter((line) => line !== fallback);
+            }
+
+            const parts = [];
+            if (hasFlight) parts.push(day.flightStat || "航班示意线");
+            if (routed) {
+                const km = profile === "foot" ? driveKm.toFixed(1) : Math.round(driveKm);
+                const minutes = Math.round(driveMin);
                 const time = minutes >= 60
                     ? `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分`
                     : `${minutes} 分`;
-                routeStatEl.textContent = `当日 ${km} km · ${time}`;
-                map.fitBounds(routeLine.getBounds().pad(0.15));
-            } catch (error) {
-                if (activeDay === expectedDay) routeStatEl.textContent = "路线暂不可用，显示直线示意";
+                const label = profile === "foot" ? "步行" : "自驾";
+                parts.push(`${label}约 ${km} km · ${time}`);
+            } else if (!hasFlight) {
+                parts.push(profile === "foot" ? "步行路线暂不可用，显示直线示意" : "路线暂不可用，显示直线示意");
             }
+            routeStatEl.textContent = parts.join(" · ");
+
+            const bounds = routeLines.reduce((acc, line) => acc.extend(line.getBounds()), routeLines[0].getBounds());
+            map.fitBounds(bounds.pad(0.15));
         }
 
         function escapeHtml(value) {
