@@ -5,8 +5,7 @@
     <title>Jason's Trip</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Jason 的自驾行程安排，公开分享给可能用得上的人。">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
         :root {
             --ink: #1a365d;
@@ -15,6 +14,7 @@
             --accent: #2b6cb0;
             --accent-soft: #ebf5ff;
             --chip: #edf2f7;
+            --ocean: #f4f8fb;
             --bg: #f7fafc;
             --shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
             --shadow-lift: 0 10px 24px rgba(15, 23, 42, 0.09);
@@ -56,12 +56,6 @@
             font-weight: 650;
         }
         h1 { margin: 8px 0 0; font-size: 32px; line-height: 1.2; }
-        .intro {
-            margin: 14px 0 0;
-            color: var(--muted);
-            font-size: 15px;
-            line-height: 1.75;
-        }
         .footprint {
             margin: 28px 0 0;
         }
@@ -97,12 +91,41 @@
             color: var(--muted);
         }
         #map {
-            height: clamp(220px, 42vw, 340px);
+            position: relative;
+            aspect-ratio: 16 / 9;
             border: 1px solid var(--line);
             border-radius: 14px;
-            background: #fff;
+            background: var(--ocean);
             box-shadow: var(--shadow);
+            overflow: hidden;
         }
+        .map-error {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .map-legend {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 10px 0 0;
+            font-size: 11px;
+            color: var(--muted);
+        }
+        .map-legend i {
+            width: 22px;
+            height: 8px;
+            border-radius: 2px;
+            background: var(--accent);
+        }
+        .map-legend i:nth-of-type(1) { opacity: 0.36; }
+        .map-legend i:nth-of-type(2) { opacity: 0.52; }
+        .map-legend i:nth-of-type(3) { opacity: 0.7; }
+        .map-legend i:nth-of-type(4) { opacity: 0.88; }
         .places {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -124,17 +147,6 @@
             font-weight: 650;
         }
         .place-meta {
-            margin: 4px 0 0;
-            font-size: 12px;
-            color: var(--muted);
-        }
-        .popup-title {
-            margin: 0;
-            font-size: 14px;
-            font-weight: 650;
-            color: var(--ink);
-        }
-        .popup-meta {
             margin: 4px 0 0;
             font-size: 12px;
             color: var(--muted);
@@ -234,14 +246,6 @@
             font-size: 14px;
             line-height: 1.6;
         }
-        footer {
-            margin: 40px 0 0;
-            padding-top: 16px;
-            border-top: 1px solid var(--line);
-            color: #718096;
-            font-size: 12px;
-            line-height: 1.6;
-        }
         @media (max-width: 520px) {
             main { padding: 32px 16px 56px; }
             h1 { font-size: 26px; }
@@ -282,10 +286,10 @@
     <main>
         <p class="kicker">Personal itineraries</p>
         <h1>Jason's Trip</h1>
-        <p class="intro">这里放的是我自己的行程安排：去哪、停多久、晚上住哪。写给自己用，也公开出来，如果有人路线相近，可以直接拿去参考。</p>
         <section class="footprint" aria-labelledby="footprint-title">
             <h2 id="footprint-title">旅行足迹</h2>
             <div id="map"></div>
+            <p class="map-legend">到访次数<i></i><i></i><i></i><i></i>少 → 多</p>
             <div class="stats" id="stats"></div>
             <ul class="places" id="places"></ul>
         </section>
@@ -328,7 +332,7 @@
                     <a class="trip" href="2026/hayman_island_trip_260607_260615.html">
                         <p class="trip-tags"><span class="trip-tag trip-tag--flag">🇦🇺</span><span class="trip-tag">九天</span><span class="trip-tag">海岛度假</span></p>
                         <h3>澳大利亚 Hayman Island 2026/06/07–2026/06/15</h3>
-                        <p>Sydney 经 Hamilton Island 坐船上 Hayman，住 InterContinental 八晚。Spa、轻玩水、Langford 出海，最后一天直升机看心形礁和 Whitehaven，直送 PPP 傍晚回 Sydney。</p>
+                        <p>Sydney 经 Hamilton Island 坐船上 Hayman，住 InterContinental 八晚。皮划艇、网球、赶海、Black Island 和 Langford 浮潜，最后一天直升机看心形礁和 Whitehaven，直送 PPP 傍晚回 Sydney。</p>
                     </a>
                 </li>
                 <li>
@@ -406,50 +410,120 @@
                 </li>
             </ul>
         </section>
-        <footer>托管在 GitHub Pages。时间与路况会变，出发前请再核对开放时间和预订。</footer>
     </main>
     <script>
         // 只保留最近去过的年份和次数，不放具体日期和行程。
         const places = [
-            { name: "澳大利亚", flag: "🇦🇺", visits: 21, lastYear: 2026, lastDate: "2026-09-02", lat: -25.3, lng: 133.8 },
-            { name: "日本", flag: "🇯🇵", visits: 5, lastYear: 2026, lastDate: "2026-08-14", lat: 36.2, lng: 138.3 },
-            { name: "中国香港", flag: "🇭🇰", visits: 2, lastYear: 2026, lastDate: "2026-08-04", lat: 22.32, lng: 114.17 },
-            { name: "中国", flag: "🇨🇳", visits: 22, lastYear: 2026, lastDate: "2026-08-03", lat: 35.0, lng: 105.0 },
-            { name: "美国", flag: "🇺🇸", visits: 2, lastYear: 2026, lastDate: "2026-02-13", lat: 39.5, lng: -98.35 },
-            { name: "新加坡", flag: "🇸🇬", visits: 3, lastYear: 2026, lastDate: "2026-01-08", lat: 1.35, lng: 103.82 },
-            { name: "马来西亚", flag: "🇲🇾", visits: 1, lastYear: 2026, lastDate: "2026-01-07", lat: 4.2, lng: 102.0 },
-            { name: "英国", flag: "🇬🇧", visits: 4, lastYear: 2025, lastDate: "2025-12-23", lat: 54.0, lng: -2.0 },
-            { name: "阿联酋", flag: "🇦🇪", visits: 1, lastYear: 2025, lastDate: "2025-02-11", lat: 24.0, lng: 54.0 },
-            { name: "法国", flag: "🇫🇷", visits: 1, lastYear: 2025, lastDate: "2025-01-18", lat: 46.6, lng: 2.4 },
-            { name: "泰国", flag: "🇹🇭", visits: 2, lastYear: 2019, lastDate: "2019-12-23", lat: 15.0, lng: 101.0 }
+            { name: "澳大利亚", iso: "AUS", flag: "🇦🇺", visits: 21, lastYear: 2026, lastDate: "2026-09-02", lat: -25.3, lng: 133.8 },
+            { name: "日本", iso: "JPN", flag: "🇯🇵", visits: 5, lastYear: 2026, lastDate: "2026-08-14", lat: 36.2, lng: 138.3 },
+            { name: "中国香港", iso: "HKG", flag: "🇭🇰", visits: 2, lastYear: 2026, lastDate: "2026-08-04", lat: 22.32, lng: 114.17 },
+            { name: "中国", iso: "CHN", flag: "🇨🇳", visits: 22, lastYear: 2026, lastDate: "2026-08-03", lat: 35.0, lng: 105.0 },
+            { name: "美国", iso: "USA", flag: "🇺🇸", visits: 2, lastYear: 2026, lastDate: "2026-02-13", lat: 39.5, lng: -98.35 },
+            { name: "新加坡", iso: "SGP", flag: "🇸🇬", visits: 3, lastYear: 2026, lastDate: "2026-01-08", lat: 1.35, lng: 103.82 },
+            { name: "马来西亚", iso: "MYS", flag: "🇲🇾", visits: 1, lastYear: 2026, lastDate: "2026-01-07", lat: 4.2, lng: 102.0 },
+            { name: "英国", iso: "GBR", flag: "🇬🇧", visits: 4, lastYear: 2025, lastDate: "2025-12-23", lat: 54.0, lng: -2.0 },
+            { name: "阿联酋", iso: "ARE", flag: "🇦🇪", visits: 1, lastYear: 2025, lastDate: "2025-02-11", lat: 24.0, lng: 54.0 },
+            { name: "法国", iso: "FRA", flag: "🇫🇷", visits: 1, lastYear: 2025, lastDate: "2025-01-18", lat: 46.6, lng: 2.4 },
+            { name: "泰国", iso: "THA", flag: "🇹🇭", visits: 2, lastYear: 2019, lastDate: "2019-12-23", lat: 15.0, lng: 101.0 }
         ];
 
         const sorted = [...places].sort((a, b) => b.lastDate.localeCompare(a.lastDate));
         const totalVisits = places.reduce((sum, place) => sum + place.visits, 0);
         const latestYear = Math.max(...places.map((place) => place.lastYear));
 
-        const map = L.map("map", { zoomControl: true, scrollWheelZoom: false, minZoom: 1 });
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            maxZoom: 19,
-            attribution: "&copy; OpenStreetMap contributors"
-        }).addTo(map);
+        const placeByIso = new Map(places.map((place) => [place.iso, place]));
 
-        places.forEach((place) => {
-            L.circleMarker([place.lat, place.lng], {
-                radius: 5 + Math.sqrt(place.visits) * 2,
-                color: "#fff",
-                weight: 2,
-                fillColor: "#2b6cb0",
-                fillOpacity: 0.78
-            }).addTo(map).bindPopup(`
-                <p class="popup-title">${place.flag} ${place.name}</p>
-                <p class="popup-meta">最近 ${place.lastYear} 年 · 去过 ${place.visits} 次</p>`);
-        });
+        function visitOpacity(visits) {
+            return visits >= 16 ? 0.88 : visits >= 6 ? 0.7 : visits >= 3 ? 0.52 : 0.36;
+        }
 
-        map.fitBounds(places.map((place) => [place.lat, place.lng]), {
-            padding: [30, 30],
-            maxZoom: 4
-        });
+        fetch("data/countries.geo.json")
+            .then((response) => response.json())
+            .then((world) => {
+                world.features = world.features.filter((feature) => feature.id !== "ATA");
+                world.features.forEach((feature) => {
+                    feature.properties.name = feature.id;
+                });
+                echarts.registerMap("travel-world", world);
+
+                const outlined = new Set(world.features.map((feature) => feature.id));
+                const regions = world.features.map((feature) => {
+                    const place = placeByIso.get(feature.id);
+                    return {
+                        name: feature.id,
+                        itemStyle: {
+                            areaColor: place
+                                ? `rgba(43, 108, 176, ${visitOpacity(place.visits)})`
+                                : "#dfe6ee"
+                        }
+                    };
+                });
+                const dots = places
+                    .filter((place) => !outlined.has(place.iso))
+                    .map((place) => ({
+                        name: place.iso,
+                        value: [place.lng, place.lat, place.visits],
+                        place
+                    }));
+
+                const chart = echarts.init(document.getElementById("map"), null, { renderer: "svg" });
+                chart.setOption({
+                    animationDuration: 450,
+                    tooltip: {
+                        trigger: "item",
+                        borderWidth: 1,
+                        borderColor: "#e2e8f0",
+                        backgroundColor: "rgba(255, 255, 255, 0.97)",
+                        textStyle: { color: "#1a365d", fontSize: 12 },
+                        formatter: (params) => {
+                            const place = params.data?.place || placeByIso.get(params.name);
+                            if (!place) return "暂无旅行记录";
+                            return `<b>${place.flag} ${place.name}</b><br>最近 ${place.lastYear} 年 · 去过 ${place.visits} 次`;
+                        }
+                    },
+                    geo: {
+                        map: "travel-world",
+                        roam: true,
+                        left: 4,
+                        right: 4,
+                        top: 4,
+                        bottom: 4,
+                        boundingCoords: [[-168, 78], [178, -56]],
+                        itemStyle: {
+                            areaColor: "#dfe6ee",
+                            borderColor: "#fff",
+                            borderWidth: 0.8
+                        },
+                        emphasis: {
+                            label: { show: false },
+                            itemStyle: { areaColor: "#90bce7", borderColor: "#1a365d", borderWidth: 1.2 }
+                        },
+                        regions
+                    },
+                    series: [{
+                        name: "微型地区",
+                        type: "scatter",
+                        coordinateSystem: "geo",
+                        data: dots,
+                        symbolSize: (value) => 7 + Math.sqrt(value[2]) * 2,
+                        itemStyle: {
+                            color: "#2b6cb0",
+                            borderColor: "#fff",
+                            borderWidth: 2,
+                            opacity: 0.95
+                        },
+                        emphasis: { scale: 1.35 }
+                    }]
+                });
+
+                const resizeObserver = new ResizeObserver(() => chart.resize());
+                resizeObserver.observe(document.getElementById("map"));
+            })
+            .catch((error) => {
+                document.getElementById("map").innerHTML =
+                    `<p class="map-error">地图加载失败，请稍后重试。</p>`;
+                console.error("Failed to load travel map:", error);
+            });
 
         document.getElementById("stats").innerHTML = [
             [places.length, "个国家/地区"],
