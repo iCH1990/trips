@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>泰国 Phuket 2019/12/16–2019/12/22</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --ink: #164e63;
+            --muted: #4a6672;
+            --line: #dce5ec;
+            --accent: #0e7490;
+            --accent-soft: #e0f4f8;
+            --warm: #b45f24;
+            --warm-soft: #fff0df;
+            --stay: #6b4ea0;
+            --stay-soft: #f0eafa;
+            --panel: rgba(255, 255, 255, 0.97);
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            height: 100%;
+            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        }
+        button { font: inherit; }
+        #map { width: 100%; height: 100%; }
+        .info-panel {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            width: min(400px, calc(100vw - 32px));
+            max-height: calc(100vh - 32px);
+            overflow: auto;
+            padding: 17px 18px 15px;
+            border-radius: 14px;
+            background: var(--panel);
+            box-shadow: 0 10px 32px rgba(15, 35, 55, 0.18);
+            backdrop-filter: blur(8px);
+        }
+        h1 { margin: 0; color: var(--ink); font-size: 19px; line-height: 1.35; }
+        .subtitle { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+        .stats { display: flex; flex-wrap: wrap; gap: 7px; margin: 11px 0; }
+        .stat {
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #edf3f7;
+            color: var(--ink);
+            font-size: 11px;
+        }
+        .day-tabs {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 4px;
+            margin: 8px 0 10px;
+        }
+        .day-tab {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 7px 3px;
+            background: #fff;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 11px;
+            line-height: 1.25;
+        }
+        .day-tab:hover, .day-tab:focus-visible { border-color: var(--accent); outline: none; }
+        .day-tab.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+        .day-summary {
+            margin: 0 0 8px;
+            padding: 9px 10px;
+            border-left: 3px solid var(--accent);
+            border-radius: 5px;
+            background: #f5f9fb;
+        }
+        .day-title { margin: 0; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .day-meta { margin: 3px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+        .itinerary { margin: 0; padding: 0; list-style: none; }
+        .stop-wrap + .stop-wrap { border-top: 1px solid var(--line); }
+        .stop {
+            display: grid;
+            grid-template-columns: 28px 1fr;
+            gap: 9px;
+            width: 100%;
+            padding: 10px 5px 6px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+        .stop:hover, .stop:focus-visible, .stop.is-active { background: var(--accent-soft); outline: none; }
+        .badge, .num-marker {
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+        }
+        .badge { width: 26px; height: 26px; margin-top: 1px; font-size: 12px; }
+        .num-marker {
+            width: 29px;
+            height: 29px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.27);
+            font-size: 12px;
+        }
+        .badge.is-stay, .num-marker.is-stay { background: var(--stay); }
+        .badge.is-highlight, .num-marker.is-highlight { background: var(--warm); }
+        .stop-title { color: var(--ink); font-size: 14px; font-weight: 650; }
+        .stop-meta { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+        .tag {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: var(--warm-soft);
+            color: var(--warm);
+            font-size: 10px;
+            font-weight: 700;
+            vertical-align: 1px;
+        }
+        .tag--stay { background: var(--stay-soft); color: var(--stay); }
+        .activities {
+            margin: 0 0 9px 19px;
+            padding: 2px 0 3px 14px;
+            border-left: 2px solid var(--line);
+            list-style: none;
+        }
+        .activity {
+            display: grid;
+            grid-template-columns: 92px 1fr;
+            gap: 7px;
+            padding: 3px 0;
+            font-size: 11.5px;
+            line-height: 1.45;
+        }
+        .activity-time { color: var(--accent); font-variant-numeric: tabular-nums; }
+        .activity-text { color: var(--muted); }
+        .note {
+            display: block;
+            margin-top: 4px;
+            color: var(--warm);
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        .hint { margin: 10px 0 0; color: #6c7d8e; font-size: 11px; line-height: 1.5; }
+        .popup-title { margin: 0 0 4px; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .popup-meta { margin: 0; color: var(--muted); font-size: 12px; }
+        .activities--popup { margin: 7px 0 0; padding-left: 10px; }
+        .leaflet-popup-content { margin: 10px 13px; min-width: 235px; }
+        .toggle {
+            display: none;
+            width: 100%;
+            margin-bottom: 8px;
+            padding: 8px;
+            border: 0;
+            border-radius: 8px;
+            background: #edf3f7;
+            cursor: pointer;
+        }
+        @media (max-width: 680px) {
+            .info-panel { top: auto; right: 10px; bottom: 10px; left: 10px; width: auto; max-height: 52vh; }
+            .toggle { display: block; }
+            .info-panel.is-collapsed .stats,
+            .info-panel.is-collapsed .day-tabs,
+            .info-panel.is-collapsed .day-summary,
+            .info-panel.is-collapsed .itinerary,
+            .info-panel.is-collapsed .hint { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="info-panel" id="panel">
+        <button class="toggle" id="togglePanel" type="button" aria-expanded="true">收起行程</button>
+        <h1>泰国 Phuket 2019/12/16–2019/12/22</h1>
+        <p class="subtitle">🇹🇭 · 七天 · 海岛度假</p>
+        <div class="stats">
+            <span class="stat">7 天 6 晚</span>
+            <span class="stat">Anantara Mai Khao</span>
+            <span class="stat">皇帝岛 · 珊瑚岛</span>
+            <span class="stat" id="routeStat">正在规划当日路线…</span>
+        </div>
+        <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+        <section class="day-summary" id="daySummary"></section>
+        <ol class="itinerary" id="itinerary"></ol>
+        <p class="hint">上海出发，约 14:30 抵达普吉岛国际机场；返程按航班时间专车送机。度假村内步行、包船出海为示意线，陆路专车按 OSRM 估算。</p>
+    </aside>
+    <div id="map" role="application" aria-label="Phuket 行程地图"></div>
+
+    <script>
+        const days = [
+            {
+                date: "12/16",
+                weekday: "周一",
+                title: "上海 → 普吉，抵达与庄园初探",
+                meta: "专车入住私家泳池别墅 · 自行车熟悉地形 · Sea.Fire.Salt. 迎宾晚餐",
+                color: "#0e7490",
+                flightStat: "上海 → 普吉岛",
+                stops: [
+                    {
+                        name: "上海浦东国际机场",
+                        time: "出发",
+                        lat: 31.1443, lng: 121.8083,
+                        activities: [
+                            { time: "上午", text: "从上海出发，飞往普吉岛" }
+                        ]
+                    },
+                    {
+                        name: "普吉岛国际机场",
+                        time: "14:30 抵达",
+                        drive: "飞行约 5 小时",
+                        leg: "flight",
+                        lat: 8.1132, lng: 98.3169,
+                        activities: [
+                            { time: "14:30–15:00", text: "抵达后搭乘专车前往度假村" }
+                        ]
+                    },
+                    {
+                        name: "Anantara Mai Khao Phuket Villas",
+                        time: "15:00 入住",
+                        kind: "stay",
+                        drive: "专车约 15 分钟",
+                        lat: 8.16903, lng: 98.29548,
+                        activities: [
+                            { time: "15:00–16:00", text: "大堂由专属私人管家办理入住，入住私家泳池别墅，开箱整理" },
+                            { time: "16:30–18:00", text: "骑别墅自带免费自行车，沿泻湖小径和热带园林熟悉度假村地形" }
+                        ],
+                        note: "888 Moo 3, Mai Khao, Thalang · 连住六晚"
+                    },
+                    {
+                        name: "Sea.Fire.Salt.",
+                        time: "18:30–21:00",
+                        lat: 8.16795, lng: 98.29320,
+                        activities: [
+                            { time: "18:30–21:00", text: "在海滨餐厅享用顶级熟成牛排与安达曼海鲜炭烤迎宾晚餐" }
+                        ],
+                        note: "度假村海滨餐厅"
+                    }
+                ]
+            },
+            {
+                date: "12/17",
+                weekday: "周二",
+                title: "沉浸式宅酒店与身心疗愈",
+                meta: "泳池漂浮早餐 · Anantara Spa · Tree Tops 日落鸡尾酒与法式晚宴",
+                color: "#0369a1",
+                mode: "foot",
+                zoom: 16,
+                stops: [
+                    {
+                        name: "Anantara Mai Khao 泳池别墅",
+                        time: "08:30–12:30",
+                        kind: "stay",
+                        lat: 8.16840, lng: 98.29490,
+                        activities: [
+                            { time: "08:30–10:00", text: "享用别墅内泳池漂浮早餐（Floating Breakfast）并拍照打卡" },
+                            { time: "10:30–12:30", text: "在别墅私人庭院内游泳、日光浴，享受私密慢时光" }
+                        ]
+                    },
+                    {
+                        name: "La Sala",
+                        time: "13:00–14:00",
+                        lat: 8.16885, lng: 98.29570,
+                        activities: [
+                            { time: "13:00–14:00", text: "在 La Sala 餐厅享用轻食午餐" }
+                        ]
+                    },
+                    {
+                        name: "Anantara Spa",
+                        time: "15:00–16:30",
+                        kind: "highlight",
+                        lat: 8.16755, lng: 98.29640,
+                        activities: [
+                            { time: "15:00–16:30", text: "前往泻湖环绕的 Anantara Spa，体验 90 分钟招牌泰式精油按摩" }
+                        ]
+                    },
+                    {
+                        name: "Tree Tops",
+                        time: "18:00–21:00",
+                        lat: 8.16955, lng: 98.29620,
+                        activities: [
+                            { time: "18:00–21:00", text: "在树顶酒吧私人包厢享用日落鸡尾酒，随后就地享用精致法式晚宴" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/18",
+                weekday: "周三",
+                title: "双岛专属海钓与果冻海出海",
+                meta: "查龙码头包船 · 皇帝岛浮潜与玻璃皮划艇 · 珊瑚岛 Banana Beach · 别墅送餐",
+                color: "#0891b2",
+                flightStat: "包船出海示意线",
+                stops: [
+                    {
+                        name: "Anantara Mai Khao Phuket Villas",
+                        time: "07:30 出发",
+                        kind: "stay",
+                        lat: 8.16903, lng: 98.29548,
+                        activities: [
+                            { time: "07:30–08:30", text: "专属保姆车在大堂接客，前往南部查龙码头" }
+                        ]
+                    },
+                    {
+                        name: "查龙码头 Chalong Pier",
+                        time: "09:00 登船",
+                        drive: "专车约 1 小时",
+                        lat: 7.8219, lng: 98.3436,
+                        activities: [
+                            { time: "09:00–10:30", text: "登上私家包船前往皇帝岛，途中进行安达曼海海上拖钓" }
+                        ]
+                    },
+                    {
+                        name: "皇帝岛 Racha Yai",
+                        time: "10:30–14:00",
+                        kind: "highlight",
+                        drive: "包船约 1.5 小时",
+                        leg: "flight",
+                        lat: 7.6044, lng: 98.3669,
+                        activities: [
+                            { time: "10:30–12:00", text: "船只停泊于皇帝岛经典潜点，浮潜观赏珊瑚礁与热带鱼群" },
+                            { time: "12:00–14:00", text: "登上白沙滩，体验全透明玻璃皮划艇打卡，随后在岛上享用海鲜午餐（含当日海钓战利品现制刺身）" }
+                        ]
+                    },
+                    {
+                        name: "珊瑚岛 Banana Beach",
+                        time: "14:00–15:30",
+                        kind: "highlight",
+                        drive: "包船约 40 分钟",
+                        leg: "flight",
+                        lat: 7.7464, lng: 98.3678,
+                        activities: [
+                            { time: "14:00–15:30", text: "船只返航停靠珊瑚岛 Banana Beach，在椰林沙滩漫步或打卡网红秋千" }
+                        ]
+                    },
+                    {
+                        name: "查龙码头 Chalong Pier",
+                        time: "15:30 靠岸",
+                        drive: "包船约 30 分钟",
+                        leg: "flight",
+                        lat: 7.8219, lng: 98.3436,
+                        activities: [
+                            { time: "15:30–18:00", text: "乘船返回查龙码头，搭乘专属保姆车返回安纳塔拉迈考别墅" }
+                        ]
+                    },
+                    {
+                        name: "Anantara Mai Khao 泳池别墅",
+                        time: "19:30–21:00",
+                        kind: "stay",
+                        drive: "专车约 1 小时",
+                        lat: 8.16840, lng: 98.29490,
+                        activities: [
+                            { time: "19:30–21:00", text: "呼叫别墅内私密送餐服务（In-Villa Dining），在私家泳池边安静享用晚餐" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/19",
+                weekday: "周四",
+                title: "天堂越野全地形车与滑索",
+                meta: "Phuket Paradise 18 平台滑索与 ATV · Turtle Village · Dining by Design",
+                color: "#0f766e",
+                stops: [
+                    {
+                        name: "La Sala",
+                        time: "07:30–08:30",
+                        lat: 8.16885, lng: 98.29570,
+                        activities: [
+                            { time: "07:30–08:30", text: "享用 La Sala 餐厅的单点与自助早餐" },
+                            { time: "08:30–09:30", text: "专车在度假村大堂接客，前往芭东海滩山区的普吉岛天堂冒险公园" }
+                        ]
+                    },
+                    {
+                        name: "Phuket Paradise",
+                        time: "09:30–12:30",
+                        kind: "highlight",
+                        drive: "专车约 1 小时",
+                        lat: 7.8436, lng: 98.3275,
+                        activities: [
+                            { time: "09:30–12:30", text: "换好安全装备，体验 18 平台丛林高空滑索，尝试空中超人飞行模式并拍照。随后驾驶 ATV 穿越山间土路，途中停靠巨型天空秋千与观景点" },
+                            { time: "12:30–13:30", text: "在冒险公园享用园区提供的冰镇饮水与水果，结束后专车返回度假村" }
+                        ],
+                        note: "54/2 Moo 7, Chalong · 18 平台 Zipline + ATV"
+                    },
+                    {
+                        name: "Anantara Mai Khao 泳池别墅",
+                        time: "13:30–15:00",
+                        kind: "stay",
+                        drive: "专车约 1 小时",
+                        lat: 8.16840, lng: 98.29490,
+                        activities: [
+                            { time: "13:30–15:00", text: "返回别墅洗浴更衣，冲凉放松" }
+                        ]
+                    },
+                    {
+                        name: "Turtle Village 海龟村",
+                        time: "15:30–17:30",
+                        lat: 8.17180, lng: 98.29650,
+                        activities: [
+                            { time: "15:30–17:30", text: "骑自行车前往与度假村无缝连接的海龟村逛街购物，并参观海龟保护基金会" }
+                        ],
+                        note: "889 Moo 3, Mai Khao"
+                    },
+                    {
+                        name: "Dining by Design · 迈考海滩",
+                        time: "18:30–21:30",
+                        kind: "highlight",
+                        lat: 8.16740, lng: 98.29280,
+                        activities: [
+                            { time: "18:30–21:30", text: "在迈考海滩边体验 Dining by Design，于专属海滩烛光帐篷内享用私人大厨烹饪的定制晚宴" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/20",
+                weekday: "周五",
+                title: "普吉老城人文与嘉年华魔幻之夜",
+                meta: "宅别墅午休 · 普吉老城中葡老街 · Carnival Magic 花车与灯光秀",
+                color: "#7c5b9f",
+                stops: [
+                    {
+                        name: "La Sala",
+                        time: "09:00–10:30",
+                        lat: 8.16885, lng: 98.29570,
+                        activities: [
+                            { time: "09:00–10:30", text: "在 La Sala 餐厅享用早茶与气泡酒早餐" }
+                        ]
+                    },
+                    {
+                        name: "Anantara Mai Khao 泳池别墅",
+                        time: "11:00–13:00",
+                        kind: "stay",
+                        lat: 8.16840, lng: 98.29490,
+                        activities: [
+                            { time: "11:00–13:00", text: "宅别墅时光，在室外水磨石大浴缸里享受长白午休" }
+                        ]
+                    },
+                    {
+                        name: "普吉老城 Phuket Town",
+                        time: "13:30–17:30",
+                        kind: "highlight",
+                        drive: "包车约 50 分钟",
+                        lat: 7.8856, lng: 98.3878,
+                        activities: [
+                            { time: "13:30–17:30", text: "包车前往普吉老城，漫步百年中葡老街，探访南洋咖啡馆，品尝米其林当地小吃" }
+                        ],
+                        note: "Thalang Road / Dibuk Road 一带"
+                    },
+                    {
+                        name: "Carnival Magic",
+                        time: "18:00–21:30",
+                        kind: "highlight",
+                        drive: "包车约 35 分钟",
+                        lat: 7.9578, lng: 98.2825,
+                        activities: [
+                            { time: "18:00–21:30", text: "前往卡马拉海滩的嘉年华魔法主题乐园，观赏巨型花车巡游与数百万盏 LED 灯光秀" }
+                        ],
+                        note: "999 Moo 3, Kamala, Kathu"
+                    },
+                    {
+                        name: "Anantara Mai Khao Phuket Villas",
+                        time: "21:30–22:15",
+                        kind: "stay",
+                        drive: "包车约 45 分钟",
+                        lat: 8.16903, lng: 98.29548,
+                        activities: [
+                            { time: "21:30–22:15", text: "包车返回度假村休息" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/21",
+                weekday: "周六",
+                title: "海滩水上运动与完美收官夜",
+                meta: "迈考海滩 SUP / 皮划艇 · 沙滩慢时光 · La Sala 南泰欢送晚宴",
+                color: "#0e7490",
+                mode: "foot",
+                zoom: 16,
+                stops: [
+                    {
+                        name: "Anantara Mai Khao Phuket Villas",
+                        time: "08:30–09:30",
+                        kind: "stay",
+                        lat: 8.16903, lng: 98.29548,
+                        activities: [
+                            { time: "08:30–09:30", text: "享用度假村早餐" }
+                        ]
+                    },
+                    {
+                        name: "迈考海滩俱乐部",
+                        time: "10:00–12:00",
+                        kind: "highlight",
+                        lat: 8.16720, lng: 98.29240,
+                        activities: [
+                            { time: "10:00–12:00", text: "前往迈考海滩俱乐部，免费租借桨板（SUP）或皮划艇进行清晨海上运动" }
+                        ]
+                    },
+                    {
+                        name: "海滨无边泳池",
+                        time: "12:30–14:00",
+                        lat: 8.16770, lng: 98.29300,
+                        activities: [
+                            { time: "12:30–14:00", text: "在海滨无边泳池畔享用简餐与冰饮" }
+                        ]
+                    },
+                    {
+                        name: "迈考海滩躺椅",
+                        time: "14:30–17:30",
+                        lat: 8.16690, lng: 98.29210,
+                        activities: [
+                            { time: "14:30–17:30", text: "在度假村沙滩躺椅上晒太阳、阅读，享受最后的纯粹度假慢时光" }
+                        ]
+                    },
+                    {
+                        name: "La Sala",
+                        time: "19:00–21:30",
+                        lat: 8.16885, lng: 98.29570,
+                        activities: [
+                            { time: "19:00–21:30", text: "在 La Sala 餐厅享用正宗南泰风味欢送晚宴" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/22",
+                weekday: "周日",
+                title: "完美假期依依返程",
+                meta: "最后一顿早餐 · 退房 · 专车送机回上海",
+                color: "#4f6d7a",
+                flightStat: "普吉岛 → 上海",
+                stops: [
+                    {
+                        name: "Anantara Mai Khao Phuket Villas",
+                        time: "09:00–12:00",
+                        kind: "stay",
+                        lat: 8.16903, lng: 98.29548,
+                        activities: [
+                            { time: "09:00–10:30", text: "悠闲享用在度假村的最后一顿早餐" },
+                            { time: "11:00–12:00", text: "在别墅内整理行囊，办理退房手续" }
+                        ]
+                    },
+                    {
+                        name: "普吉岛国际机场",
+                        time: "按航班送机",
+                        drive: "专车约 15 分钟",
+                        lat: 8.1132, lng: 98.3169,
+                        activities: [
+                            { time: "退房后", text: "由度假村专车送往机场，搭乘航班返程" }
+                        ]
+                    },
+                    {
+                        name: "上海浦东国际机场",
+                        time: "抵达",
+                        drive: "飞行约 5 小时",
+                        leg: "flight",
+                        lat: 31.1443, lng: 121.8083,
+                        activities: [
+                            { time: "抵达后", text: "回到上海，行程结束" }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const map = L.map("map", { zoomControl: true }).setView([8.05, 98.33], 10);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        const tabsEl = document.getElementById("dayTabs");
+        const summaryEl = document.getElementById("daySummary");
+        const itineraryEl = document.getElementById("itinerary");
+        const routeStatEl = document.getElementById("routeStat");
+        let routeLines = [];
+        let markers = [];
+        let activeDay = 0;
+
+        days.forEach((day, index) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "day-tab";
+            button.innerHTML = `${escapeHtml(day.date)}<br>${escapeHtml(day.weekday)}`;
+            button.addEventListener("click", () => renderDay(index));
+            tabsEl.appendChild(button);
+        });
+
+        document.getElementById("togglePanel").addEventListener("click", () => {
+            const panel = document.getElementById("panel");
+            const collapsed = panel.classList.toggle("is-collapsed");
+            const button = document.getElementById("togglePanel");
+            button.textContent = collapsed ? "展开行程" : "收起行程";
+            button.setAttribute("aria-expanded", String(!collapsed));
+        });
+
+        itineraryEl.addEventListener("click", (event) => {
+            const button = event.target.closest(".stop");
+            if (!button) return;
+            const index = Number(button.dataset.index);
+            document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+            const zoom = days[activeDay].zoom || 12;
+            map.flyTo(markers[index].getLatLng(), zoom, { duration: 0.7 });
+            markers[index].openPopup();
+        });
+
+        function splitLegs(day, coords) {
+            const groups = [];
+            let current = { type: "drive", points: [coords[0]] };
+            for (let i = 1; i < day.stops.length; i++) {
+                const type = day.stops[i].leg === "flight" ? "flight" : "drive";
+                if (type === current.type) {
+                    current.points.push(coords[i]);
+                } else {
+                    groups.push(current);
+                    current = { type, points: [coords[i - 1], coords[i]] };
+                }
+            }
+            groups.push(current);
+            return groups.filter((group) => group.points.length > 1);
+        }
+
+        async function renderDay(dayIndex) {
+            activeDay = dayIndex;
+            const day = days[dayIndex];
+            document.querySelectorAll(".day-tab").forEach((tab, index) => {
+                tab.classList.toggle("is-active", index === dayIndex);
+            });
+            summaryEl.innerHTML = `
+                <p class="day-title">${escapeHtml(day.date)} ${escapeHtml(day.weekday)} · ${escapeHtml(day.title)}</p>
+                <p class="day-meta">${escapeHtml(day.meta)}</p>`;
+            itineraryEl.innerHTML = "";
+            markers.forEach((marker) => marker.remove());
+            markers = [];
+            routeLines.forEach((line) => line.remove());
+            routeLines = [];
+
+            const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
+
+            day.stops.forEach((stop, index) => {
+                const number = index + 1;
+                const kindClass = stop.kind ? ` is-${stop.kind}` : "";
+                const label = stop.kind === "stay"
+                    ? '<span class="tag tag--stay">住宿</span>'
+                    : stop.kind === "highlight"
+                        ? '<span class="tag">重点</span>'
+                        : "";
+                const activityRows = stop.activities.map((activity) => `
+                    <li class="activity">
+                        <span class="activity-time">${escapeHtml(activity.time)}</span>
+                        <span class="activity-text">${escapeHtml(activity.text)}</span>
+                    </li>`).join("");
+                const meta = [stop.drive, stop.time].filter(Boolean).join(" · ");
+                const note = stop.note ? `<span class="note">${escapeHtml(stop.note)}</span>` : "";
+
+                const marker = L.marker([stop.lat, stop.lng], {
+                    icon: L.divIcon({
+                        className: "",
+                        html: `<div class="num-marker${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</div>`,
+                        iconSize: [29, 29],
+                        iconAnchor: [14, 14],
+                        popupAnchor: [0, -16]
+                    })
+                }).addTo(map);
+                marker.bindPopup(`
+                    <p class="popup-title">${number}. ${escapeHtml(stop.name)}${label}</p>
+                    <p class="popup-meta">${escapeHtml(meta)}</p>
+                    ${note}
+                    <ul class="activities activities--popup">${activityRows}</ul>`);
+                marker.on("click", () => {
+                    document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+                });
+                markers.push(marker);
+
+                const item = document.createElement("li");
+                item.className = "stop-wrap";
+                item.innerHTML = `
+                    <button class="stop" type="button" data-index="${index}">
+                        <span class="badge${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</span>
+                        <span>
+                            <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
+                            <span class="stop-meta">${escapeHtml(meta)}</span>
+                            ${note}
+                        </span>
+                    </button>
+                    <ul class="activities">${activityRows}</ul>`;
+                itineraryEl.appendChild(item);
+            });
+
+            const fallback = L.polyline(coords, {
+                color: day.color,
+                weight: 4,
+                opacity: 0.82,
+                dashArray: "8, 8"
+            }).addTo(map);
+            routeLines.push(fallback);
+            map.fitBounds(fallback.getBounds().pad(0.18));
+            await loadRoute(day, coords, dayIndex, fallback);
+        }
+
+        async function loadRoute(day, coords, expectedDay, fallback) {
+            const groups = splitLegs(day, coords);
+            const profile = day.mode === "foot" ? "foot" : "driving";
+            const waiting = day.mode === "foot" ? "正在规划步行路线…" : "正在规划当日路线…";
+            routeStatEl.textContent = waiting;
+
+            let driveKm = 0;
+            let driveMin = 0;
+            let hasFlight = false;
+            let routed = false;
+
+            for (const group of groups) {
+                if (group.type === "flight") {
+                    hasFlight = true;
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 3,
+                        opacity: 0.75,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                    continue;
+                }
+                const path = group.points.map(([lat, lng]) => `${lng},${lat}`).join(";");
+                const url = `https://router.project-osrm.org/route/v1/${profile}/${path}?overview=full&geometries=geojson`;
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error("route request failed");
+                    const data = await response.json();
+                    if (activeDay !== expectedDay) return;
+                    const route = data.routes && data.routes[0];
+                    if (!route) throw new Error("no route returned");
+                    const line = L.polyline(
+                        route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+                        { color: day.color, weight: 4, opacity: 0.85 }
+                    ).addTo(map);
+                    routeLines.push(line);
+                    driveKm += route.distance / 1000;
+                    driveMin += route.duration / 60;
+                    routed = true;
+                } catch (error) {
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 4,
+                        opacity: 0.82,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                }
+            }
+
+            if (activeDay !== expectedDay) return;
+            if (fallback) {
+                fallback.remove();
+                routeLines = routeLines.filter((line) => line !== fallback);
+            }
+
+            const parts = [];
+            if (hasFlight) parts.push(day.flightStat || "航班示意线");
+            if (routed) {
+                const km = profile === "foot" ? driveKm.toFixed(1) : Math.round(driveKm);
+                const minutes = Math.round(driveMin);
+                const time = minutes >= 60
+                    ? `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分`
+                    : `${minutes} 分`;
+                const label = profile === "foot" ? "步行" : "自驾";
+                parts.push(`${label}约 ${km} km · ${time}`);
+            } else if (!hasFlight) {
+                parts.push(profile === "foot" ? "步行路线暂不可用，显示直线示意" : "路线暂不可用，显示直线示意");
+            }
+            routeStatEl.textContent = parts.join(" · ");
+
+            const bounds = routeLines.reduce((acc, line) => acc.extend(line.getBounds()), routeLines[0].getBounds());
+            map.fitBounds(bounds.pad(0.15));
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        renderDay(0);
+    </script>
+</body>
+</html>
