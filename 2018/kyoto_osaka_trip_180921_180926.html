@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>日本 Kyoto / Osaka 2018/09/21–2018/09/26</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --ink: #1a2744;
+            --muted: #5a6a7a;
+            --line: #dce5ec;
+            --accent: #c23b3b;
+            --accent-soft: #fdeaea;
+            --warm: #b45f24;
+            --warm-soft: #fff0df;
+            --stay: #6b4ea0;
+            --stay-soft: #f0eafa;
+            --panel: rgba(255, 255, 255, 0.97);
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            height: 100%;
+            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        }
+        button { font: inherit; }
+        #map { width: 100%; height: 100%; }
+        .info-panel {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            width: min(400px, calc(100vw - 32px));
+            max-height: calc(100vh - 32px);
+            overflow: auto;
+            padding: 17px 18px 15px;
+            border-radius: 14px;
+            background: var(--panel);
+            box-shadow: 0 10px 32px rgba(15, 35, 55, 0.18);
+            backdrop-filter: blur(8px);
+        }
+        h1 { margin: 0; color: var(--ink); font-size: 19px; line-height: 1.35; }
+        .subtitle { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+        .stats { display: flex; flex-wrap: wrap; gap: 7px; margin: 11px 0; }
+        .stat {
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #edf3f7;
+            color: var(--ink);
+            font-size: 11px;
+        }
+        .day-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 4px;
+            margin: 8px 0 10px;
+        }
+        .day-tab {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 7px 3px;
+            background: #fff;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 11px;
+            line-height: 1.25;
+        }
+        .day-tab:hover, .day-tab:focus-visible { border-color: var(--accent); outline: none; }
+        .day-tab.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+        .day-summary {
+            margin: 0 0 8px;
+            padding: 9px 10px;
+            border-left: 3px solid var(--accent);
+            border-radius: 5px;
+            background: #f5f9fb;
+        }
+        .day-title { margin: 0; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .day-meta { margin: 3px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+        .itinerary { margin: 0; padding: 0; list-style: none; }
+        .stop-wrap + .stop-wrap { border-top: 1px solid var(--line); }
+        .stop {
+            display: grid;
+            grid-template-columns: 28px 1fr;
+            gap: 9px;
+            width: 100%;
+            padding: 10px 5px 6px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+        .stop:hover, .stop:focus-visible, .stop.is-active { background: var(--accent-soft); outline: none; }
+        .badge, .num-marker {
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+        }
+        .badge { width: 26px; height: 26px; margin-top: 1px; font-size: 12px; }
+        .num-marker {
+            width: 29px;
+            height: 29px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.27);
+            font-size: 12px;
+        }
+        .badge.is-stay, .num-marker.is-stay { background: var(--stay); }
+        .badge.is-highlight, .num-marker.is-highlight { background: var(--warm); }
+        .stop-title { color: var(--ink); font-size: 14px; font-weight: 650; }
+        .stop-meta { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+        .tag {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: var(--warm-soft);
+            color: var(--warm);
+            font-size: 10px;
+            font-weight: 700;
+            vertical-align: 1px;
+        }
+        .tag--stay { background: var(--stay-soft); color: var(--stay); }
+        .activities {
+            margin: 0 0 9px 19px;
+            padding: 2px 0 3px 14px;
+            border-left: 2px solid var(--line);
+            list-style: none;
+        }
+        .activity {
+            display: grid;
+            grid-template-columns: 92px 1fr;
+            gap: 7px;
+            padding: 3px 0;
+            font-size: 11.5px;
+            line-height: 1.45;
+        }
+        .activity-time { color: var(--accent); font-variant-numeric: tabular-nums; }
+        .activity-text { color: var(--muted); }
+        .note {
+            display: block;
+            margin-top: 4px;
+            color: var(--warm);
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        .hint { margin: 10px 0 0; color: #6c7d8e; font-size: 11px; line-height: 1.5; }
+        .popup-title { margin: 0 0 4px; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .popup-meta { margin: 0; color: var(--muted); font-size: 12px; }
+        .activities--popup { margin: 7px 0 0; padding-left: 10px; }
+        .leaflet-popup-content { margin: 10px 13px; min-width: 235px; }
+        .toggle {
+            display: none;
+            width: 100%;
+            margin-bottom: 8px;
+            padding: 8px;
+            border: 0;
+            border-radius: 8px;
+            background: #edf3f7;
+            cursor: pointer;
+        }
+        @media (max-width: 680px) {
+            .info-panel { top: auto; right: 10px; bottom: 10px; left: 10px; width: auto; max-height: 52vh; }
+            .toggle { display: block; }
+            .info-panel.is-collapsed .stats,
+            .info-panel.is-collapsed .day-tabs,
+            .info-panel.is-collapsed .day-summary,
+            .info-panel.is-collapsed .itinerary,
+            .info-panel.is-collapsed .hint { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="info-panel" id="panel">
+        <button class="toggle" id="togglePanel" type="button" aria-expanded="true">收起行程</button>
+        <h1>日本 Kyoto / Osaka 2018/09/21–2018/09/26</h1>
+        <p class="subtitle">🇯🇵 · 六天 · 铁路 + 步行</p>
+        <div class="stats">
+            <span class="stat">6 天 5 晚</span>
+            <span class="stat">京都 2 晚 · 大阪 3 晚</span>
+            <span class="stat">清水寺 · 奈良 · 道顿堀</span>
+            <span class="stat" id="routeStat">正在规划当日路线…</span>
+        </div>
+        <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+        <section class="day-summary" id="daySummary"></section>
+        <ol class="itinerary" id="itinerary"></ol>
+        <p class="hint">上海飞关西机场，推荐乘 Haruka 直达京都。城际 JR / Haruka 为虚线示意；市区路段按 OSRM 估算，仅供参考。</p>
+    </aside>
+    <div id="map" role="application" aria-label="京都大阪行程地图"></div>
+
+    <script>
+        const days = [
+            {
+                date: "09/21",
+                weekday: "周五",
+                title: "上海 → 大阪，入住京都大丸附近",
+                meta: "Haruka 直达京都 · 大丸周边烧肉与和牛寿喜烧",
+                color: "#c23b3b",
+                flightStat: "航班 + Haruka 示意线",
+                stops: [
+                    {
+                        name: "上海浦东国际机场",
+                        time: "上午出发",
+                        lat: 31.1443, lng: 121.8083,
+                        activities: [
+                            { time: "上午", text: "上海飞大阪（关西机场）" }
+                        ]
+                    },
+                    {
+                        name: "关西国际机场",
+                        time: "抵达",
+                        drive: "飞行约 2 小时",
+                        leg: "flight",
+                        lat: 34.4342, lng: 135.2443,
+                        activities: [
+                            { time: "抵达后", text: "出关后乘坐 Haruka 特急直达京都站" }
+                        ],
+                        note: "推荐 Haruka，京都站约 75 分钟"
+                    },
+                    {
+                        name: "京都站",
+                        time: "转乘市区",
+                        drive: "Haruka 约 75 分钟",
+                        leg: "flight",
+                        lat: 34.9858, lng: 135.7588,
+                        activities: [
+                            { time: "抵达后", text: "转地铁或出租车前往四条大丸附近 Airbnb" }
+                        ]
+                    },
+                    {
+                        name: "大丸京都店附近 Airbnb",
+                        time: "入住",
+                        kind: "stay",
+                        drive: "市区约 15 分钟",
+                        lat: 35.0038, lng: 135.7635,
+                        activities: [
+                            { time: "入住后", text: "办理入住，放下行李" }
+                        ],
+                        note: "大丸百货附近 · 连住两晚"
+                    },
+                    {
+                        name: "大丸附近烧肉店",
+                        time: "午餐",
+                        lat: 35.0040, lng: 135.7650,
+                        activities: [
+                            { time: "中午", text: "在大丸周边吃烧肉午餐" }
+                        ]
+                    },
+                    {
+                        name: "大丸京都店及周边商圈",
+                        time: "下午",
+                        lat: 35.0034, lng: 135.7642,
+                        activities: [
+                            { time: "下午", text: "逛大丸百货及四条周边商圈" }
+                        ],
+                        note: "四条高仓"
+                    },
+                    {
+                        name: "和牛寿喜烧",
+                        time: "晚餐",
+                        lat: 35.0045, lng: 135.7665,
+                        activities: [
+                            { time: "晚上", text: "享用和牛寿喜烧晚餐，回 Airbnb 休息" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "09/22",
+                weekday: "周六",
+                title: "清水寺、四条河原町与伏见稻荷夜游",
+                meta: "三年坂二年坂 · 鳗鱼饭 · 大丸美食街 · 千本鸟居",
+                color: "#b45309",
+                stops: [
+                    {
+                        name: "清水寺",
+                        time: "上午",
+                        kind: "highlight",
+                        lat: 34.9948, lng: 135.7850,
+                        activities: [
+                            { time: "上午", text: "游览清水寺（替代浅草寺）" }
+                        ]
+                    },
+                    {
+                        name: "三年坂 / 二年坂",
+                        time: "上午",
+                        kind: "highlight",
+                        lat: 34.9968, lng: 135.7805,
+                        activities: [
+                            { time: "上午", text: "沿三年坂、二年坂下山，逛传统街景与小店" }
+                        ]
+                    },
+                    {
+                        name: "鳗鱼饭",
+                        time: "午餐",
+                        lat: 35.0033, lng: 135.7750,
+                        activities: [
+                            { time: "中午", text: "在清水寺 / 祇园一带吃鳗鱼饭" }
+                        ]
+                    },
+                    {
+                        name: "四条河原町",
+                        time: "下午",
+                        lat: 35.0037, lng: 135.7685,
+                        activities: [
+                            { time: "下午", text: "逛京都药妆店与四条河原町商圈" }
+                        ]
+                    },
+                    {
+                        name: "大丸京都店美食街",
+                        time: "晚餐",
+                        lat: 35.0034, lng: 135.7642,
+                        activities: [
+                            { time: "晚上", text: "在大丸百货美食街解决晚餐" }
+                        ]
+                    },
+                    {
+                        name: "伏见稻荷大社",
+                        time: "夜游",
+                        kind: "highlight",
+                        drive: "JR 约 15 分钟",
+                        lat: 34.9671, lng: 135.7727,
+                        activities: [
+                            { time: "夜游", text: "夜游伏见稻荷大社，走千本鸟居" }
+                        ],
+                        note: "人少更好拍照，注意台阶与灯光"
+                    }
+                ]
+            },
+            {
+                date: "09/23",
+                weekday: "周日",
+                title: "奈良公园后转大阪入住",
+                meta: "喂小鹿、东大寺 · Omakase · 友都八喜 · 一兰拉面",
+                color: "#0f766e",
+                flightStat: "京都 → 奈良 → 大阪 JR 示意线",
+                stops: [
+                    {
+                        name: "奈良公园",
+                        time: "上午",
+                        kind: "highlight",
+                        drive: "JR 奈良线约 45 分钟",
+                        leg: "flight",
+                        lat: 34.6851, lng: 135.8430,
+                        activities: [
+                            { time: "上午", text: "从京都前往奈良公园，喂小鹿" }
+                        ],
+                        note: "鹿仙贝另买，注意不要被鹿顶到"
+                    },
+                    {
+                        name: "东大寺",
+                        time: "上午",
+                        kind: "highlight",
+                        lat: 34.6889, lng: 135.8398,
+                        activities: [
+                            { time: "上午", text: "参观东大寺大佛殿" }
+                        ]
+                    },
+                    {
+                        name: "奈良公园周边 Omakase",
+                        time: "午餐",
+                        lat: 34.6830, lng: 135.8280,
+                        activities: [
+                            { time: "中午", text: "在公园内或周边吃 Omakase" }
+                        ]
+                    },
+                    {
+                        name: "大阪入住",
+                        time: "下午 Check-in",
+                        kind: "stay",
+                        drive: "JR 约 40 分钟",
+                        leg: "flight",
+                        lat: 34.6659, lng: 135.5004,
+                        activities: [
+                            { time: "下午", text: "前往大阪办理入住（难波一带）" }
+                        ],
+                        note: "大阪连住三晚"
+                    },
+                    {
+                        name: "友都八喜 梅田",
+                        time: "下午",
+                        lat: 34.7044, lng: 135.4960,
+                        activities: [
+                            { time: "下午", text: "逛友都八喜（Yodobashi），看家电与相机" }
+                        ]
+                    },
+                    {
+                        name: "一兰拉面",
+                        time: "晚餐",
+                        lat: 34.6684, lng: 135.5026,
+                        activities: [
+                            { time: "晚上", text: "吃一兰拉面，回住处休息" }
+                        ],
+                        note: "道顿堀店"
+                    }
+                ]
+            },
+            {
+                date: "09/24",
+                weekday: "周一",
+                title: "黑门市场、心斋桥与道顿堀",
+                meta: "市场刺身 · 心斋桥逛街 · 蟹道乐（建议提前预约）",
+                color: "#0369a1",
+                mode: "foot",
+                zoom: 15,
+                stops: [
+                    {
+                        name: "黑门市场",
+                        time: "上午",
+                        kind: "highlight",
+                        lat: 34.6658, lng: 135.5064,
+                        activities: [
+                            { time: "上午", text: "逛黑门市场" },
+                            { time: "中午", text: "在市场内吃刺身 / 海鲜午餐" }
+                        ]
+                    },
+                    {
+                        name: "心斋桥",
+                        time: "下午",
+                        lat: 34.6748, lng: 135.5005,
+                        activities: [
+                            { time: "下午", text: "逛心斋桥商店街" }
+                        ]
+                    },
+                    {
+                        name: "道顿堀",
+                        time: "下午",
+                        kind: "highlight",
+                        lat: 34.6687, lng: 135.5033,
+                        activities: [
+                            { time: "下午", text: "走道顿堀，看霓虹与固力果跑跑男" }
+                        ]
+                    },
+                    {
+                        name: "蟹道乐",
+                        time: "晚餐",
+                        lat: 34.6686, lng: 135.5014,
+                        activities: [
+                            { time: "晚上", text: "蟹道乐晚餐" }
+                        ],
+                        note: "建议提前预约"
+                    }
+                ]
+            },
+            {
+                date: "09/25",
+                weekday: "周二",
+                title: "补货或大阪城，梅田夜景",
+                meta: "药妆 / 潮牌或大阪城 · 梅田商圈 · 蓝天大厦夜景晚餐",
+                color: "#7c5b9f",
+                stops: [
+                    {
+                        name: "药妆店 / 潮牌店",
+                        time: "上午",
+                        lat: 34.6728, lng: 135.4983,
+                        activities: [
+                            { time: "上午", text: "补货购物：药妆店与潮牌店（心斋桥 / 美国村一带）" }
+                        ]
+                    },
+                    {
+                        name: "大阪城",
+                        time: "上午备选",
+                        kind: "highlight",
+                        lat: 34.6873, lng: 135.5262,
+                        activities: [
+                            { time: "上午", text: "若不购物，可改游大阪城" }
+                        ],
+                        note: "与购物二选一，或顺路短访"
+                    },
+                    {
+                        name: "当地美食午餐",
+                        time: "午餐",
+                        lat: 34.6810, lng: 135.5170,
+                        activities: [
+                            { time: "中午", text: "自由选择当地美食" }
+                        ]
+                    },
+                    {
+                        name: "梅田商圈",
+                        time: "下午",
+                        lat: 34.7024, lng: 135.4959,
+                        activities: [
+                            { time: "下午", text: "梅田商圈逛街（Grand Front / HEP 一带）" }
+                        ]
+                    },
+                    {
+                        name: "梅田蓝天大厦",
+                        time: "晚上",
+                        kind: "highlight",
+                        lat: 34.7053, lng: 135.4897,
+                        activities: [
+                            { time: "晚上", text: "观赏梅田蓝天大厦夜景，并在附近享用晚餐" }
+                        ],
+                        note: "Umeda Sky Building 空中庭园展望台"
+                    }
+                ]
+            },
+            {
+                date: "09/26",
+                weekday: "周三",
+                title: "整理行李，关西机场返程",
+                meta: "退房后前往关西机场飞回上海",
+                color: "#4f6d7a",
+                flightStat: "Haruka / 机场线 + 返程航班示意线",
+                stops: [
+                    {
+                        name: "大阪入住",
+                        time: "上午",
+                        kind: "stay",
+                        lat: 34.6659, lng: 135.5004,
+                        activities: [
+                            { time: "上午", text: "整理行李，办理退房" }
+                        ]
+                    },
+                    {
+                        name: "关西国际机场",
+                        time: "送机",
+                        drive: "Haruka / 机场线约 50–75 分钟",
+                        leg: "flight",
+                        lat: 34.4342, lng: 135.2443,
+                        activities: [
+                            { time: "出发前", text: "前往关西机场，搭乘航班返程" }
+                        ]
+                    },
+                    {
+                        name: "上海浦东国际机场",
+                        time: "抵达",
+                        drive: "飞行约 2 小时",
+                        leg: "flight",
+                        lat: 31.1443, lng: 121.8083,
+                        activities: [
+                            { time: "抵达后", text: "回到上海，行程结束" }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const map = L.map("map", { zoomControl: true }).setView([34.85, 135.55], 9);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        const tabsEl = document.getElementById("dayTabs");
+        const summaryEl = document.getElementById("daySummary");
+        const itineraryEl = document.getElementById("itinerary");
+        const routeStatEl = document.getElementById("routeStat");
+        let routeLines = [];
+        let markers = [];
+        let activeDay = 0;
+
+        days.forEach((day, index) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "day-tab";
+            button.innerHTML = `${escapeHtml(day.date)}<br>${escapeHtml(day.weekday)}`;
+            button.addEventListener("click", () => renderDay(index));
+            tabsEl.appendChild(button);
+        });
+
+        document.getElementById("togglePanel").addEventListener("click", () => {
+            const panel = document.getElementById("panel");
+            const collapsed = panel.classList.toggle("is-collapsed");
+            const button = document.getElementById("togglePanel");
+            button.textContent = collapsed ? "展开行程" : "收起行程";
+            button.setAttribute("aria-expanded", String(!collapsed));
+        });
+
+        itineraryEl.addEventListener("click", (event) => {
+            const button = event.target.closest(".stop");
+            if (!button) return;
+            const index = Number(button.dataset.index);
+            document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+            const zoom = days[activeDay].zoom || 12;
+            map.flyTo(markers[index].getLatLng(), zoom, { duration: 0.7 });
+            markers[index].openPopup();
+        });
+
+        function splitLegs(day, coords) {
+            const groups = [];
+            let current = { type: "drive", points: [coords[0]] };
+            for (let i = 1; i < day.stops.length; i++) {
+                const type = day.stops[i].leg === "flight" ? "flight" : "drive";
+                if (type === current.type) {
+                    current.points.push(coords[i]);
+                } else {
+                    groups.push(current);
+                    current = { type, points: [coords[i - 1], coords[i]] };
+                }
+            }
+            groups.push(current);
+            return groups.filter((group) => group.points.length > 1);
+        }
+
+        async function renderDay(dayIndex) {
+            activeDay = dayIndex;
+            const day = days[dayIndex];
+            document.querySelectorAll(".day-tab").forEach((tab, index) => {
+                tab.classList.toggle("is-active", index === dayIndex);
+            });
+            summaryEl.innerHTML = `
+                <p class="day-title">${escapeHtml(day.date)} ${escapeHtml(day.weekday)} · ${escapeHtml(day.title)}</p>
+                <p class="day-meta">${escapeHtml(day.meta)}</p>`;
+            itineraryEl.innerHTML = "";
+            markers.forEach((marker) => marker.remove());
+            markers = [];
+            routeLines.forEach((line) => line.remove());
+            routeLines = [];
+
+            const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
+
+            day.stops.forEach((stop, index) => {
+                const number = index + 1;
+                const kindClass = stop.kind ? ` is-${stop.kind}` : "";
+                const label = stop.kind === "stay"
+                    ? '<span class="tag tag--stay">住宿</span>'
+                    : stop.kind === "highlight"
+                        ? '<span class="tag">重点</span>'
+                        : "";
+                const activityRows = stop.activities.map((activity) => `
+                    <li class="activity">
+                        <span class="activity-time">${escapeHtml(activity.time)}</span>
+                        <span class="activity-text">${escapeHtml(activity.text)}</span>
+                    </li>`).join("");
+                const meta = [stop.drive, stop.time].filter(Boolean).join(" · ");
+                const note = stop.note ? `<span class="note">${escapeHtml(stop.note)}</span>` : "";
+
+                const marker = L.marker([stop.lat, stop.lng], {
+                    icon: L.divIcon({
+                        className: "",
+                        html: `<div class="num-marker${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</div>`,
+                        iconSize: [29, 29],
+                        iconAnchor: [14, 14],
+                        popupAnchor: [0, -16]
+                    })
+                }).addTo(map);
+                marker.bindPopup(`
+                    <p class="popup-title">${number}. ${escapeHtml(stop.name)}${label}</p>
+                    <p class="popup-meta">${escapeHtml(meta)}</p>
+                    ${note}
+                    <ul class="activities activities--popup">${activityRows}</ul>`);
+                marker.on("click", () => {
+                    document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+                });
+                markers.push(marker);
+
+                const item = document.createElement("li");
+                item.className = "stop-wrap";
+                item.innerHTML = `
+                    <button class="stop" type="button" data-index="${index}">
+                        <span class="badge${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</span>
+                        <span>
+                            <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
+                            <span class="stop-meta">${escapeHtml(meta)}</span>
+                            ${note}
+                        </span>
+                    </button>
+                    <ul class="activities">${activityRows}</ul>`;
+                itineraryEl.appendChild(item);
+            });
+
+            const fallback = L.polyline(coords, {
+                color: day.color,
+                weight: 4,
+                opacity: 0.82,
+                dashArray: "8, 8"
+            }).addTo(map);
+            routeLines.push(fallback);
+            map.fitBounds(fallback.getBounds().pad(0.18));
+            await loadRoute(day, coords, dayIndex, fallback);
+        }
+
+        async function loadRoute(day, coords, expectedDay, fallback) {
+            const groups = splitLegs(day, coords);
+            const profile = day.mode === "foot" ? "foot" : "driving";
+            const waiting = day.mode === "foot" ? "正在规划步行路线…" : "正在规划当日路线…";
+            routeStatEl.textContent = waiting;
+
+            let driveKm = 0;
+            let driveMin = 0;
+            let hasFlight = false;
+            let routed = false;
+
+            for (const group of groups) {
+                if (group.type === "flight") {
+                    hasFlight = true;
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 3,
+                        opacity: 0.75,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                    continue;
+                }
+                const path = group.points.map(([lat, lng]) => `${lng},${lat}`).join(";");
+                const url = `https://router.project-osrm.org/route/v1/${profile}/${path}?overview=full&geometries=geojson`;
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error("route request failed");
+                    const data = await response.json();
+                    if (activeDay !== expectedDay) return;
+                    const route = data.routes && data.routes[0];
+                    if (!route) throw new Error("no route returned");
+                    const line = L.polyline(
+                        route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+                        { color: day.color, weight: 4, opacity: 0.85 }
+                    ).addTo(map);
+                    routeLines.push(line);
+                    driveKm += route.distance / 1000;
+                    driveMin += route.duration / 60;
+                    routed = true;
+                } catch (error) {
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 4,
+                        opacity: 0.82,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                }
+            }
+
+            if (activeDay !== expectedDay) return;
+            if (fallback) {
+                fallback.remove();
+                routeLines = routeLines.filter((line) => line !== fallback);
+            }
+
+            const parts = [];
+            if (hasFlight) parts.push(day.flightStat || "航班示意线");
+            if (routed) {
+                const km = profile === "foot" ? driveKm.toFixed(1) : Math.round(driveKm);
+                const minutes = Math.round(driveMin);
+                const time = minutes >= 60
+                    ? `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分`
+                    : `${minutes} 分`;
+                const label = profile === "foot" ? "步行" : "自驾";
+                parts.push(`${label}约 ${km} km · ${time}`);
+            } else if (!hasFlight) {
+                parts.push(profile === "foot" ? "步行路线暂不可用，显示直线示意" : "路线暂不可用，显示直线示意");
+            }
+            routeStatEl.textContent = parts.join(" · ");
+
+            const bounds = routeLines.reduce((acc, line) => acc.extend(line.getBounds()), routeLines[0].getBounds());
+            map.fitBounds(bounds.pad(0.15));
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        renderDay(0);
+    </script>
+</body>
+</html>
