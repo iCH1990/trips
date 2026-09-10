@@ -335,11 +335,29 @@
             {
                 date: "09/23",
                 weekday: "周日",
-                title: "奈良公园后转大阪入住",
-                meta: "喂小鹿、东大寺 · Omakase · 友都八喜 · 一兰拉面",
+                title: "京都退房，奈良后转大阪入住",
+                meta: "退房后 JR 去奈良 · 喂小鹿、东大寺 · Omakase · 友都八喜 · 一兰拉面",
                 color: "#0f766e",
                 flightStat: "京都 → 奈良 → 大阪 JR 示意线",
                 stops: [
+                    {
+                        name: "大丸京都店附近 Airbnb",
+                        time: "上午退房",
+                        kind: "stay",
+                        lat: 35.0038, lng: 135.7635,
+                        activities: [
+                            { time: "上午", text: "整理行李，办理京都退房，带上行囊前往奈良" }
+                        ]
+                    },
+                    {
+                        name: "京都站",
+                        time: "转乘 JR",
+                        drive: "市区约 15 分钟",
+                        lat: 34.9858, lng: 135.7588,
+                        activities: [
+                            { time: "上午", text: "到京都站乘坐 JR 奈良线前往奈良" }
+                        ]
+                    },
                     {
                         name: "奈良公园",
                         time: "上午",
@@ -348,7 +366,7 @@
                         leg: "flight",
                         lat: 34.6851, lng: 135.8430,
                         activities: [
-                            { time: "上午", text: "从京都前往奈良公园，喂小鹿" }
+                            { time: "上午", text: "抵达奈良公园，喂小鹿" }
                         ],
                         note: "鹿仙贝另买，注意不要被鹿顶到"
                     },
