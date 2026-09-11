@@ -17,75 +17,99 @@
             --warm-soft: #fff0df;
             --stay: #6b4ea0;
             --stay-soft: #f0eafa;
-            --panel: rgba(255, 255, 255, 0.97);
+            --bg: #f4f7f9;
+            --shadow: 0 1px 2px rgba(15, 35, 55, 0.05);
+            --shadow-lift: 0 10px 28px rgba(15, 35, 55, 0.1);
         }
         * { box-sizing: border-box; }
-        html, body {
+        body {
             margin: 0;
-            height: 100%;
+            background: var(--bg);
+            color: var(--ink);
             font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
         }
         button { font: inherit; }
-        #map { width: 100%; height: 100%; }
-        .info-panel {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            z-index: 1000;
-            width: min(400px, calc(100vw - 32px));
-            max-height: calc(100vh - 32px);
-            overflow: auto;
-            padding: 17px 18px 15px;
-            border-radius: 14px;
-            background: var(--panel);
-            box-shadow: 0 10px 32px rgba(15, 35, 55, 0.18);
-            backdrop-filter: blur(8px);
+        .page { max-width: 1140px; margin: 0 auto; padding: 40px 24px 72px; }
+        .card {
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: var(--shadow);
         }
-        h1 { margin: 0; color: var(--ink); font-size: 19px; line-height: 1.35; }
-        .subtitle { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
-        .stats { display: flex; flex-wrap: wrap; gap: 7px; margin: 11px 0; }
+        .kicker {
+            margin: 0;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 650;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        h1 { margin: 8px 0 0; color: var(--ink); font-size: 30px; line-height: 1.25; }
+        .subtitle { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+        .stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; }
         .stat {
-            padding: 4px 8px;
+            padding: 5px 11px;
+            border: 1px solid var(--line);
             border-radius: 999px;
-            background: #edf3f7;
+            background: #fff;
             color: var(--ink);
-            font-size: 11px;
+            font-size: 12px;
+        }
+        .overview {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 316px;
+            gap: 16px;
+            margin: 24px 0 0;
+        }
+        .map-card { overflow: hidden; }
+        #map { width: 100%; height: 100%; min-height: 520px; }
+        .side {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 520px;
+            padding: 16px;
         }
         .day-tabs {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 4px;
-            margin: 8px 0 10px;
+            grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+            gap: 6px;
         }
         .day-tab {
             border: 1px solid var(--line);
-            border-radius: 8px;
-            padding: 7px 3px;
+            border-radius: 10px;
+            padding: 8px 4px;
             background: #fff;
             color: var(--muted);
             cursor: pointer;
-            font-size: 11px;
-            line-height: 1.25;
+            font-size: 12px;
+            line-height: 1.3;
         }
         .day-tab:hover, .day-tab:focus-visible { border-color: var(--accent); outline: none; }
         .day-tab.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; }
         .day-summary {
-            margin: 0 0 8px;
-            padding: 9px 10px;
+            padding: 10px 12px;
             border-left: 3px solid var(--accent);
-            border-radius: 5px;
+            border-radius: 6px;
             background: #f5f9fb;
         }
         .day-title { margin: 0; color: var(--ink); font-size: 14px; font-weight: 700; }
-        .day-meta { margin: 3px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
-        .itinerary { margin: 0; padding: 0; list-style: none; }
-        .stop-wrap + .stop-wrap { border-top: 1px solid var(--line); }
+        .day-meta { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+        .glance {
+            flex: 1;
+            overflow: auto;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        .glance-item + .glance-item { border-top: 1px solid var(--line); }
         .stop {
             display: grid;
-            grid-template-columns: 28px 1fr;
-            gap: 9px;
+            grid-template-columns: 26px 1fr;
+            gap: 10px;
+            align-items: center;
             width: 100%;
-            padding: 10px 5px 6px;
+            padding: 8px 6px;
             border: 0;
             border-radius: 8px;
             background: transparent;
@@ -94,6 +118,14 @@
             cursor: pointer;
         }
         .stop:hover, .stop:focus-visible, .stop.is-active { background: var(--accent-soft); outline: none; }
+        .route-stat {
+            margin: 0;
+            padding-top: 10px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
         .badge, .num-marker {
             display: grid;
             place-items: center;
@@ -126,71 +158,133 @@
             vertical-align: 1px;
         }
         .tag--stay { background: var(--stay-soft); color: var(--stay); }
+        .detail { margin: 32px 0 0; }
+        .detail-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 4px 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--line);
+        }
+        .detail-head h2 { margin: 0; font-size: 20px; }
+        .detail-note { margin: 0; color: var(--muted); font-size: 13px; }
+        .timeline { display: grid; gap: 10px; margin: 18px 0 0; padding: 0; list-style: none; }
+        .timeline-item { display: grid; gap: 10px; }
+        .leg-row {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding-left: 18px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .leg-row::before {
+            content: "";
+            width: 2px;
+            height: 20px;
+            border-radius: 2px;
+            background: var(--line);
+        }
+        .stop-card {
+            padding: 16px 18px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: var(--shadow);
+            scroll-margin-top: 16px;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+        .stop-card.is-active { border-color: var(--accent); box-shadow: var(--shadow-lift); }
+        .stop-card .stop {
+            grid-template-columns: 32px 1fr;
+            gap: 12px;
+            align-items: start;
+            padding: 0;
+        }
+        .stop-card .stop:hover, .stop-card .stop:focus-visible, .stop-card .stop.is-active { background: transparent; }
+        .stop-card .badge { width: 32px; height: 32px; margin-top: 0; font-size: 14px; }
+        .stop-card .stop-title { font-size: 17px; font-weight: 700; }
+        .stop-card .stop-meta { margin-top: 4px; font-size: 13px; }
         .activities {
-            margin: 0 0 9px 19px;
-            padding: 2px 0 3px 14px;
-            border-left: 2px solid var(--line);
+            display: grid;
+            gap: 8px;
+            margin: 12px 0 0;
+            padding: 12px 0 0;
+            border-top: 1px dashed var(--line);
             list-style: none;
         }
         .activity {
             display: grid;
-            grid-template-columns: 80px 1fr;
-            gap: 7px;
-            padding: 3px 0;
-            font-size: 11.5px;
-            line-height: 1.45;
+            grid-template-columns: 96px 1fr;
+            gap: 12px;
+            font-size: 13.5px;
+            line-height: 1.6;
         }
-        .activity-time { color: var(--accent); font-variant-numeric: tabular-nums; }
-        .activity-text { color: var(--muted); }
+        .activity-time { color: var(--accent); font-weight: 650; font-variant-numeric: tabular-nums; }
+        .activity-text { color: var(--ink); }
         .note {
             display: block;
-            margin-top: 4px;
+            margin-top: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: var(--warm-soft);
             color: var(--warm);
-            font-size: 11px;
-            line-height: 1.4;
+            font-size: 12.5px;
+            line-height: 1.5;
         }
-        .hint { margin: 10px 0 0; color: #6c7d8e; font-size: 11px; line-height: 1.5; }
+        .hint { margin: 28px 0 0; color: #6c7d8e; font-size: 12px; line-height: 1.6; }
         .popup-title { margin: 0 0 4px; color: var(--ink); font-size: 14px; font-weight: 700; }
         .popup-meta { margin: 0; color: var(--muted); font-size: 12px; }
-        .activities--popup { margin: 7px 0 0; padding-left: 10px; }
+        .activities--popup { gap: 5px; margin-top: 8px; font-size: 12px; }
+        .activities--popup .activity { grid-template-columns: 72px 1fr; gap: 8px; font-size: 12px; }
         .leaflet-popup-content { margin: 10px 13px; min-width: 235px; }
-        .toggle {
-            display: none;
-            width: 100%;
-            margin-bottom: 8px;
-            padding: 8px;
-            border: 0;
-            border-radius: 8px;
-            background: #edf3f7;
-            cursor: pointer;
+        @media (max-width: 880px) {
+            .overview { grid-template-columns: minmax(0, 1fr); }
+            #map { min-height: 380px; }
+            .side { max-height: none; }
+            .glance { overflow: visible; }
         }
-        @media (max-width: 680px) {
-            .info-panel { top: auto; right: 10px; bottom: 10px; left: 10px; width: auto; max-height: 52vh; }
-            .toggle { display: block; }
-            .info-panel.is-collapsed .stats,
-            .info-panel.is-collapsed .day-tabs,
-            .info-panel.is-collapsed .day-summary,
-            .info-panel.is-collapsed .itinerary,
-            .info-panel.is-collapsed .hint { display: none; }
+        @media (max-width: 560px) {
+            .page { padding: 28px 16px 56px; }
+            h1 { font-size: 23px; }
+            .stop-card { padding: 14px 15px; }
+            .stop-card .stop-title { font-size: 16px; }
+            .activity { grid-template-columns: 72px 1fr; gap: 8px; font-size: 13px; }
         }
     </style>
 </head>
 <body>
-    <aside class="info-panel" id="panel">
-        <button class="toggle" id="togglePanel" type="button" aria-expanded="true">收起行程</button>
-        <h1>法国 Paris 2025/01/17–2025/01/18</h1>
-        <p class="subtitle">🇫🇷 · 两天 · 步行</p>
-        <div class="stats">
-            <span class="stat">2 天 1 晚</span>
-            <span class="stat">全天步行</span>
-            <span class="stat" id="routeStat">正在规划当日路线…</span>
-        </div>
-        <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
-        <section class="day-summary" id="daySummary"></section>
-        <ol class="itinerary" id="itinerary"></ol>
+    <div class="page">
+        <header class="trip-head">
+            <p class="kicker">France · 2025</p>
+            <h1>法国 Paris 2025/01/17–2025/01/18</h1>
+            <p class="subtitle">🇫🇷 · 两天 · 步行</p>
+            <div class="stats">
+                <span class="stat">2 天 1 晚</span>
+                <span class="stat">全天步行</span>
+            </div>
+        </header>
+        <section class="overview" aria-label="行程总览">
+            <div class="card map-card">
+                <div id="map" role="application" aria-label="Paris 行程地图"></div>
+            </div>
+            <div class="card side">
+                <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+                <div class="day-summary" id="daySummary"></div>
+                <ol class="glance" id="glance"></ol>
+                <p class="route-stat" id="routeStat">正在规划当日路线…</p>
+            </div>
+        </section>
+        <section class="detail" aria-label="当日详细安排">
+            <div class="detail-head">
+                <h2 id="detailTitle"></h2>
+                <p class="detail-note" id="detailNote"></p>
+            </div>
+            <ol class="timeline" id="itinerary"></ol>
+        </section>
         <p class="hint">17 日抵达入住。18 日从酒店出发，按实际步行顺序标点；下午在 La Grille Montorgueil 午餐后，从 Gare du Nord 搭 Eurostar 回 London。</p>
-    </aside>
-    <div id="map" role="application" aria-label="Paris 行程地图"></div>
+    </div>
 
     <script>
         const days = [
@@ -428,7 +522,10 @@
 
         const tabsEl = document.getElementById("dayTabs");
         const summaryEl = document.getElementById("daySummary");
+        const glanceEl = document.getElementById("glance");
         const itineraryEl = document.getElementById("itinerary");
+        const detailTitleEl = document.getElementById("detailTitle");
+        const detailNoteEl = document.getElementById("detailNote");
         const routeStatEl = document.getElementById("routeStat");
         let routeLine = null;
         let markers = [];
@@ -443,22 +540,31 @@
             tabsEl.appendChild(button);
         });
 
-        document.getElementById("togglePanel").addEventListener("click", () => {
-            const panel = document.getElementById("panel");
-            const collapsed = panel.classList.toggle("is-collapsed");
-            const button = document.getElementById("togglePanel");
-            button.textContent = collapsed ? "展开行程" : "收起行程";
-            button.setAttribute("aria-expanded", String(!collapsed));
-        });
+        function highlightStop(index) {
+            document.querySelectorAll(".stop").forEach((el) => {
+                el.classList.toggle("is-active", Number(el.dataset.index) === index);
+            });
+            document.querySelectorAll(".stop-card").forEach((card, i) => {
+                card.classList.toggle("is-active", i === index);
+            });
+        }
 
-        itineraryEl.addEventListener("click", (event) => {
-            const button = event.target.closest(".stop");
-            if (!button) return;
-            const index = Number(button.dataset.index);
-            document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
+        function focusStop(index, { scroll = false } = {}) {
+            highlightStop(index);
             const zoom = days[activeDay].zoom || 14;
             map.flyTo(markers[index].getLatLng(), zoom, { duration: 0.7 });
             markers[index].openPopup();
+            if (scroll) {
+                itineraryEl.children[index].scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        }
+
+        [glanceEl, itineraryEl].forEach((container) => {
+            container.addEventListener("click", (event) => {
+                const button = event.target.closest(".stop");
+                if (!button) return;
+                focusStop(Number(button.dataset.index), { scroll: container === glanceEl });
+            });
         });
 
         async function renderDay(dayIndex) {
@@ -468,8 +574,11 @@
                 tab.classList.toggle("is-active", index === dayIndex);
             });
             summaryEl.innerHTML = `
-                <p class="day-title">${escapeHtml(day.date)} ${escapeHtml(day.weekday)} · ${escapeHtml(day.title)}</p>
-                <p class="day-meta">${escapeHtml(day.meta)}</p>`;
+                <p class="day-title">${escapeHtml(day.date)} ${escapeHtml(day.weekday)}</p>
+                <p class="day-meta">${escapeHtml(day.title)}</p>`;
+            detailTitleEl.textContent = [`${day.date} ${day.weekday}`, day.title].filter(Boolean).join(" · ");
+            detailNoteEl.textContent = [`${day.stops.length} 个地点`, day.meta].filter(Boolean).join(" · ");
+            glanceEl.innerHTML = "";
             itineraryEl.innerHTML = "";
             markers.forEach((marker) => marker.remove());
             markers = [];
@@ -513,23 +622,37 @@
                     <p class="popup-meta">${escapeHtml(meta)}</p>
                     ${note}
                     <ul class="activities activities--popup">${activityRows}</ul>`);
-                marker.on("click", () => {
-                    document.querySelectorAll(".stop").forEach((el, i) => el.classList.toggle("is-active", i === index));
-                });
+                marker.on("click", () => highlightStop(index));
                 markers.push(marker);
 
-                const item = document.createElement("li");
-                item.className = "stop-wrap";
-                item.innerHTML = `
+                const badgeStyle = kindClass ? "" : ` style="background:${day.color}"`;
+                const glanceItem = document.createElement("li");
+                glanceItem.className = "glance-item";
+                glanceItem.innerHTML = `
                     <button class="stop" type="button" data-index="${index}">
-                        <span class="badge${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</span>
+                        <span class="badge${kindClass}"${badgeStyle}>${number}</span>
                         <span>
                             <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
-                            <span class="stop-meta">${escapeHtml(meta)}</span>
-                            ${note}
+                            <span class="stop-meta">${escapeHtml(stop.time || "")}</span>
                         </span>
-                    </button>
-                    <ul class="activities">${activityRows}</ul>`;
+                    </button>`;
+                glanceEl.appendChild(glanceItem);
+
+                const item = document.createElement("li");
+                item.className = "timeline-item";
+                item.innerHTML = `
+                    ${stop.drive ? `<p class="leg-row">${escapeHtml(stop.drive)}</p>` : ""}
+                    <article class="stop-card">
+                        <button class="stop" type="button" data-index="${index}">
+                            <span class="badge${kindClass}"${badgeStyle}>${number}</span>
+                            <span>
+                                <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
+                                <span class="stop-meta">${escapeHtml(stop.time || "")}</span>
+                            </span>
+                        </button>
+                        <ul class="activities">${activityRows}</ul>
+                        ${note}
+                    </article>`;
                 itineraryEl.appendChild(item);
             });
 
