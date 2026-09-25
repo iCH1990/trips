@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>澳大利亚 Adelaide / Kangaroo Island / Mungo 2026/10/01–2026/10/08</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --ink: #4c1d24;
+            --muted: #5c4a4e;
+            --line: #e4d8d6;
+            --accent: #9f2d3a;
+            --accent-soft: #f8ecec;
+            --warm: #b45f24;
+            --warm-soft: #fff0df;
+            --stay: #6b4ea0;
+            --stay-soft: #f0eafa;
+            --bg: #f7f4f2;
+            --shadow: 0 1px 2px rgba(15, 35, 55, 0.05);
+            --shadow-lift: 0 10px 28px rgba(15, 35, 55, 0.1);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        }
+        button { font: inherit; }
+        .page { max-width: 1140px; margin: 0 auto; padding: 40px 24px 72px; }
+        .card {
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: var(--shadow);
+        }
+        .kicker {
+            margin: 0;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 650;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        h1 { margin: 8px 0 0; color: var(--ink); font-size: 30px; line-height: 1.25; }
+        .subtitle { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+        .stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; }
+        .stat {
+            padding: 5px 11px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: #fff;
+            color: var(--ink);
+            font-size: 12px;
+        }
+        .overview {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 316px;
+            gap: 16px;
+            margin: 24px 0 0;
+        }
+        .map-card { overflow: hidden; }
+        #map { width: 100%; height: 100%; min-height: 520px; }
+        .side {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 520px;
+            padding: 16px;
+        }
+        .day-tabs {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+            gap: 6px;
+        }
+        .day-tab {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 8px 4px;
+            background: #fff;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 1.3;
+        }
+        .day-tab:hover, .day-tab:focus-visible { border-color: var(--accent); outline: none; }
+        .day-tab.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+        .day-summary {
+            padding: 10px 12px;
+            border-left: 3px solid var(--accent);
+            border-radius: 6px;
+            background: #f8f4f2;
+        }
+        .day-title { margin: 0; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .day-meta { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+        .glance {
+            flex: 1;
+            overflow: auto;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        .glance-item + .glance-item { border-top: 1px solid var(--line); }
+        .stop {
+            display: grid;
+            grid-template-columns: 26px 1fr;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+            padding: 8px 6px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+        .stop:hover, .stop:focus-visible, .stop.is-active { background: var(--accent-soft); outline: none; }
+        .route-stat {
+            margin: 0;
+            padding-top: 10px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .badge, .num-marker {
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+        }
+        .badge { width: 26px; height: 26px; margin-top: 1px; font-size: 12px; }
+        .num-marker {
+            width: 29px;
+            height: 29px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.27);
+            font-size: 12px;
+        }
+        .badge.is-stay, .num-marker.is-stay { background: var(--stay); }
+        .badge.is-highlight, .num-marker.is-highlight { background: var(--warm); }
+        .stop-title { color: var(--ink); font-size: 14px; font-weight: 650; }
+        .stop-meta { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+        .tag {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: var(--warm-soft);
+            color: var(--warm);
+            font-size: 10px;
+            font-weight: 700;
+            vertical-align: 1px;
+        }
+        .tag--stay { background: var(--stay-soft); color: var(--stay); }
+        .detail { margin: 32px 0 0; }
+        .detail-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 4px 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--line);
+        }
+        .detail-head h2 { margin: 0; font-size: 20px; }
+        .detail-note { margin: 0; color: var(--muted); font-size: 13px; }
+        .timeline { display: grid; gap: 10px; margin: 18px 0 0; padding: 0; list-style: none; }
+        .timeline-item { display: grid; gap: 10px; }
+        .leg-row {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding-left: 18px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .leg-row::before {
+            content: "";
+            width: 2px;
+            height: 20px;
+            border-radius: 2px;
+            background: var(--line);
+        }
+        .stop-card {
+            padding: 16px 18px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: var(--shadow);
+            scroll-margin-top: 16px;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+        .stop-card.is-active { border-color: var(--accent); box-shadow: var(--shadow-lift); }
+        .stop-card .stop {
+            grid-template-columns: 32px 1fr;
+            gap: 12px;
+            align-items: start;
+            padding: 0;
+        }
+        .stop-card .stop:hover, .stop-card .stop:focus-visible, .stop-card .stop.is-active { background: transparent; }
+        .stop-card .badge { width: 32px; height: 32px; margin-top: 0; font-size: 14px; }
+        .stop-card .stop-title { font-size: 17px; font-weight: 700; }
+        .stop-card .stop-meta { margin-top: 4px; font-size: 13px; }
+        .activities {
+            display: grid;
+            gap: 8px;
+            margin: 12px 0 0;
+            padding: 12px 0 0;
+            border-top: 1px dashed var(--line);
+            list-style: none;
+        }
+        .activity {
+            display: grid;
+            grid-template-columns: 96px 1fr;
+            gap: 12px;
+            font-size: 13.5px;
+            line-height: 1.6;
+        }
+        .activity-time { color: var(--accent); font-weight: 650; font-variant-numeric: tabular-nums; }
+        .activity-text { color: var(--ink); }
+        .note {
+            display: block;
+            margin-top: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: var(--warm-soft);
+            color: var(--warm);
+            font-size: 12.5px;
+            line-height: 1.5;
+        }
+        .hint { margin: 28px 0 0; color: #6c7d8e; font-size: 12px; line-height: 1.6; }
+        .popup-title { margin: 0 0 4px; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .popup-meta { margin: 0; color: var(--muted); font-size: 12px; }
+        .activities--popup { gap: 5px; margin-top: 8px; font-size: 12px; }
+        .activities--popup .activity { grid-template-columns: 72px 1fr; gap: 8px; font-size: 12px; }
+        .leaflet-popup-content { margin: 10px 13px; min-width: 235px; }
+        @media (max-width: 880px) {
+            .overview { grid-template-columns: minmax(0, 1fr); }
+            #map { min-height: 380px; }
+            .side { max-height: none; }
+            .glance { overflow: visible; }
+        }
+        @media (max-width: 560px) {
+            .page { padding: 28px 16px 56px; }
+            h1 { font-size: 23px; }
+            .stop-card { padding: 14px 15px; }
+            .stop-card .stop-title { font-size: 16px; }
+            .activity { grid-template-columns: 72px 1fr; gap: 8px; font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header class="trip-head">
+            <p class="kicker">Australia · 2026</p>
+            <h1>澳大利亚 Adelaide / Kangaroo Island / Mungo 2026/10/01–2026/10/08</h1>
+            <p class="subtitle">🇦🇺 · 八天 · 飞机 + 自驾</p>
+            <div class="stats">
+                <span class="stat">8 天 7 晚</span>
+                <span class="stat">Adelaide Marriott 6 晚 · Mungo Lodge 1 晚</span>
+                <span class="stat">Barossa · Kangaroo Island · Mungo</span>
+            </div>
+        </header>
+        <section class="overview" aria-label="行程总览">
+            <div class="card map-card">
+                <div id="map" role="application" aria-label="Adelaide 与 Barossa、Adelaide Hills 行程地图"></div>
+            </div>
+            <div class="card side">
+                <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+                <div class="day-summary" id="daySummary"></div>
+                <ol class="glance" id="glance"></ol>
+                <p class="route-stat" id="routeStat">正在规划当日路线…</p>
+            </div>
+        </section>
+        <section class="detail" aria-label="当日详细安排">
+            <div class="detail-head">
+                <h2 id="detailTitle"></h2>
+                <p class="detail-note" id="detailNote"></p>
+            </div>
+            <ol class="timeline" id="itinerary"></ol>
+        </section>
+        <p class="hint">去程 QF733 约 09:25 Sydney 起飞、11:05 抵 ADL，落地即取车。八天七晚：万豪六晚（215 Grenfell St，10/1–10/6），只有 10/7 住 Mungo Lodge。袋鼠岛 10/4 周日当天往返；10/7 看完 Walls of China 日落；10/8 开回 Adelaide，Glenelg 稍作停留，晚上 QF746 约 19:10 回 Sydney。租车 Adelaide 取还，并书面确认可走 Arumpo Road。袋鼠岛按 06:00 出城、07:30 码头报到、约 09:00 抵岛、19:30 回程来排；长周末车位紧张，人车往返一起订，时刻以 SeaLink 为准。</p>
+    </div>
+
+    <script>
+        const days = [
+            {
+                date: "10/1",
+                weekday: "周四",
+                title: "QF733 抵 Adelaide，市场午餐后 Zoo 与植物园",
+                meta: "落地机场取车 · Central Market · 入住 Adelaide Marriott · Zoo 熊猫 · 植物园 · 河岸 · Gouger 晚饭",
+                color: "#9f2d3a",
+                flightStat: "QF733 Sydney → Adelaide",
+                stops: [
+                    {
+                        name: "Sydney Airport",
+                        time: "09:25 起飞",
+                        lat: -33.94989, lng: 151.18197,
+                        activities: [
+                            { time: "09:25", text: "QF733 从 Sydney 出发，飞往 Adelaide" }
+                        ]
+                    },
+                    {
+                        name: "Adelaide Airport",
+                        time: "约 11:05 抵达",
+                        drive: "飞行约 2 小时 10 分",
+                        leg: "flight",
+                        lat: -34.945, lng: 138.5306,
+                        activities: [
+                            { time: "抵达后", text: "取行李后立刻机场取车。第一天就开始自驾，没有另留取车日" }
+                        ]
+                    },
+                    {
+                        name: "Adelaide Central Market",
+                        time: "12:30–14:00 午餐",
+                        kind: "highlight",
+                        lat: -34.9298, lng: 138.5972,
+                        activities: [
+                            { time: "12:30", text: "逛摊位吃午餐：Lucia's、海鲜、bakery 随便组合，再买点水果和零食备车上" }
+                        ],
+                        note: "Gouger Street 一侧入口。周四下午还开；停车用市场停车场或附近 Grote St。"
+                    },
+                    {
+                        name: "Adelaide Marriott Hotel",
+                        time: "14:00 入住",
+                        kind: "stay",
+                        lat: -34.9228, lng: 138.6089,
+                        activities: [
+                            { time: "14:00", text: "办理入住，行李进房。下午不出城，步行去 Zoo 和植物园" }
+                        ],
+                        note: "215 Grenfell St。前六晚都住这里（10/1–10/6），10/7 才去 Mungo Lodge。酒店有停车，出发前问清 overnight 收费。沿 Torrens 河步行约 10–15 分钟到 Zoo。"
+                    },
+                    {
+                        name: "Adelaide Zoo",
+                        time: "14:30–16:30",
+                        kind: "highlight",
+                        lat: -34.9144, lng: 138.6081,
+                        activities: [
+                            { time: "14:30", text: "先看熊猫馆，再按体力走其他区。落地当天下午不要贪整个园" }
+                        ],
+                        note: "Frome Rd。网上买票。周四通常 17:00 闭园，尽量 14:30 前入园。"
+                    },
+                    {
+                        name: "Adelaide Botanic Garden",
+                        time: "16:40–17:30",
+                        lat: -34.9183, lng: 138.6104,
+                        activities: [
+                            { time: "16:40", text: "看 Palm House 与温室，草坪坐一会儿" }
+                        ]
+                    },
+                    {
+                        name: "River Torrens Footbridge",
+                        time: "17:40–18:10",
+                        lat: -34.9174, lng: 138.6006,
+                        activities: [
+                            { time: "17:40", text: "沿河走回酒店，顺路看 Adelaide Oval 外观" }
+                        ]
+                    },
+                    {
+                        name: "Gouger Street Chinatown",
+                        time: "19:00 晚餐",
+                        lat: -34.9302, lng: 138.5983,
+                        activities: [
+                            { time: "19:00", text: "回城在 Gouger Street 吃中餐或火锅，之后回酒店早休息" }
+                        ],
+                        note: "离 Central Market 同一条街。想吃西餐可改 Peel Street 或 Rundle。"
+                    }
+                ]
+            },
+            {
+                date: "10/2",
+                weekday: "周五",
+                title: "Glenelg 沙滩，当晚仍住 Marriott",
+                meta: "Jetty · Moseley Square · 近机场海边 · 第二晚万豪",
+                color: "#0e7490",
+                stops: [
+                    {
+                        name: "Adelaide Marriott Hotel",
+                        time: "09:30 出发",
+                        kind: "stay",
+                        lat: -34.9228, lng: 138.6089,
+                        activities: [
+                            { time: "09:30", text: "不赶长途。沿海边走一天，车第一天就在" }
+                        ]
+                    },
+                    {
+                        name: "Glenelg Jetty",
+                        time: "10:00–12:30",
+                        drive: "驾驶约 20 分钟",
+                        kind: "highlight",
+                        lat: -34.9807, lng: 138.5115,
+                        activities: [
+                            { time: "10:00", text: "沿 Jetty 走到头看海，Moseley Square 转一圈，陪小孩玩沙滩" }
+                        ],
+                        note: "十月海水仍凉，以走沙、拍照为主。停车用 Jetty Road 附近车位或 Glenelg 停车场。"
+                    },
+                    {
+                        name: "Glenelg",
+                        time: "12:30–14:30 午饭",
+                        lat: -34.9802, lng: 138.5155,
+                        activities: [
+                            { time: "12:30", text: "Jetty Road 吃午饭，bakery 或简单海鲜" }
+                        ]
+                    },
+                    {
+                        name: "Brighton Beach",
+                        time: "15:00–16:00",
+                        lat: -35.0165, lng: 138.5125,
+                        activities: [
+                            { time: "15:00", text: "南边再停 Brighton 看一下海滩和小屋，然后回城" }
+                        ]
+                    },
+                    {
+                        name: "Adelaide Marriott Hotel",
+                        time: "17:00 回到",
+                        kind: "stay",
+                        lat: -34.9228, lng: 138.6089,
+                        activities: [
+                            { time: "19:00", text: "附近晚饭。次日 Barossa，指定司机、早一点睡" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "10/3",
+                weekday: "周六",
+                title: "Barossa：Maggie Beer、Seppeltsfield，回程 Whispering Wall",
+                meta: "北上酒庄 · 农场店午餐 · 建筑与花园 · 指定司机 · 当晚回 CBD",
+                color: "#b45309",
+                stops: [
+                    {
+                        name: "Adelaide Marriott Hotel",
+                        time: "08:30 出发",
+                        kind: "stay",
+                        lat: -34.9228, lng: 138.6089,
+                        activities: [
+                            { time: "08:00", text: "酒店早饭" },
+                            { time: "08:30", text: "加满油出城，走 Northern Expressway 去 Barossa，约 1 小时" }
+                        ]
+                    },
+                    {
+                        name: "Maggie Beer Farm Shop",
+                        time: "10:00–12:00",
+                        drive: "驾驶约 1 小时 10 分",
+                        kind: "highlight",
+                        lat: -34.4994, lng: 139.0467,
+                        activities: [
+                            { time: "10:00", text: "Farm Shop 试吃 pâté、冰酒醋、冰淇淋，院子里走走" },
+                            { time: "11:00", text: "在店里或院子吃早午餐，不用另订餐厅" }
+                        ],
+                        note: "50 Pheasant Farm Rd, Nuriootpa。带小孩最合适的酒庄停点，不必正装品酒。"
+                    },
+                    {
+                        name: "Seppeltsfield",
+                        time: "13:00–15:00",
+                        drive: "驾驶约 20 分钟",
+                        kind: "highlight",
+                        lat: -34.4928, lng: 138.9119,
+                        activities: [
+                            { time: "13:00", text: "看棕榈大道与 Centennial Cellar，花园散步" },
+                            { time: "14:00", text: "指定司机不喝酒；其他人 cellar door 短品即可，不要连排三家" }
+                        ],
+                        note: "730 Seppeltsfield Rd。想坐下来吃饭可改订 Fino Seppeltsfield，需提前订；订不上就沿用 Maggie Beer 午餐。"
+                    },
+                    {
+                        name: "Whispering Wall",
+                        time: "15:30–16:00",
+                        lat: -34.6167, lng: 138.8383,
+                        activities: [
+                            { time: "15:30", text: "回城路上停 Barossa Reservoir 大坝，两端低声说话能听见，停 20 分钟够" }
+                        ],
+                        note: "Whispering Wall Rd, Williamstown。周末人多，停一下就走。"
+                    },
+                    {
+                        name: "Adelaide Marriott Hotel",
+                        time: "17:30 回到",
+                        kind: "stay",
+                        lat: -34.9228, lng: 138.6089,
+                        activities: [
+                            { time: "17:30", text: "回酒店休息。次日 06:00 上袋鼠岛当天往返，不退房，今晚早睡" },
+                            { time: "19:00", text: "晚饭走去附近 North Terrace / Rundle 随便吃，不再开车" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "10/4",
+                weekday: "周日",
+                title: "袋鼠岛当天往返：先西端再顺路回",
+                meta: "06:00 出城 · 约 09:00 抵岛 · 19:30 回程 · 当晚仍住 Marriott",
+                color: "#4f6d7a",
+                flightStat: "SeaLink Cape Jervis ⇄ Penneshaw",
+                stops: [
+                    {
+                        name: "Adelaide Marriott Hotel",
+                        time: "06:00 出发",
+                        kind: "stay",
+                        lat: -34.9228, lng: 138.6089,
+                        activities: [
+                            { time: "06:00", text: "市区出发去 Cape Jervis，约 1.5 小时。不退房，行李留酒店，只带当天背包、水和简餐" }
+                        ],
+                        note: "沿线路况好，早晨注意限速。长周末人车往返一起订。"
+                    },
+                    {
+                        name: "Cape Jervis Ferry Terminal",
+                        time: "07:30 报到",
+                        drive: "驾驶约 1 小时 30 分",
+                        lat: -35.6081, lng: 138.0975,
+                        activities: [
+                            { time: "07:30", text: "办理人车登船。开船前 30 分钟必须完成 check-in，并把车开进开舱等待区" }
+                        ],
+                        note: "按 07:30 报到、约 09:00 抵 Penneshaw 来排。时刻以 SeaLink 周日班次为准。"
+                    },
+                    {
+                        name: "Penneshaw Ferry Terminal",
+                        time: "09:00 抵达",
+                        leg: "flight",
+                        lat: -35.7181, lng: 137.9415,
+                        activities: [
+                            { time: "09:00", text: "驶出渡轮后不要在东部停留，直奔岛最西端 Flinders Chase NP。单程约 150 公里、1.5–2 小时" }
+                        ]
+                    },
+                    {
+                        name: "Remarkable Rocks",
+                        time: "11:00–12:15",
+                        drive: "驾驶约 1 小时 50 分",
+                        kind: "highlight",
+                        lat: -36.0483, lng: 136.7562,
+                        activities: [
+                            { time: "11:00", text: "先打卡神奇岩石。随后去 Admirals Arch，这段都在 Flinders Chase 内" }
+                        ]
+                    },
+                    {
+                        name: "Admirals Arch",
+                        time: "12:30–13:30",
+                        kind: "highlight",
+                        lat: -36.0604, lng: 136.7048,
+                        activities: [
+                            { time: "12:30", text: "看旗舰拱门和野生海豹。国家公园游客中心可买简餐，或吃自备午餐" }
+                        ],
+                        note: "11:00–13:30 只停这两处，13:30 左右必须掉头往回开。"
+                    },
+                    {
+                        name: "Seal Bay Conservation Park",
+                        time: "14:00–16:30",
+                        drive: "驾驶约 1 小时 15 分",
+                        kind: "highlight",
+                        lat: -35.994, lng: 137.3218,
+                        activities: [
+                            { time: "14:00", text: "沿 South Coast Road 回程。海豹湾导览走下沙丘近看澳洲海狮，约 1 小时；也可改停 Vivonne Bay" }
+                        ],
+                        note: "16:30 离开。不住岛上。若赶不上导览，只走 boardwalk。"
+                    },
+                    {
+                        name: "Penneshaw Ferry Terminal",
+                        time: "18:00–18:30 报到 · 19:30 开船",
+                        drive: "驾驶约 1 小时 10 分",
+                        lat: -35.7181, lng: 137.9415,
+                        activities: [
+                            { time: "18:00", text: "码头附近加满油，车辆排队，乘约 19:30 轮渡回 Cape Jervis（时刻视季节确认）" }
+                        ]
+                    },
+                    {
+                        name: "Cape Jervis Ferry Terminal",
+                        time: "约 20:15 抵达",
+                        leg: "flight",
+                        lat: -35.6081, lng: 138.0975,
+                        activities: [
+                            { time: "20:15", text: "下船后开回 Adelaide" }
+                        ]
+                    },
+                    {
+                        name: "Adelaide Marriott Hotel",
+                        time: "21:30–22:00 回到",
+                        kind: "stay",
+                        lat: -34.9228, lng: 138.6089,
+                        activities: [
+                            { time: "21:45", text: "回到 Marriott。晚饭在船上或车上解决。之后两天都在 Adelaide 附近，去 Mungo 前可以缓过来" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "10/5",
+                weekday: "周一",
+                title: "Adelaide Hills：Hahndorf、Cleland、Mt Lofty",
+                meta: "劳工节 · 德式小镇早餐 · 农场草莓酱 · 野生动物 · 山顶看 Adelaide",
+                color: "#0f766e",
+                stops: [
+                    {
+                        name: "Adelaide Marriott Hotel",
+                        time: "09:30 出发",
+                        kind: "stay",
+                        lat: -34.9228, lng: 138.6089,
+                        activities: [
+                            { time: "09:30", text: "前一晚回得晚，晚一点出门。东南上 Adelaide Hills，约 30 分钟到 Hahndorf" }
+                        ]
+                    },
+                    {
+                        name: "Hahndorf",
+                        time: "10:00–11:30",
+                        drive: "驾驶约 30 分钟",
+                        kind: "highlight",
+                        lat: -35.0294, lng: 138.8078,
+                        activities: [
+                            { time: "10:00", text: "Main Street 吃德式早餐或 bakery，逛一圈小店" }
+                        ],
+                        note: "类似 Bowral 那种一天小镇，不要排太多店。劳工节人多，停车沿主街两侧。"
+                    },
+                    {
+                        name: "Beerenberg Farm",
+                        time: "11:45–12:15",
+                        lat: -35.027, lng: 138.79,
+                        activities: [
+                            { time: "11:45", text: "买草莓酱、季节水果，当伴手礼；十月不一定能自己摘，以农场店为主" }
+                        ],
+                        note: "152 Old Princes Hwy, Hahndorf。就在镇西头，不绕路。"
+                    },
+                    {
+                        name: "Cleland Wildlife Park",
+                        time: "12:45–15:15",
+                        kind: "highlight",
+                        lat: -34.9669, lng: 138.6956,
+                        activities: [
+                            { time: "12:45", text: "入园。袋鼠、鸸鹋可近距离；考拉合影要另约时段" },
+                            { time: "14:45", text: "园内 cafe 简单垫一下，再上山顶" }
+                        ],
+                        note: "365 Mount Lofty Summit Rd, Crafers。须网上买票。劳工节仍开园。"
+                    },
+                    {
+                        name: "Mount Lofty Summit",
+                        time: "15:35–16:15",
+                        kind: "highlight",
+                        lat: -34.9772, lng: 138.7089,
+                        activities: [
+                            { time: "15:35", text: "观景台看 Adelaide 平原，喝杯咖啡，之后下山回城" }
+                        ]
+                    },
+                    {
+                        name: "Adelaide Marriott Hotel",
+                        time: "17:00 回到",
+                        kind: "stay",
+                        lat: -34.9228, lng: 138.6089,
+                        activities: [
+                            { time: "19:00", text: "晚饭后正常休息。次日 McLaren Vale，10/7 才去 Mungo 并当天看完" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "10/6",
+                weekday: "周二",
+                title: "McLaren Vale：酒庄与 Port Willunga，当晚仍住 Marriott",
+                meta: "南下约 45 分钟 · 指定司机 · 第六晚仍住万豪",
+                color: "#27756d",
+                stops: [
+                    {
+                        name: "Adelaide Marriott Hotel",
+                        time: "09:00 出发",
+                        kind: "stay",
+                        lat: -34.9228, lng: 138.6089,
+                        activities: [
+                            { time: "09:00", text: "前一晚已在 17:00 前回酒店。车第一天就在，直接南下 McLaren Vale" }
+                        ]
+                    },
+                    {
+                        name: "d'Arenberg Cube",
+                        time: "10:00–12:00",
+                        drive: "驾驶约 45 分钟",
+                        kind: "highlight",
+                        lat: -35.2147, lng: 138.5469,
+                        activities: [
+                            { time: "10:00", text: "看 Cube 建筑、屋顶看葡萄园。品酒给指定司机，带小孩可走花园和展望台" }
+                        ],
+                        note: "Osborn Rd, McLaren Vale。预约屋顶或餐厅，当天往返不要排太多酒庄。"
+                    },
+                    {
+                        name: "McLaren Vale township",
+                        time: "12:15–13:15 午饭",
+                        lat: -35.2189, lng: 138.5433,
+                        activities: [
+                            { time: "12:15", text: "镇上咖啡馆或 bakers 吃午饭，买水和零食备次日 Mungo 车上" }
+                        ]
+                    },
+                    {
+                        name: "Port Willunga Beach",
+                        time: "13:45–15:15",
+                        kind: "highlight",
+                        lat: -35.2595, lng: 138.4628,
+                        activities: [
+                            { time: "13:45", text: "走沙、看 Star of Greece 栈桥遗迹。十月海水凉，以散步为主" }
+                        ]
+                    },
+                    {
+                        name: "Adelaide Marriott Hotel",
+                        time: "16:30 回到",
+                        kind: "stay",
+                        drive: "驾驶约 50 分钟",
+                        lat: -34.9228, lng: 138.6089,
+                        activities: [
+                            { time: "16:30", text: "这是万豪第六晚、也是最后一晚。收拾 Mungo 一晚的行李" },
+                            { time: "19:00", text: "附近吃晚饭，早睡。次日 06:30 退房去 Mungo，当天看完 Walls of China" }
+                        ],
+                        note: "确认租车保险书面覆盖 Arumpo Road。车仍回 Adelaide 还。"
+                    }
+                ]
+            },
+            {
+                date: "10/7",
+                weekday: "周三",
+                title: "开到 Mungo，当天看完 Walls of China",
+                meta: "早出发 · Mildura 加油 · 下午入园 · 日落导览 · 只住这一晚",
+                color: "#b45309",
+                stops: [
+                    {
+                        name: "Adelaide Marriott Hotel",
+                        time: "06:30 退房",
+                        kind: "stay",
+                        lat: -34.9228, lng: 138.6089,
+                        activities: [
+                            { time: "06:30", text: "退房，加满油走 Sturt Highway。今天要赶到 lodge 赶日落导览" }
+                        ]
+                    },
+                    {
+                        name: "Renmark",
+                        time: "10:00–10:40 午饭",
+                        drive: "驾驶约 3 小时 20 分",
+                        lat: -34.174, lng: 140.744,
+                        activities: [
+                            { time: "10:00", text: "河边吃饭、休息，检查油量，不要停太久" }
+                        ]
+                    },
+                    {
+                        name: "Mildura",
+                        time: "12:20–12:45 加油",
+                        drive: "驾驶约 1 小时 45 分",
+                        lat: -34.1841, lng: 142.159,
+                        activities: [
+                            { time: "12:20", text: "加满油再进公园。Mungo 没有可靠加油站" }
+                        ]
+                    },
+                    {
+                        name: "Mungo Lodge",
+                        time: "14:30 入住",
+                        drive: "自驾约 1 小时 40 分",
+                        kind: "stay",
+                        lat: -33.7315, lng: 143.012,
+                        activities: [
+                            { time: "14:30", text: "办理入住，这是全程唯一一晚 lodge。确认今晚日落导览集合时间" }
+                        ],
+                        note: "只住 10/7 一晚。Arumpo Road 后段非铺装，租车前要书面确认保险。雨后先查封路。"
+                    },
+                    {
+                        name: "Mungo Visitor Centre",
+                        time: "15:00–16:00",
+                        lat: -33.7273, lng: 143.0329,
+                        activities: [
+                            { time: "15:00", text: "自助缴入园费，看展览和 Historic Woolshed。Walls of China 不能自己走进 lunette" }
+                        ],
+                        note: "入园约每车每天 8 澳元。"
+                    },
+                    {
+                        name: "Walls of China",
+                        time: "17:30–19:30 日落导览",
+                        kind: "highlight",
+                        lat: -33.7385, lng: 143.1165,
+                        activities: [
+                            { time: "17:30", text: "从 lodge 出发，日落前约 1.5 小时。自己开车跟 NPWS，或订 Mungo Lodge 日落团" },
+                            { time: "19:30", text: "看完 lunette 回 lodge 吃晚饭。Mungo 行程今天结束" }
+                        ],
+                        note: "十月日落约 19:00。Lodge 日落团 03 5029 7297 / stay@mungolodge.com.au；NPWS lunette 预约 1300 072 757，选当天下午或傍晚场。"
+                    },
+                    {
+                        name: "Mungo Lodge",
+                        time: "20:00 回到",
+                        kind: "stay",
+                        lat: -33.7315, lng: 143.012,
+                        activities: [
+                            { time: "20:00", text: "lodge 晚饭，早睡。次日开回 Adelaide，晚上 QF746 回 Sydney" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "10/8",
+                weekday: "周四",
+                title: "开回 Adelaide，Glenelg 后 QF746 回 Sydney",
+                meta: "不进园 · Mildura 加油 · Renmark 午饭 · Glenelg · 19:10 起飞",
+                color: "#9f2d3a",
+                flightStat: "QF746 Adelaide → Sydney",
+                stops: [
+                    {
+                        name: "Mungo Lodge",
+                        time: "07:00 退房",
+                        kind: "stay",
+                        lat: -33.7315, lng: 143.012,
+                        activities: [
+                            { time: "07:00", text: "早饭后退房。今天不进园，开回 Adelaide" }
+                        ]
+                    },
+                    {
+                        name: "Mildura",
+                        time: "08:40–09:00 加油",
+                        drive: "自驾约 1 小时 40 分",
+                        lat: -34.1841, lng: 142.159,
+                        activities: [
+                            { time: "08:40", text: "加满油、买路上吃的，不进城" }
+                        ]
+                    },
+                    {
+                        name: "Renmark",
+                        time: "10:45–11:30 午饭",
+                        drive: "驾驶约 1 小时 45 分",
+                        lat: -34.174, lng: 140.744,
+                        activities: [
+                            { time: "10:45", text: "河边吃饭、休息，之后继续往 Adelaide" }
+                        ]
+                    },
+                    {
+                        name: "Glenelg Jetty",
+                        time: "15:30–17:00",
+                        drive: "驾驶约 3 小时 20 分",
+                        kind: "highlight",
+                        lat: -34.9807, lng: 138.5115,
+                        activities: [
+                            { time: "15:30", text: "长途后来海边走一走、喝杯咖啡。不要排满，给还车留时间" }
+                        ],
+                        note: "Glenelg 离机场约 15 分钟。10/2 已经来过，今天只作歇脚。"
+                    },
+                    {
+                        name: "Adelaide Airport",
+                        time: "17:40 还车 · 19:10 起飞",
+                        lat: -34.945, lng: 138.5306,
+                        activities: [
+                            { time: "17:40", text: "还车、值机。不再回市区酒店" },
+                            { time: "19:10", text: "QF746 飞 Sydney" }
+                        ],
+                        note: "租车 Adelaide 取还。19:10 起飞，17:40 到机场够用；路况差就缩短 Glenelg。"
+                    },
+                    {
+                        name: "Sydney Airport",
+                        time: "约 21:35 抵达",
+                        drive: "飞行约 1 小时 55 分",
+                        leg: "flight",
+                        lat: -33.94989, lng: 151.18197,
+                        activities: [
+                            { time: "21:35", text: "抵达 Sydney，行程结束" }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const map = L.map("map", { zoomControl: true }).setView([-34.85, 138.7], 9);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        const tabsEl = document.getElementById("dayTabs");
+        const summaryEl = document.getElementById("daySummary");
+        const glanceEl = document.getElementById("glance");
+        const itineraryEl = document.getElementById("itinerary");
+        const detailTitleEl = document.getElementById("detailTitle");
+        const detailNoteEl = document.getElementById("detailNote");
+        const routeStatEl = document.getElementById("routeStat");
+        let routeLines = [];
+        let markers = [];
+        let activeDay = 0;
+
+        days.forEach((day, index) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "day-tab";
+            button.innerHTML = `${escapeHtml(day.date)}<br>${escapeHtml(day.weekday)}`;
+            button.addEventListener("click", () => renderDay(index));
+            tabsEl.appendChild(button);
+        });
+
+        function highlightStop(index) {
+            document.querySelectorAll(".stop").forEach((el) => {
+                el.classList.toggle("is-active", Number(el.dataset.index) === index);
+            });
+            document.querySelectorAll(".stop-card").forEach((card, i) => {
+                card.classList.toggle("is-active", i === index);
+            });
+        }
+
+        function focusStop(index, { scroll = false } = {}) {
+            highlightStop(index);
+            const zoom = days[activeDay].zoom || 12;
+            map.flyTo(markers[index].getLatLng(), zoom, { duration: 0.7 });
+            markers[index].openPopup();
+            if (scroll) {
+                itineraryEl.children[index].scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        }
+
+        [glanceEl, itineraryEl].forEach((container) => {
+            container.addEventListener("click", (event) => {
+                const button = event.target.closest(".stop");
+                if (!button) return;
+                focusStop(Number(button.dataset.index), { scroll: container === glanceEl });
+            });
+        });
+
+        function splitLegs(day, coords) {
+            const groups = [];
+            let current = { type: "drive", points: [coords[0]] };
+            for (let i = 1; i < day.stops.length; i++) {
+                const type = day.stops[i].leg === "flight" ? "flight" : "drive";
+                if (type === current.type) {
+                    current.points.push(coords[i]);
+                } else {
+                    groups.push(current);
+                    current = { type, points: [coords[i - 1], coords[i]] };
+                }
+            }
+            groups.push(current);
+            return groups.filter((group) => group.points.length > 1);
+        }
+
+        async function renderDay(dayIndex) {
+            activeDay = dayIndex;
+            const day = days[dayIndex];
+            document.querySelectorAll(".day-tab").forEach((tab, index) => {
+                tab.classList.toggle("is-active", index === dayIndex);
+            });
+            summaryEl.innerHTML = `
+                <p class="day-title">${escapeHtml(day.date)} ${escapeHtml(day.weekday)}</p>
+                <p class="day-meta">${escapeHtml(day.title)}</p>`;
+            detailTitleEl.textContent = [`${day.date} ${day.weekday}`, day.title].filter(Boolean).join(" · ");
+            detailNoteEl.textContent = [`${day.stops.length} 个地点`, day.meta].filter(Boolean).join(" · ");
+            glanceEl.innerHTML = "";
+            itineraryEl.innerHTML = "";
+            markers.forEach((marker) => marker.remove());
+            markers = [];
+            routeLines.forEach((line) => line.remove());
+            routeLines = [];
+
+            const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
+
+            day.stops.forEach((stop, index) => {
+                const number = index + 1;
+                const kindClass = stop.kind ? ` is-${stop.kind}` : "";
+                const label = stop.kind === "stay"
+                    ? '<span class="tag tag--stay">住宿</span>'
+                    : stop.kind === "highlight"
+                        ? '<span class="tag">重点</span>'
+                        : "";
+                const activityRows = stop.activities.map((activity) => `
+                    <li class="activity">
+                        <span class="activity-time">${escapeHtml(activity.time)}</span>
+                        <span class="activity-text">${escapeHtml(activity.text)}</span>
+                    </li>`).join("");
+                const meta = [stop.drive, stop.time].filter(Boolean).join(" · ");
+                const note = stop.note ? `<span class="note">${escapeHtml(stop.note)}</span>` : "";
+
+                const marker = L.marker([stop.lat, stop.lng], {
+                    icon: L.divIcon({
+                        className: "",
+                        html: `<div class="num-marker${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</div>`,
+                        iconSize: [29, 29],
+                        iconAnchor: [14, 14],
+                        popupAnchor: [0, -16]
+                    })
+                }).addTo(map);
+                marker.bindPopup(`
+                    <p class="popup-title">${number}. ${escapeHtml(stop.name)}${label}</p>
+                    <p class="popup-meta">${escapeHtml(meta)}</p>
+                    ${note}
+                    <ul class="activities activities--popup">${activityRows}</ul>`);
+                marker.on("click", () => highlightStop(index));
+                markers.push(marker);
+
+                const badgeStyle = kindClass ? "" : ` style="background:${day.color}"`;
+                const glanceItem = document.createElement("li");
+                glanceItem.className = "glance-item";
+                glanceItem.innerHTML = `
+                    <button class="stop" type="button" data-index="${index}">
+                        <span class="badge${kindClass}"${badgeStyle}>${number}</span>
+                        <span>
+                            <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
+                            <span class="stop-meta">${escapeHtml(stop.time || "")}</span>
+                        </span>
+                    </button>`;
+                glanceEl.appendChild(glanceItem);
+
+                const item = document.createElement("li");
+                item.className = "timeline-item";
+                item.innerHTML = `
+                    ${stop.drive ? `<p class="leg-row">${escapeHtml(stop.drive)}</p>` : ""}
+                    <article class="stop-card">
+                        <button class="stop" type="button" data-index="${index}">
+                            <span class="badge${kindClass}"${badgeStyle}>${number}</span>
+                            <span>
+                                <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
+                                <span class="stop-meta">${escapeHtml(stop.time || "")}</span>
+                            </span>
+                        </button>
+                        <ul class="activities">${activityRows}</ul>
+                        ${note}
+                    </article>`;
+                itineraryEl.appendChild(item);
+            });
+
+            const fallback = L.polyline(coords, {
+                color: day.color,
+                weight: 4,
+                opacity: 0.82,
+                dashArray: "8, 8"
+            }).addTo(map);
+            routeLines.push(fallback);
+            map.fitBounds(fallback.getBounds().pad(0.18));
+            await loadRoute(day, coords, dayIndex, fallback);
+        }
+
+        async function loadRoute(day, coords, expectedDay, fallback) {
+            const groups = splitLegs(day, coords);
+            const profile = day.mode === "foot" ? "foot" : "driving";
+            const waiting = day.mode === "foot" ? "正在规划步行路线…" : "正在规划当日路线…";
+            routeStatEl.textContent = waiting;
+
+            let driveKm = 0;
+            let driveMin = 0;
+            let hasFlight = false;
+            let routed = false;
+
+            for (const group of groups) {
+                if (group.type === "flight") {
+                    hasFlight = true;
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 3,
+                        opacity: 0.75,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                    continue;
+                }
+                const path = group.points.map(([lat, lng]) => `${lng},${lat}`).join(";");
+                const url = `https://router.project-osrm.org/route/v1/${profile}/${path}?overview=full&geometries=geojson`;
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error("route request failed");
+                    const data = await response.json();
+                    if (activeDay !== expectedDay) return;
+                    const route = data.routes && data.routes[0];
+                    if (!route) throw new Error("no route returned");
+                    const line = L.polyline(
+                        route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+                        { color: day.color, weight: 4, opacity: 0.85 }
+                    ).addTo(map);
+                    routeLines.push(line);
+                    driveKm += route.distance / 1000;
+                    driveMin += route.duration / 60;
+                    routed = true;
+                } catch (error) {
+                    const line = L.polyline(group.points, {
+                        color: day.color,
+                        weight: 4,
+                        opacity: 0.82,
+                        dashArray: "8, 8"
+                    }).addTo(map);
+                    routeLines.push(line);
+                }
+            }
+
+            if (activeDay !== expectedDay) return;
+            if (fallback) {
+                fallback.remove();
+                routeLines = routeLines.filter((line) => line !== fallback);
+            }
+
+            const parts = [];
+            if (hasFlight) parts.push(day.flightStat || "航班示意线");
+            if (routed) {
+                const km = profile === "foot" ? driveKm.toFixed(1) : Math.round(driveKm);
+                const minutes = Math.round(driveMin);
+                const time = minutes >= 60
+                    ? `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分`
+                    : `${minutes} 分`;
+                const label = profile === "foot" ? "步行" : "自驾";
+                parts.push(`${label}约 ${km} km · ${time}`);
+            } else if (!hasFlight) {
+                parts.push(profile === "foot" ? "步行路线暂不可用，显示直线示意" : "路线暂不可用，显示直线示意");
+            }
+            routeStatEl.textContent = parts.join(" · ");
+
+            const bounds = routeLines.reduce((acc, line) => acc.extend(line.getBounds()), routeLines[0].getBounds());
+            map.fitBounds(bounds.pad(0.15));
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        renderDay(0);
+    </script>
+</body>
+</html>
