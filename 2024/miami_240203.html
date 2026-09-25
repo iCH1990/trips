@@ -30,6 +30,16 @@
         }
         button { font: inherit; }
         .page { max-width: 1140px; margin: 0 auto; padding: 40px 24px 72px; }
+        .site-nav { margin: 0 0 20px; }
+        .back-home {
+            display: inline-flex;
+            align-items: center;
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 650;
+            text-decoration: none;
+        }
+        .back-home:hover, .back-home:focus-visible { text-decoration: underline; outline: none; }
         .card {
             border: 1px solid var(--line);
             border-radius: 16px;
@@ -256,6 +266,9 @@
 </head>
 <body>
     <div class="page">
+        <nav class="site-nav" aria-label="站点导航">
+            <a class="back-home" href="../index.html">← 返回主页</a>
+        </nav>
         <header class="trip-head">
             <p class="kicker">United States · 2024</p>
             <h1>美国 Miami / Key West 2024/02/03</h1>
