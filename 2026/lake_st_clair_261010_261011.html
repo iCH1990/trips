@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>澳大利亚 Lake St Clair 2026/10/10–2026/10/11</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --ink: #17324d;
+            --muted: #52657a;
+            --line: #dce5ec;
+            --accent: #2f6b4f;
+            --accent-soft: #e8f3ec;
+            --warm: #b45f24;
+            --warm-soft: #fff0df;
+            --stay: #6b4ea0;
+            --stay-soft: #f0eafa;
+            --bg: #f4f7f9;
+            --shadow: 0 1px 2px rgba(15, 35, 55, 0.05);
+            --shadow-lift: 0 10px 28px rgba(15, 35, 55, 0.1);
+        }
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        }
+        button { font: inherit; }
+        .page {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 20px 24px 16px;
+            overflow: hidden;
+        }
+        .site-nav { flex: none; margin: 0 0 12px; }
+        .trip-head { flex: none; }
+        .back-home {
+            display: inline-flex;
+            align-items: center;
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 650;
+            text-decoration: none;
+        }
+        .back-home:hover, .back-home:focus-visible { text-decoration: underline; outline: none; }
+        .card {
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: var(--shadow);
+        }
+        .kicker {
+            margin: 0;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 650;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        h1 { margin: 8px 0 0; color: var(--ink); font-size: 30px; line-height: 1.25; }
+        .subtitle { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+        .stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; }
+        .stat {
+            padding: 5px 11px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: #fff;
+            color: var(--ink);
+            font-size: 12px;
+        }
+        .overview {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 316px;
+            gap: 16px;
+            flex: none;
+            margin: 16px 0 0;
+        }
+        .map-card { overflow: hidden; }
+        #map { width: 100%; height: min(380px, 36vh); min-height: 260px; }
+        .side {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            height: min(380px, 36vh);
+            min-height: 260px;
+            padding: 16px;
+        }
+        .day-tabs {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+            gap: 6px;
+        }
+        .day-tab {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 8px 4px;
+            background: #fff;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 1.3;
+        }
+        .day-tab:hover, .day-tab:focus-visible { border-color: var(--accent); outline: none; }
+        .day-tab.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+        .day-summary {
+            padding: 10px 12px;
+            border-left: 3px solid var(--accent);
+            border-radius: 6px;
+            background: #f5f9fb;
+        }
+        .day-title { margin: 0; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .day-meta { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+        .glance {
+            flex: 1;
+            overflow: auto;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        .glance-item + .glance-item { border-top: 1px solid var(--line); }
+        .stop {
+            display: grid;
+            grid-template-columns: 26px 1fr;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+            padding: 8px 6px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+        .stop:hover, .stop:focus-visible, .stop.is-active { background: var(--accent-soft); outline: none; }
+        .route-stat {
+            margin: 0;
+            padding-top: 10px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .badge, .num-marker {
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+        }
+        .badge { width: 26px; height: 26px; margin-top: 1px; font-size: 12px; }
+        .num-marker {
+            width: 29px;
+            height: 29px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.27);
+            font-size: 12px;
+        }
+        .badge.is-stay, .num-marker.is-stay { background: var(--stay); }
+        .badge.is-highlight, .num-marker.is-highlight { background: var(--warm); }
+        .stop-title { color: var(--ink); font-size: 14px; font-weight: 650; }
+        .stop-meta { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+        .tag {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: var(--warm-soft);
+            color: var(--warm);
+            font-size: 10px;
+            font-weight: 700;
+            vertical-align: 1px;
+        }
+        .tag--stay { background: var(--stay-soft); color: var(--stay); }
+        .detail {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+            min-height: 0;
+            margin: 16px 0 0;
+            padding: 14px 16px 8px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .detail-head {
+            display: flex;
+            flex: none;
+            align-items: flex-start;
+            gap: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--line);
+        }
+        .detail-heading {
+            display: flex;
+            flex: 1 1 auto;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 4px 12px;
+            min-width: 0;
+        }
+        .detail-head h2 { margin: 0; font-size: 20px; }
+        .detail-note { margin: 0; color: var(--muted); font-size: 13px; }
+        .detail-expand {
+            flex: none;
+            margin-top: 1px;
+            padding: 5px 12px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: #fff;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 650;
+            line-height: 1.3;
+            cursor: pointer;
+        }
+        .detail-expand:hover, .detail-expand:focus-visible {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+            outline: none;
+        }
+        .timeline {
+            display: grid;
+            gap: 10px;
+            flex: 1 1 auto;
+            min-height: 0;
+            margin: 12px 0 0;
+            padding: 2px 6px 12px 0;
+            overflow: auto;
+            overscroll-behavior: contain;
+            list-style: none;
+        }
+        .timeline-item { display: grid; gap: 10px; }
+        .leg-row {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding-left: 18px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .leg-row::before {
+            content: "";
+            width: 2px;
+            height: 20px;
+            border-radius: 2px;
+            background: var(--line);
+        }
+        .stop-card {
+            padding: 16px 18px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: var(--shadow);
+            scroll-margin-top: 16px;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+        .stop-card.is-active { border-color: var(--accent); box-shadow: var(--shadow-lift); }
+        .stop-card .stop {
+            grid-template-columns: 32px 1fr;
+            gap: 12px;
+            align-items: start;
+            padding: 0;
+        }
+        .stop-card .stop:hover, .stop-card .stop:focus-visible, .stop-card .stop.is-active { background: transparent; }
+        .stop-card .badge { width: 32px; height: 32px; margin-top: 0; font-size: 14px; }
+        .stop-card .stop-title { font-size: 17px; font-weight: 700; }
+        .stop-card .stop-meta { margin-top: 4px; font-size: 13px; }
+        .activities {
+            display: grid;
+            gap: 8px;
+            margin: 12px 0 0;
+            padding: 12px 0 0;
+            border-top: 1px dashed var(--line);
+            list-style: none;
+        }
+        .activity {
+            display: grid;
+            grid-template-columns: 96px 1fr;
+            gap: 12px;
+            font-size: 13.5px;
+            line-height: 1.6;
+        }
+        .activity-time { color: var(--accent); font-weight: 650; font-variant-numeric: tabular-nums; }
+        .activity-text { color: var(--ink); }
+        .note {
+            display: block;
+            margin-top: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: var(--warm-soft);
+            color: var(--warm);
+            font-size: 12.5px;
+            line-height: 1.5;
+        }
+        .hint {
+            flex: none;
+            margin: 10px 0 0;
+            color: #6c7d8e;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .popup-title { margin: 0 0 4px; color: var(--ink); font-size: 14px; font-weight: 700; }
+        .popup-meta { margin: 0; color: var(--muted); font-size: 12px; }
+        .activities--popup { gap: 5px; margin-top: 8px; font-size: 12px; }
+        .activities--popup .activity { grid-template-columns: 72px 1fr; gap: 8px; font-size: 12px; }
+        .leaflet-popup-content { margin: 10px 13px; min-width: 235px; }
+        @media (max-width: 880px) {
+            .page { padding: 12px 12px 10px; }
+            h1 { margin-top: 4px; font-size: 22px; }
+            .subtitle { margin-top: 4px; }
+            .stats { flex-wrap: nowrap; margin-top: 8px; overflow-x: auto; }
+            .stat { flex: none; }
+            .overview { grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 10px; }
+            #map { height: 180px; min-height: 180px; }
+            .side { height: auto; min-height: 0; max-height: none; gap: 8px; padding: 10px 12px; }
+            .day-summary, .glance { display: none; }
+            .side:has(.day-tab) { gap: 0; padding: 8px; }
+            .side:has(.day-tab) .day-tabs {
+                display: flex;
+                gap: 6px;
+                overflow-x: auto;
+                overscroll-behavior: contain;
+            }
+            .side:has(.day-tab) .day-tab { flex: 0 0 auto; min-width: 72px; }
+            .side:has(.day-tab) .route-stat { display: none; }
+            .detail { margin-top: 8px; padding: 10px 12px 6px; }
+            .detail-head h2 { font-size: 16px; }
+            .hint { max-height: 3.2em; overflow: auto; overscroll-behavior: contain; }
+        }
+        @media (max-width: 560px) {
+            .page { padding: 12px 12px 10px; }
+            h1 { font-size: 22px; }
+            .stop-card { padding: 14px 15px; }
+            .stop-card .stop-title { font-size: 16px; }
+            .activity { grid-template-columns: 72px 1fr; gap: 8px; font-size: 13px; }
+        }
+
+        html.is-page-scroll,
+        html.is-page-scroll body {
+            height: auto;
+            min-height: 100%;
+            overflow: visible;
+        }
+        html.is-page-scroll .page {
+            height: auto;
+            overflow: visible;
+            padding-bottom: 72px;
+        }
+        html.is-page-scroll .detail {
+            flex: none;
+            overflow: visible;
+            scroll-margin-top: 12px;
+        }
+        html.is-page-scroll .timeline {
+            flex: none;
+            min-height: auto;
+            overflow: visible;
+        }
+        html.is-page-scroll .hint {
+            max-height: none;
+            overflow: visible;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <nav class="site-nav" aria-label="站点导航">
+            <a class="back-home" href="../index.html">← 返回主页</a>
+        </nav>
+        <header class="trip-head">
+            <p class="kicker">Australia · 2026</p>
+            <h1>澳大利亚 Lake St Clair 2026/10/10–2026/10/11</h1>
+            <p class="subtitle">🇦🇺 · 两天 · 自驾</p>
+            <div class="stats">
+                <span class="stat">2 天 1 晚</span>
+                <span class="stat">约 430 km</span>
+                <span class="stat">车内过夜</span>
+            </div>
+        </header>
+        <section class="overview" aria-label="行程总览">
+            <div class="card map-card">
+                <div id="map" role="application" aria-label="Chatswood 至 Lake St Clair 两日自驾地图"></div>
+            </div>
+            <div class="card side">
+                <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+                <div class="day-summary" id="daySummary"></div>
+                <ol class="glance" id="glance"></ol>
+                <p class="route-stat" id="routeStat">正在规划当日路线…</p>
+            </div>
+        </section>
+        <section class="detail" aria-label="当日详细安排">
+            <div class="detail-head">
+                <div class="detail-heading">
+                    <h2 id="detailTitle"></h2>
+                    <p class="detail-note" id="detailNote"></p>
+                </div>
+                <button type="button" class="detail-expand" id="detailExpand" aria-expanded="false">展开</button>
+            </div>
+            <ol class="timeline" id="itinerary"></ol>
+        </section>
+        <p class="hint">驾驶时间按 OSRM 常规路况估算，不含停车与拥堵。周六 10:30 出发，Pie in the Sky 午饭，Singleton 下午茶后大约 15:40 到营地。晚上用自带碳火烤炉，先预热木炭，再和火锅一起吃，22:15 左右上床。营位必须提前在 Singleton Council 网站预订，办公室 17:00 下班且不收现金。周日早上离场后走 Wollombi 吃午饭，经 Great North Road 回 M1；想早到家就从 Singleton 直接上高速。</p>
+    </div>
+
+    <script>
+        const days = [
+            {
+                date: "10/10",
+                weekday: "周六",
+                title: "Pie in the Sky 午餐 → Singleton 下午茶",
+                meta: "约 227 km · 驾驶约 3 小时 10 分 · 车内过夜",
+                color: "#27756d",
+                stops: [
+                    {
+                        name: "Chatswood",
+                        time: "10:30 出发",
+                        lat: -33.7969, lng: 151.1833,
+                        activities: [
+                            { time: "10:00–10:25", text: "收拾睡袋、防潮垫、手电、碳火烤炉、木炭、卡式炉、锅和今晚的食材；十月夜里大约十几度" },
+                            { time: "10:30", text: "加满油，经 Pacific Highway / M1 北上" }
+                        ]
+                    },
+                    {
+                        name: "Pie in the Sky",
+                        time: "11:10–12:10",
+                        drive: "驾驶约 40 分钟",
+                        kind: "highlight",
+                        lat: -33.5739, lng: 151.1925,
+                        activities: [
+                            { time: "11:10–12:00", text: "肉饼当午饭，咖啡，在店外观景台坐一会儿" },
+                            { time: "12:10", text: "上 M1 继续北上" }
+                        ],
+                        note: "1296 Pacific Hwy, Cowan；周六 8:00–17:00。"
+                    },
+                    {
+                        name: "Singleton",
+                        time: "14:10–15:05",
+                        drive: "驾驶约 2 小时",
+                        kind: "highlight",
+                        lat: -32.5653, lng: 151.1690,
+                        activities: [
+                            { time: "14:10–14:45", text: "The Coffee Club 下午茶（Gowrie 与 John 街口，周六大约开到 17:00）" },
+                            { time: "14:45–15:05", text: "Burdekin Park 短走，进营地前最后歇一下" }
+                        ],
+                        note: "这条高速上值得下来的只有 Kurri Kurri 主街壁画，几乎不绕路，走 15 分钟即可。不去就直开这里。走完经 Bridgman Road / Carrowbrook Road。"
+                    },
+                    {
+                        name: "Lake St Clair Campgrounds",
+                        time: "15:40 入住",
+                        drive: "驾驶约 35 分钟",
+                        kind: "stay",
+                        lat: -32.3344, lng: 151.2917,
+                        activities: [
+                            { time: "15:40", text: "办公室登记。没有预订不能进营位" },
+                            { time: "16:00–16:30", text: "选高处、地面硬的非动力营位，车里铺好过夜" },
+                            { time: "16:30–17:00", text: "沿 Carrowbrook Road 看东岸，或在船坡附近走走" },
+                            { time: "17:00–17:30", text: "回营位生火，木炭预热" },
+                            { time: "17:30–18:00", text: "处理肉和菜，炭火继续烧透，卡式炉就位" },
+                            { time: "18:00–21:20", text: "碳火烤炉加热锅，慢慢吃，看着天黑" },
+                            { time: "21:20–22:10", text: "收餐具、淋浴" },
+                            { time: "22:15", text: "上床休息" }
+                        ],
+                        note: "1719 Carrowbrook Rd, St Clair；电话 (02) 5522 4010。办公室 8:00–17:00，只收卡。轿车避开近水软地。十月湖水偏凉，下水随意。"
+                    }
+                ]
+            },
+            {
+                date: "10/11",
+                weekday: "周日",
+                title: "湖边早晨 → Wollombi → Chatswood",
+                meta: "约 208 km · 驾驶约 3 小时 15 分 · 下午到家",
+                color: "#b45f24",
+                stops: [
+                    {
+                        name: "Lake St Clair Campgrounds",
+                        time: "07:30–10:15",
+                        kind: "stay",
+                        lat: -32.3344, lng: 151.2917,
+                        activities: [
+                            { time: "07:30–09:20", text: "营厨房咖啡，沿湖岸再走一圈" },
+                            { time: "09:20–10:05", text: "淋浴、收拾车辆，去办公室确认离场" },
+                            { time: "10:15", text: "经 Singleton 不上高速，转去 Wollombi" }
+                        ],
+                        note: "离场时间以办公室说明为准。想多待一上午，就把 Wollombi 改成外带，或直接上 M1 回家。"
+                    },
+                    {
+                        name: "Wollombi Tavern",
+                        time: "11:45–13:15",
+                        drive: "驾驶约 1 小时 30 分",
+                        kind: "highlight",
+                        lat: -32.9388, lng: 151.1406,
+                        activities: [
+                            { time: "11:45–13:15", text: "村子里午饭，木火披萨；Great North Road 两侧可以慢慢看" },
+                            { time: "13:15", text: "沿 Tourist Drive 33 回 Calga，再上 M1" }
+                        ],
+                        note: "2994 Great North Rd, Wollombi；大约 10:00 开门。山路弯多，比高速大约多 20 分钟。想赶路就从 Singleton 直接上 Hunter Expressway。"
+                    },
+                    {
+                        name: "Chatswood",
+                        time: "15:05 抵达",
+                        drive: "驾驶约 1 小时 50 分",
+                        lat: -33.7969, lng: 151.1833,
+                        activities: [
+                            { time: "15:05", text: "回到 Chatswood，行程结束" }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const map = L.map("map", { zoomControl: true }).setView([-33.05, 151.22], 8);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        const tabsEl = document.getElementById("dayTabs");
+        const summaryEl = document.getElementById("daySummary");
+        const glanceEl = document.getElementById("glance");
+        const itineraryEl = document.getElementById("itinerary");
+        const detailTitleEl = document.getElementById("detailTitle");
+        const detailNoteEl = document.getElementById("detailNote");
+        const routeStatEl = document.getElementById("routeStat");
+        let routeLine = null;
+        let markers = [];
+        let activeDay = 0;
+
+        days.forEach((day, index) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "day-tab";
+            button.innerHTML = `${escapeHtml(day.date)}<br>${escapeHtml(day.weekday)}`;
+            button.addEventListener("click", () => renderDay(index));
+            tabsEl.appendChild(button);
+        });
+
+        function highlightStop(index) {
+            document.querySelectorAll(".stop").forEach((el) => {
+                el.classList.toggle("is-active", Number(el.dataset.index) === index);
+            });
+            document.querySelectorAll(".stop-card").forEach((card, i) => {
+                card.classList.toggle("is-active", i === index);
+            });
+        }
+
+        function focusStop(index, { scroll = false } = {}) {
+            highlightStop(index);
+            map.flyTo(markers[index].getLatLng(), 11, { duration: 0.7 });
+            markers[index].openPopup();
+            if (scroll) {
+                itineraryEl.children[index].scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        }
+
+        [glanceEl, itineraryEl].forEach((container) => {
+            container.addEventListener("click", (event) => {
+                const button = event.target.closest(".stop");
+                if (!button) return;
+                focusStop(Number(button.dataset.index), { scroll: container === glanceEl });
+            });
+        });
+
+        async function renderDay(dayIndex) {
+            activeDay = dayIndex;
+            const day = days[dayIndex];
+            document.querySelectorAll(".day-tab").forEach((tab, index) => {
+                tab.classList.toggle("is-active", index === dayIndex);
+            });
+            summaryEl.innerHTML = `
+                <p class="day-title">${escapeHtml(day.date)} ${escapeHtml(day.weekday)}</p>
+                <p class="day-meta">${escapeHtml(day.title)}</p>`;
+            detailTitleEl.textContent = [`${day.date} ${day.weekday}`, day.title].filter(Boolean).join(" · ");
+            detailNoteEl.textContent = [`${day.stops.length} 个地点`, day.meta].filter(Boolean).join(" · ");
+            glanceEl.innerHTML = "";
+            itineraryEl.innerHTML = "";
+            markers.forEach((marker) => marker.remove());
+            markers = [];
+            if (routeLine) routeLine.remove();
+
+            const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
+            routeLine = L.polyline(coords, {
+                color: day.color,
+                weight: 4,
+                opacity: 0.82,
+                dashArray: "8, 8"
+            }).addTo(map);
+
+            day.stops.forEach((stop, index) => {
+                const number = index + 1;
+                const kindClass = stop.kind ? ` is-${stop.kind}` : "";
+                const label = stop.kind === "stay"
+                    ? '<span class="tag tag--stay">住宿</span>'
+                    : stop.kind === "highlight"
+                        ? '<span class="tag">重点</span>'
+                        : "";
+                const activityRows = stop.activities.map((activity) => `
+                    <li class="activity">
+                        <span class="activity-time">${escapeHtml(activity.time)}</span>
+                        <span class="activity-text">${escapeHtml(activity.text)}</span>
+                    </li>`).join("");
+                const meta = [stop.drive, stop.time].filter(Boolean).join(" · ");
+                const note = stop.note ? `<span class="note">${escapeHtml(stop.note)}</span>` : "";
+
+                const marker = L.marker([stop.lat, stop.lng], {
+                    icon: L.divIcon({
+                        className: "",
+                        html: `<div class="num-marker${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</div>`,
+                        iconSize: [29, 29],
+                        iconAnchor: [14, 14],
+                        popupAnchor: [0, -16]
+                    })
+                }).addTo(map);
+                marker.bindPopup(`
+                    <p class="popup-title">${number}. ${escapeHtml(stop.name)}${label}</p>
+                    <p class="popup-meta">${escapeHtml(meta)}</p>
+                    ${note}
+                    <ul class="activities activities--popup">${activityRows}</ul>`);
+                marker.on("click", () => highlightStop(index));
+                markers.push(marker);
+
+                const badgeStyle = kindClass ? "" : ` style="background:${day.color}"`;
+                const glanceItem = document.createElement("li");
+                glanceItem.className = "glance-item";
+                glanceItem.innerHTML = `
+                    <button class="stop" type="button" data-index="${index}">
+                        <span class="badge${kindClass}"${badgeStyle}>${number}</span>
+                        <span>
+                            <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
+                            <span class="stop-meta">${escapeHtml(stop.time || "")}</span>
+                        </span>
+                    </button>`;
+                glanceEl.appendChild(glanceItem);
+
+                const item = document.createElement("li");
+                item.className = "timeline-item";
+                item.innerHTML = `
+                    ${stop.drive ? `<p class="leg-row">${escapeHtml(stop.drive)}</p>` : ""}
+                    <article class="stop-card">
+                        <button class="stop" type="button" data-index="${index}">
+                            <span class="badge${kindClass}"${badgeStyle}>${number}</span>
+                            <span>
+                                <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
+                                <span class="stop-meta">${escapeHtml(stop.time || "")}</span>
+                            </span>
+                        </button>
+                        <ul class="activities">${activityRows}</ul>
+                        ${note}
+                    </article>`;
+                itineraryEl.appendChild(item);
+            });
+
+            map.fitBounds(routeLine.getBounds().pad(0.18));
+            await loadRoute(day, coords, dayIndex);
+        }
+
+        async function loadRoute(day, coords, expectedDay) {
+            routeStatEl.textContent = "正在规划当日路线…";
+            const path = coords.map(([lat, lng]) => `${lng},${lat}`).join(";");
+            const url = `https://router.project-osrm.org/route/v1/driving/${path}?overview=full&geometries=geojson`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("route request failed");
+                const data = await response.json();
+                if (activeDay !== expectedDay) return;
+                const route = data.routes && data.routes[0];
+                if (!route) throw new Error("no route returned");
+                routeLine.setLatLngs(route.geometry.coordinates.map(([lng, lat]) => [lat, lng]));
+                routeLine.setStyle({ dashArray: null });
+                const km = Math.round(route.distance / 1000);
+                const minutes = Math.round(route.duration / 60);
+                const time = minutes >= 60
+                    ? `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分`
+                    : `${minutes} 分`;
+                routeStatEl.textContent = `当日 ${km} km · ${time}`;
+                map.fitBounds(routeLine.getBounds().pad(0.15));
+            } catch (error) {
+                if (activeDay === expectedDay) routeStatEl.textContent = "路线暂不可用，显示直线示意";
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        renderDay(0);
+    </script>
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const button = document.getElementById("detailExpand");
+            const detail = document.querySelector(".detail");
+            if (!button || !detail) return;
+            button.addEventListener("click", function () {
+                const expanded = !root.classList.contains("is-page-scroll");
+                root.classList.toggle("is-page-scroll", expanded);
+                button.setAttribute("aria-expanded", expanded ? "true" : "false");
+                button.textContent = expanded ? "收起" : "展开";
+                if (expanded) {
+                    requestAnimationFrame(function () {
+                        detail.scrollIntoView({ behavior: "smooth", block: "start" });
+                    });
+                } else {
+                    const timeline = document.querySelector(".timeline");
+                    if (timeline) timeline.scrollTop = 0;
+                    window.scrollTo(0, 0);
+                }
+                window.dispatchEvent(new Event("resize"));
+            });
+        })();
+    </script>
+</body>
+</html>
