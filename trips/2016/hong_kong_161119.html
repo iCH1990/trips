@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>中国香港 Hong Kong 2016/11/19</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="../../css/tokens.css">
+    <link rel="stylesheet" href="../../css/trip.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="../../js/color.js"></script>
+    <script src="../../js/trip-model.js"></script>
+    <script src="../../js/trip-render.js"></script>
+    <script src="../../js/trip-routing.js"></script>
+</head>
+<body>
+    <div class="page">
+        <nav class="site-nav" aria-label="站点导航">
+            <a class="back-home" href="../../index.html">← 返回主页</a>
+        </nav>
+        <header class="trip-head">
+            <p class="kicker">Hong Kong · 2016</p>
+            <h1>中国香港 Hong Kong 2016/11/19</h1>
+            <p class="subtitle">🇭🇰 · 一天 · 落马洲过关 · 地铁</p>
+            <div class="stats">
+                <span class="stat">1 天</span>
+                <span class="stat">深圳往返</span>
+                <span class="stat">铜锣湾 · 维多利亚港</span>
+            </div>
+        </header>
+        <section class="overview" aria-label="行程总览">
+            <div class="card map-card">
+                <div id="map" role="application" aria-label="深圳至香港一日行程地图"></div>
+            </div>
+            <div class="card side">
+                <div class="day-scroller">
+                    <button type="button" class="day-arrow" data-dir="-1" aria-label="更早的日期" hidden>
+                        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M7.6 2.2 4 6l3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+                    <button type="button" class="day-arrow" data-dir="1" aria-label="更晚的日期" hidden>
+                        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.4 2.2 8 6l-3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                </div>
+                <div class="day-summary" id="daySummary"></div>
+                <ol class="glance" id="glance"></ol>
+                <p class="route-stat" id="routeStat">正在规划当日路线…</p>
+            </div>
+        </section>
+        <section class="detail" aria-label="当日详细安排">
+            <div class="detail-head">
+                <div class="detail-heading">
+                    <h2 id="detailTitle"></h2>
+                    <p class="detail-note" id="detailNote"></p>
+                </div>
+                <button type="button" class="detail-expand" id="detailExpand" aria-expanded="false">展开</button>
+            </div>
+            <div class="detail-scroll">
+                <ol class="timeline" id="itinerary"></ol>
+                <p class="hint">2016 年东铁线南端只到红磡。去铜锣湾在九龙塘转观塘线，旺角转荃湾线，金钟转港岛线。商场约 10:00 开门。当天日落约 17:40，幻彩咏香江 20:00。落马洲支线管制站约 22:30 关闭，周六回程预留排队。虚线为地铁示意，实线为步行。</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const days = TripModel.prepareDays([
+            {
+                date: "11/19",
+                weekday: "周六",
+                title: "深圳出发，落马洲过关逛铜锣湾，维多利亚港看日落夜景后返回",
+                meta: "福田口岸过关 · 铜锣湾商场 · 檀岛咖啡饼店 · 星光大道",
+                color: "var(--route-1)",
+                zoom: 14,
+                stops: [
+                    {
+                        name: "福田口岸",
+                        time: "08:20 出发",
+                        lat: 22.51842, lng: 114.06406,
+                        activities: [
+                            { time: "08:20", text: "从深圳到福田口岸，准备过关" }
+                        ],
+                        note: "深圳地铁 4 号线福田口岸站"
+                    },
+                    {
+                        name: "落马洲站",
+                        time: "08:45 上车",
+                        drive: "步行过关",
+                        leg: "metro",
+                        lat: 22.51459, lng: 114.06618,
+                        activities: [
+                            { time: "08:45", text: "过关后在落马洲站上东铁线" }
+                        ],
+                        note: "落马洲支线管制站"
+                    },
+                    {
+                        name: "铜锣湾",
+                        time: "10:00–12:20",
+                        drive: "东铁线经九龙塘、旺角、金钟，约 1 小时",
+                        leg: "metro",
+                        kind: "highlight",
+                        lat: 22.27836, lng: 114.18211,
+                        activities: [
+                            { time: "10:00–11:10", text: "时代广场 Times Square" },
+                            { time: "11:10–12:20", text: "崇光百货 SOGO、希慎广场 Hysan Place" }
+                        ],
+                        note: "商场约 10:00 开门，都在铜锣湾几分钟路程内"
+                    },
+                    {
+                        name: "檀岛咖啡饼店",
+                        time: "12:35–13:50",
+                        drive: "沿轩尼诗道步行约 15 分钟",
+                        lat: 22.27753, lng: 114.17395,
+                        activities: [
+                            { time: "12:35–13:50", text: "吃蛋挞、菠萝包和奶茶" }
+                        ],
+                        note: "湾仔轩尼诗道 176-178 号地下及阁楼"
+                    },
+                    {
+                        name: "星光大道",
+                        time: "14:20–20:15",
+                        drive: "湾仔站转荃湾线到尖沙咀，约 20 分钟",
+                        leg: "metro",
+                        kind: "highlight",
+                        lat: 22.29415, lng: 114.17579,
+                        activities: [
+                            { time: "14:20–17:30", text: "尖沙咀钟楼与海滨长廊，在星光大道等日落" },
+                            { time: "17:40–19:50", text: "日落约 17:40，之后看维多利亚港夜景" },
+                            { time: "20:00–20:15", text: "幻彩咏香江" }
+                        ],
+                        note: "尖沙咀梳士巴利道海滨"
+                    },
+                    {
+                        name: "落马洲站",
+                        time: "21:15 过关",
+                        drive: "荃湾线转东铁线，约 55 分钟",
+                        leg: "metro",
+                        lat: 22.51459, lng: 114.06618,
+                        activities: [
+                            { time: "21:15", text: "到落马洲站过关，回深圳" }
+                        ],
+                        note: "管制站约 22:30 关闭，周六晚上可能排队"
+                    },
+                    {
+                        name: "福田口岸",
+                        time: "21:45 回到深圳",
+                        drive: "步行过关",
+                        leg: "metro",
+                        lat: 22.51842, lng: 114.06406,
+                        activities: [
+                            { time: "21:45", text: "回到福田口岸，行程结束" }
+                        ]
+                    }
+                ]
+            }
+        ]);
+
+        const map = TripRender.createMap("map", [22.40, 114.12], 11);
+
+        const tabsEl = document.getElementById("dayTabs");
+        const summaryEl = document.getElementById("daySummary");
+        const glanceEl = document.getElementById("glance");
+        const itineraryEl = document.getElementById("itinerary");
+        const detailTitleEl = document.getElementById("detailTitle");
+        const detailNoteEl = document.getElementById("detailNote");
+        const routeStatEl = document.getElementById("routeStat");
+        let routeLines = [];
+        let markers = [];
+        let activeDay = 0;
+
+        TripRender.createDayTabs(tabsEl, days, renderDay);
+
+        function focusStop(index, { scroll = false } = {}) {
+            TripRender.focusStop({
+                map,
+                markers,
+                itineraryEl,
+                index,
+                zoom: days[activeDay].zoom || 14,
+                scroll
+            });
+        }
+
+        TripRender.bindStopClicks([glanceEl, itineraryEl], focusStop);
+
+        async function renderDay(dayIndex) {
+            activeDay = dayIndex;
+            const day = days[dayIndex];
+            TripRender.selectDayTab(tabsEl, dayIndex);
+            summaryEl.innerHTML = "";
+            detailTitleEl.textContent = day.title || "";
+            detailNoteEl.textContent = "";
+            glanceEl.innerHTML = "";
+            itineraryEl.innerHTML = "";
+            markers.forEach((marker) => marker.remove());
+            markers = [];
+            routeLines.forEach((line) => line.remove());
+            routeLines = [];
+
+            const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
+
+            markers = TripRender.renderStops({
+                map,
+                stops: day.stops,
+                color: day.color,
+                glanceEl,
+                itineraryEl
+            });
+
+            const fallback = L.polyline(coords, {
+                color: day.color,
+                weight: 4,
+                opacity: 0.82,
+                dashArray: "8, 8"
+            }).addTo(map);
+            routeLines.push(fallback);
+            map.fitBounds(fallback.getBounds().pad(0.18));
+            await TripRouting.walk({
+                map,
+                day,
+                coords,
+                lines: routeLines,
+                fallback,
+                isCurrent: () => activeDay === dayIndex,
+                statEl: routeStatEl
+            });
+        }
+
+
+        renderDay(0);
+    </script>
+    <script src="../../js/trip-chrome.js"></script>
+</body>
+</html>
