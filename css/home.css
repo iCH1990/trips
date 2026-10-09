@@ -135,7 +135,7 @@ h1 { margin: 8px 0 0; font-size: 32px; line-height: 1.2; }
     top: 0;
     z-index: 1001;
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
     gap: 8px;
     margin: 34px 0 18px;
     padding: 10px 0;

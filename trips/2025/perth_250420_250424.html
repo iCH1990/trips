@@ -5,15 +5,18 @@
     <title>澳大利亚 Perth 2025/04/20–2025/04/24</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="../css/tokens.css">
-    <link rel="stylesheet" href="../css/trip.css">
+    <link rel="stylesheet" href="../../css/tokens.css">
+    <link rel="stylesheet" href="../../css/trip.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="../js/color.js"></script>
+    <script src="../../js/color.js"></script>
+    <script src="../../js/trip-model.js"></script>
+    <script src="../../js/trip-render.js"></script>
+    <script src="../../js/trip-routing.js"></script>
 </head>
 <body>
     <div class="page">
         <nav class="site-nav" aria-label="站点导航">
-            <a class="back-home" href="../index.html">← 返回主页</a>
+            <a class="back-home" href="../../index.html">← 返回主页</a>
         </nav>
         <header class="trip-head">
             <p class="kicker">Australia · 2025</p>
@@ -60,13 +63,13 @@
     </div>
 
     <script>
-        const days = [
+        const days = TripModel.prepareDays([
             {
                 date: "4/20",
                 weekday: "周日",
                 title: "Sydney → Perth，入住后去 6HEAD 晚餐",
                 meta: "QF645 · Perth Airport 取车 · 当晚入住后去 Elizabeth Quay 吃饭",
-                color: tokenColor("var(--route-1)"),
+                color: "var(--route-1)",
                 flightStat: "QF645 Sydney → Perth",
                 stops: [
                     {
@@ -113,7 +116,7 @@
                 weekday: "周一",
                 title: "Lobster Shack、Jurien Bay 与 The Pinnacles",
                 meta: "家里随便吃点 · Cervantes 午餐 · 看海 · The Pinnacles · 返程日落 · 城里打包泰餐",
-                color: tokenColor("var(--route-2)"),
+                color: "var(--route-2)",
                 stops: [
                     {
                         name: "Airbnb · Perth",
@@ -177,7 +180,7 @@
                 weekday: "周二",
                 title: "Kings Park、Blue Boat House 与 Fremantle 买菜",
                 meta: "Mount Street 早餐 · 公园坐坐 · 拍照 · 市场买菜回家做饭",
-                color: tokenColor("var(--route-3)"),
+                color: "var(--route-3)",
                 stops: [
                     {
                         name: "Mount Street Breakfast Bar",
@@ -223,7 +226,7 @@
                 weekday: "周三",
                 title: "Mandurah brunch，再去 Busselton",
                 meta: "Perch'd · Crooked Carrot 陪小孩玩 · 小火车 · 巧克力工厂后返程",
-                color: tokenColor("var(--route-4)"),
+                color: "var(--route-4)",
                 stops: [
                     {
                         name: "Airbnb · Perth",
@@ -278,7 +281,7 @@
                 weekday: "周四",
                 title: "Maylands 玩一会儿，之后返程 Sydney",
                 meta: "早餐后去 Waterland · 下午去机场 · QF650 回 Sydney",
-                color: tokenColor("var(--route-5)"),
+                color: "var(--route-5)",
                 flightStat: "QF650 Perth → Sydney",
                 stops: [
                     {
@@ -320,13 +323,9 @@
                     }
                 ]
             }
-        ];
+        ]);
 
-        const map = L.map("map", { zoomControl: true }).setView([-31.95, 115.86], 10);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            maxZoom: 19,
-            attribution: "&copy; OpenStreetMap contributors"
-        }).addTo(map);
+        const map = TripRender.createMap("map", [-31.95, 115.86], 10);
 
         const tabsEl = document.getElementById("dayTabs");
         const summaryEl = document.getElementById("daySummary");
@@ -339,73 +338,25 @@
         let markers = [];
         let activeDay = 0;
 
-        days.forEach((day, index) => {
-            const button = document.createElement("button");
-            button.type = "button";
-            button.className = "day-tab";
-            button.innerHTML = `${escapeHtml(day.date)}<br>${escapeHtml(day.weekday)}`;
-            button.addEventListener("click", () => renderDay(index));
-            tabsEl.appendChild(button);
-        });
-
-        function highlightStop(index) {
-            document.querySelectorAll(".stop").forEach((el) => {
-                el.classList.toggle("is-active", Number(el.dataset.index) === index);
-            });
-            document.querySelectorAll(".stop-card").forEach((card, i) => {
-                card.classList.toggle("is-active", i === index);
-            });
-        }
+        TripRender.createDayTabs(tabsEl, days, renderDay);
 
         function focusStop(index, { scroll = false } = {}) {
-            highlightStop(index);
-            const zoom = days[activeDay].zoom || 12;
-            map.flyTo(markers[index].getLatLng(), zoom, { duration: 0.7 });
-            markers[index].openPopup();
-            if (scroll) {
-                itineraryEl.children[index].scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-        }
-
-        [glanceEl, itineraryEl].forEach((container) => {
-            container.addEventListener("click", (event) => {
-                const button = event.target.closest(".stop");
-                if (!button) return;
-                focusStop(Number(button.dataset.index), { scroll: container === glanceEl });
+            TripRender.focusStop({
+                map,
+                markers,
+                itineraryEl,
+                index,
+                zoom: days[activeDay].zoom || 12,
+                scroll
             });
-        });
-
-        function splitLegs(day, coords) {
-            const groups = [];
-            let current = { type: "drive", points: [coords[0]] };
-            for (let i = 1; i < day.stops.length; i++) {
-                const type = day.stops[i].leg === "flight" ? "flight" : "drive";
-                if (type === current.type) {
-                    current.points.push(coords[i]);
-                } else {
-                    groups.push(current);
-                    current = { type, points: [coords[i - 1], coords[i]] };
-                }
-            }
-            groups.push(current);
-            return groups.filter((group) => group.points.length > 1);
         }
+
+        TripRender.bindStopClicks([glanceEl, itineraryEl], focusStop);
 
         async function renderDay(dayIndex) {
             activeDay = dayIndex;
             const day = days[dayIndex];
-            document.querySelectorAll(".day-tab").forEach((tab, index) => {
-                tab.classList.toggle("is-active", index === dayIndex);
-                if (index === dayIndex) {
-                    const tabsRect = tabsEl.getBoundingClientRect();
-                    const tabRect = tab.getBoundingClientRect();
-                    if (tabRect.left < tabsRect.left) {
-                        tabsEl.scrollLeft -= tabsRect.left - tabRect.left;
-                    } else if (tabRect.right > tabsRect.right) {
-                        tabsEl.scrollLeft += tabRect.right - tabsRect.right;
-                    }
-                }
-            });
+            TripRender.selectDayTab(tabsEl, dayIndex);
             summaryEl.innerHTML = "";
             detailTitleEl.textContent = day.title || "";
             detailNoteEl.textContent = "";
@@ -418,68 +369,12 @@
 
             const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
 
-            day.stops.forEach((stop, index) => {
-                const number = index + 1;
-                const kindClass = stop.kind ? ` is-${stop.kind}` : "";
-                const label = stop.kind === "stay"
-                    ? '<span class="tag tag--stay">住宿</span>'
-                    : stop.kind === "highlight"
-                        ? '<span class="tag">重点</span>'
-                        : "";
-                const activityRows = stop.activities.map((activity) => `
-                    <li class="activity">
-                        <span class="activity-time">${escapeHtml(activity.time)}</span>
-                        <span class="activity-text">${escapeHtml(activity.text)}</span>
-                    </li>`).join("");
-                const meta = [stop.drive, stop.time].filter(Boolean).join(" · ");
-                const note = stop.note ? `<span class="note">${escapeHtml(stop.note)}</span>` : "";
-
-                const marker = L.marker([stop.lat, stop.lng], {
-                    icon: L.divIcon({
-                        className: "",
-                        html: `<div class="num-marker${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</div>`,
-                        iconSize: [29, 29],
-                        iconAnchor: [14, 14],
-                        popupAnchor: [0, -16]
-                    })
-                }).addTo(map);
-                marker.bindPopup(`
-                    <p class="popup-title">${number}. ${escapeHtml(stop.name)}${label}</p>
-                    <p class="popup-meta">${escapeHtml(meta)}</p>
-                    ${note}
-                    <ul class="activities activities--popup">${activityRows}</ul>`);
-                marker.on("click", () => highlightStop(index));
-                markers.push(marker);
-
-                const badgeStyle = kindClass ? "" : ` style="background:${day.color}"`;
-                const glanceItem = document.createElement("li");
-                glanceItem.className = "glance-item";
-                glanceItem.innerHTML = `
-                    <button class="stop" type="button" data-index="${index}">
-                        <span class="badge${kindClass}"${badgeStyle}>${number}</span>
-                        <span>
-                            <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
-                            <span class="stop-meta">${escapeHtml(stop.time || "")}</span>
-                        </span>
-                    </button>`;
-                glanceEl.appendChild(glanceItem);
-
-                const item = document.createElement("li");
-                item.className = "timeline-item";
-                item.innerHTML = `
-                    ${stop.drive ? `<p class="leg-row">${escapeHtml(stop.drive)}</p>` : ""}
-                    <article class="stop-card">
-                        <button class="stop" type="button" data-index="${index}">
-                            <span class="badge${kindClass}"${badgeStyle}>${number}</span>
-                            <span>
-                                <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
-                                <span class="stop-meta">${escapeHtml(stop.time || "")}</span>
-                            </span>
-                        </button>
-                        <ul class="activities">${activityRows}</ul>
-                        ${note}
-                    </article>`;
-                itineraryEl.appendChild(item);
+            markers = TripRender.renderStops({
+                map,
+                stops: day.stops,
+                color: day.color,
+                glanceEl,
+                itineraryEl
             });
 
             const fallback = L.polyline(coords, {
@@ -490,140 +385,20 @@
             }).addTo(map);
             routeLines.push(fallback);
             map.fitBounds(fallback.getBounds().pad(0.18));
-            await loadRoute(day, coords, dayIndex, fallback);
+            await TripRouting.road({
+                map,
+                day,
+                coords,
+                lines: routeLines,
+                fallback,
+                isCurrent: () => activeDay === dayIndex,
+                statEl: routeStatEl
+            });
         }
 
-        async function loadRoute(day, coords, expectedDay, fallback) {
-            const groups = splitLegs(day, coords);
-            const profile = day.mode === "foot" ? "foot" : "driving";
-            const waiting = day.mode === "foot" ? "正在规划步行路线…" : "正在规划当日路线…";
-            routeStatEl.textContent = waiting;
-
-            let driveKm = 0;
-            let driveMin = 0;
-            let hasFlight = false;
-            let routed = false;
-
-            for (const group of groups) {
-                if (group.type === "flight") {
-                    hasFlight = true;
-                    const line = L.polyline(group.points, {
-                        color: day.color,
-                        weight: 3,
-                        opacity: 0.75,
-                        dashArray: "8, 8"
-                    }).addTo(map);
-                    routeLines.push(line);
-                    continue;
-                }
-                const path = group.points.map(([lat, lng]) => `${lng},${lat}`).join(";");
-                const url = `https://router.project-osrm.org/route/v1/${profile}/${path}?overview=full&geometries=geojson`;
-                try {
-                    const response = await fetch(url);
-                    if (!response.ok) throw new Error("route request failed");
-                    const data = await response.json();
-                    if (activeDay !== expectedDay) return;
-                    const route = data.routes && data.routes[0];
-                    if (!route) throw new Error("no route returned");
-                    const line = L.polyline(
-                        route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
-                        { color: day.color, weight: 4, opacity: 0.85 }
-                    ).addTo(map);
-                    routeLines.push(line);
-                    driveKm += route.distance / 1000;
-                    driveMin += route.duration / 60;
-                    routed = true;
-                } catch (error) {
-                    const line = L.polyline(group.points, {
-                        color: day.color,
-                        weight: 4,
-                        opacity: 0.82,
-                        dashArray: "8, 8"
-                    }).addTo(map);
-                    routeLines.push(line);
-                }
-            }
-
-            if (activeDay !== expectedDay) return;
-            if (fallback) {
-                fallback.remove();
-                routeLines = routeLines.filter((line) => line !== fallback);
-            }
-
-            const parts = [];
-            if (hasFlight) parts.push(day.flightStat || "航班示意线");
-            if (routed) {
-                const km = profile === "foot" ? driveKm.toFixed(1) : Math.round(driveKm);
-                const minutes = Math.round(driveMin);
-                const time = minutes >= 60
-                    ? `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分`
-                    : `${minutes} 分`;
-                const label = profile === "foot" ? "步行" : "自驾";
-                parts.push(`${label}约 ${km} km · ${time}`);
-            } else if (!hasFlight) {
-                parts.push(profile === "foot" ? "步行路线暂不可用，显示直线示意" : "路线暂不可用，显示直线示意");
-            }
-            routeStatEl.textContent = parts.join(" · ");
-
-            const bounds = routeLines.reduce((acc, line) => acc.extend(line.getBounds()), routeLines[0].getBounds());
-            map.fitBounds(bounds.pad(0.15));
-        }
-
-        function escapeHtml(value) {
-            return String(value)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;");
-        }
 
         renderDay(0);
     </script>
-    <script>
-        (function () {
-            const tabs = document.getElementById("dayTabs");
-            const arrows = document.querySelectorAll(".day-arrow");
-            if (tabs && arrows.length) {
-                const updateArrows = function () {
-                    const max = tabs.scrollWidth - tabs.clientWidth;
-                    const overflow = max > 4;
-                    arrows.forEach(function (arrow) {
-                        arrow.hidden = !overflow;
-                        const dir = Number(arrow.dataset.dir);
-                        arrow.disabled = dir < 0 ? tabs.scrollLeft <= 2 : tabs.scrollLeft >= max - 2;
-                    });
-                };
-                arrows.forEach(function (arrow) {
-                    arrow.addEventListener("click", function () {
-                        const amount = Math.max(tabs.clientWidth * 0.72, 96);
-                        tabs.scrollBy({ left: Number(arrow.dataset.dir) * amount, behavior: "smooth" });
-                    });
-                });
-                tabs.addEventListener("scroll", updateArrows, { passive: true });
-                window.addEventListener("resize", updateArrows);
-                updateArrows();
-            }
-            const root = document.documentElement;
-            const button = document.getElementById("detailExpand");
-            const detail = document.querySelector(".detail");
-            if (!button || !detail) return;
-            button.addEventListener("click", function () {
-                const expanded = !root.classList.contains("is-page-scroll");
-                root.classList.toggle("is-page-scroll", expanded);
-                button.setAttribute("aria-expanded", expanded ? "true" : "false");
-                button.textContent = expanded ? "收起" : "展开";
-                if (expanded) {
-                    requestAnimationFrame(function () {
-                        detail.scrollIntoView({ behavior: "smooth", block: "start" });
-                    });
-                } else {
-                    const timeline = document.querySelector(".timeline");
-                    if (timeline) timeline.scrollTop = 0;
-                    window.scrollTo(0, 0);
-                }
-                window.dispatchEvent(new Event("resize"));
-            });
-        })();
-    </script>
+    <script src="../../js/trip-chrome.js"></script>
 </body>
 </html>

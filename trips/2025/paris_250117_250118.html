@@ -5,15 +5,18 @@
     <title>法国 Paris 2025/01/17–2025/01/18</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="../css/tokens.css">
-    <link rel="stylesheet" href="../css/trip.css">
+    <link rel="stylesheet" href="../../css/tokens.css">
+    <link rel="stylesheet" href="../../css/trip.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="../js/color.js"></script>
+    <script src="../../js/color.js"></script>
+    <script src="../../js/trip-model.js"></script>
+    <script src="../../js/trip-render.js"></script>
+    <script src="../../js/trip-routing.js"></script>
 </head>
 <body>
     <div class="page">
         <nav class="site-nav" aria-label="站点导航">
-            <a class="back-home" href="../index.html">← 返回主页</a>
+            <a class="back-home" href="../../index.html">← 返回主页</a>
         </nav>
         <header class="trip-head">
             <p class="kicker">France · 2025</p>
@@ -59,13 +62,13 @@
     </div>
 
     <script>
-        const days = [
+        const days = TripModel.prepareDays([
             {
                 date: "1/17",
                 weekday: "周五",
                 title: "London → Paris，入住",
                 meta: "Eurostar · 抵达后入住 Hôtel du Louvre - The Unbound Collection by Hyatt",
-                color: tokenColor("var(--route-1)"),
+                color: "var(--route-1)",
                 mode: "eurostar",
                 zoom: 8,
                 stops: [
@@ -103,7 +106,7 @@
                 weekday: "周六",
                 title: "步行一天，午餐后回 London",
                 meta: "酒店出发 · 全天步行 · 午餐后 Gare du Nord 搭 Eurostar",
-                color: tokenColor("var(--route-2)"),
+                color: "var(--route-2)",
                 mode: "foot",
                 zoom: 15,
                 stops: [
@@ -233,8 +236,9 @@
                     {
                         name: "Avenue des Champs-Élysées",
                         time: "下午",
+                        kind: "highlight",
                         lat: 48.8698, lng: 2.3078,
-                        activities: [{ time: "途经", text: "沿 Champs-Élysées 向东走" }]
+                        activities: [{ time: "途经", text: "沿 Champs-Élysées 向东走，购物" }]
                     },
                     {
                         name: "Grand Palais",
@@ -284,13 +288,9 @@
                     }
                 ]
             }
-        ];
+        ]);
 
-        const map = L.map("map", { zoomControl: true }).setView([48.863, 2.34], 14);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            maxZoom: 19,
-            attribution: "&copy; OpenStreetMap contributors"
-        }).addTo(map);
+        const map = TripRender.createMap("map", [48.863, 2.34], 14);
 
         const tabsEl = document.getElementById("dayTabs");
         const summaryEl = document.getElementById("daySummary");
@@ -303,57 +303,25 @@
         let markers = [];
         let activeDay = 0;
 
-        days.forEach((day, index) => {
-            const button = document.createElement("button");
-            button.type = "button";
-            button.className = "day-tab";
-            button.innerHTML = `${escapeHtml(day.date)}<br>${escapeHtml(day.weekday)}`;
-            button.addEventListener("click", () => renderDay(index));
-            tabsEl.appendChild(button);
-        });
-
-        function highlightStop(index) {
-            document.querySelectorAll(".stop").forEach((el) => {
-                el.classList.toggle("is-active", Number(el.dataset.index) === index);
-            });
-            document.querySelectorAll(".stop-card").forEach((card, i) => {
-                card.classList.toggle("is-active", i === index);
-            });
-        }
+        TripRender.createDayTabs(tabsEl, days, renderDay);
 
         function focusStop(index, { scroll = false } = {}) {
-            highlightStop(index);
-            const zoom = days[activeDay].zoom || 14;
-            map.flyTo(markers[index].getLatLng(), zoom, { duration: 0.7 });
-            markers[index].openPopup();
-            if (scroll) {
-                itineraryEl.children[index].scrollIntoView({ behavior: "smooth", block: "center" });
-            }
+            TripRender.focusStop({
+                map,
+                markers,
+                itineraryEl,
+                index,
+                zoom: days[activeDay].zoom || 14,
+                scroll
+            });
         }
 
-        [glanceEl, itineraryEl].forEach((container) => {
-            container.addEventListener("click", (event) => {
-                const button = event.target.closest(".stop");
-                if (!button) return;
-                focusStop(Number(button.dataset.index), { scroll: container === glanceEl });
-            });
-        });
+        TripRender.bindStopClicks([glanceEl, itineraryEl], focusStop);
 
         async function renderDay(dayIndex) {
             activeDay = dayIndex;
             const day = days[dayIndex];
-            document.querySelectorAll(".day-tab").forEach((tab, index) => {
-                tab.classList.toggle("is-active", index === dayIndex);
-                if (index === dayIndex) {
-                    const tabsRect = tabsEl.getBoundingClientRect();
-                    const tabRect = tab.getBoundingClientRect();
-                    if (tabRect.left < tabsRect.left) {
-                        tabsEl.scrollLeft -= tabsRect.left - tabRect.left;
-                    } else if (tabRect.right > tabsRect.right) {
-                        tabsEl.scrollLeft += tabRect.right - tabsRect.right;
-                    }
-                }
-            });
+            TripRender.selectDayTab(tabsEl, dayIndex);
             summaryEl.innerHTML = "";
             detailTitleEl.textContent = day.title || "";
             detailNoteEl.textContent = "";
@@ -371,155 +339,28 @@
                 dashArray: "8, 8"
             }).addTo(map);
 
-            day.stops.forEach((stop, index) => {
-                const number = index + 1;
-                const kindClass = stop.kind ? ` is-${stop.kind}` : "";
-                const label = stop.kind === "stay"
-                    ? '<span class="tag tag--stay">住宿</span>'
-                    : stop.kind === "highlight"
-                        ? '<span class="tag">重点</span>'
-                        : "";
-                const activityRows = stop.activities.map((activity) => `
-                    <li class="activity">
-                        <span class="activity-time">${escapeHtml(activity.time)}</span>
-                        <span class="activity-text">${escapeHtml(activity.text)}</span>
-                    </li>`).join("");
-                const meta = [stop.drive, stop.time].filter(Boolean).join(" · ");
-                const note = stop.note ? `<span class="note">${escapeHtml(stop.note)}</span>` : "";
-
-                const marker = L.marker([stop.lat, stop.lng], {
-                    icon: L.divIcon({
-                        className: "",
-                        html: `<div class="num-marker${kindClass}" style="background:${kindClass ? "" : day.color}">${number}</div>`,
-                        iconSize: [29, 29],
-                        iconAnchor: [14, 14],
-                        popupAnchor: [0, -16]
-                    })
-                }).addTo(map);
-                marker.bindPopup(`
-                    <p class="popup-title">${number}. ${escapeHtml(stop.name)}${label}</p>
-                    <p class="popup-meta">${escapeHtml(meta)}</p>
-                    ${note}
-                    <ul class="activities activities--popup">${activityRows}</ul>`);
-                marker.on("click", () => highlightStop(index));
-                markers.push(marker);
-
-                const badgeStyle = kindClass ? "" : ` style="background:${day.color}"`;
-                const glanceItem = document.createElement("li");
-                glanceItem.className = "glance-item";
-                glanceItem.innerHTML = `
-                    <button class="stop" type="button" data-index="${index}">
-                        <span class="badge${kindClass}"${badgeStyle}>${number}</span>
-                        <span>
-                            <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
-                            <span class="stop-meta">${escapeHtml(stop.time || "")}</span>
-                        </span>
-                    </button>`;
-                glanceEl.appendChild(glanceItem);
-
-                const item = document.createElement("li");
-                item.className = "timeline-item";
-                item.innerHTML = `
-                    ${stop.drive ? `<p class="leg-row">${escapeHtml(stop.drive)}</p>` : ""}
-                    <article class="stop-card">
-                        <button class="stop" type="button" data-index="${index}">
-                            <span class="badge${kindClass}"${badgeStyle}>${number}</span>
-                            <span>
-                                <span class="stop-title">${escapeHtml(stop.name)}${label}</span>
-                                <span class="stop-meta">${escapeHtml(stop.time || "")}</span>
-                            </span>
-                        </button>
-                        <ul class="activities">${activityRows}</ul>
-                        ${note}
-                    </article>`;
-                itineraryEl.appendChild(item);
+            markers = TripRender.renderStops({
+                map,
+                stops: day.stops,
+                color: day.color,
+                glanceEl,
+                itineraryEl
             });
 
             map.fitBounds(routeLine.getBounds().pad(0.18));
-            await loadRoute(day, coords, dayIndex);
+            await TripRouting.visit({
+                map,
+                day,
+                coords,
+                line: routeLine,
+                isCurrent: () => activeDay === dayIndex,
+                statEl: routeStatEl
+            });
         }
 
-        async function loadRoute(day, coords, expectedDay) {
-            if (day.mode === "eurostar") {
-                routeStatEl.textContent = "Eurostar · 约 2 小时 15 分（示意线）";
-                return;
-            }
-            routeStatEl.textContent = "正在规划步行路线…";
-            const path = coords.map(([lat, lng]) => `${lng},${lat}`).join(";");
-            const url = `https://router.project-osrm.org/route/v1/foot/${path}?overview=full&geometries=geojson`;
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error("route request failed");
-                const data = await response.json();
-                if (activeDay !== expectedDay) return;
-                const route = data.routes && data.routes[0];
-                if (!route) throw new Error("no route returned");
-                routeLine.setLatLngs(route.geometry.coordinates.map(([lng, lat]) => [lat, lng]));
-                routeLine.setStyle({ dashArray: null });
-                const km = (route.distance / 1000).toFixed(1);
-                const minutes = Math.round(route.duration / 60);
-                routeStatEl.textContent = `步行约 ${km} km · ${minutes} 分`;
-                map.fitBounds(routeLine.getBounds().pad(0.15));
-            } catch (error) {
-                if (activeDay === expectedDay) routeStatEl.textContent = "步行路线暂不可用，显示直线示意";
-            }
-        }
-
-        function escapeHtml(value) {
-            return String(value)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;");
-        }
 
         renderDay(0);
     </script>
-    <script>
-        (function () {
-            const tabs = document.getElementById("dayTabs");
-            const arrows = document.querySelectorAll(".day-arrow");
-            if (tabs && arrows.length) {
-                const updateArrows = function () {
-                    const max = tabs.scrollWidth - tabs.clientWidth;
-                    const overflow = max > 4;
-                    arrows.forEach(function (arrow) {
-                        arrow.hidden = !overflow;
-                        const dir = Number(arrow.dataset.dir);
-                        arrow.disabled = dir < 0 ? tabs.scrollLeft <= 2 : tabs.scrollLeft >= max - 2;
-                    });
-                };
-                arrows.forEach(function (arrow) {
-                    arrow.addEventListener("click", function () {
-                        const amount = Math.max(tabs.clientWidth * 0.72, 96);
-                        tabs.scrollBy({ left: Number(arrow.dataset.dir) * amount, behavior: "smooth" });
-                    });
-                });
-                tabs.addEventListener("scroll", updateArrows, { passive: true });
-                window.addEventListener("resize", updateArrows);
-                updateArrows();
-            }
-            const root = document.documentElement;
-            const button = document.getElementById("detailExpand");
-            const detail = document.querySelector(".detail");
-            if (!button || !detail) return;
-            button.addEventListener("click", function () {
-                const expanded = !root.classList.contains("is-page-scroll");
-                root.classList.toggle("is-page-scroll", expanded);
-                button.setAttribute("aria-expanded", expanded ? "true" : "false");
-                button.textContent = expanded ? "收起" : "展开";
-                if (expanded) {
-                    requestAnimationFrame(function () {
-                        detail.scrollIntoView({ behavior: "smooth", block: "start" });
-                    });
-                } else {
-                    const timeline = document.querySelector(".timeline");
-                    if (timeline) timeline.scrollTop = 0;
-                    window.scrollTo(0, 0);
-                }
-                window.dispatchEvent(new Event("resize"));
-            });
-        })();
-    </script>
+    <script src="../../js/trip-chrome.js"></script>
 </body>
 </html>

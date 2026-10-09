@@ -5,15 +5,18 @@
     <title>澳大利亚 Southern Highlands 2026/09/06</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="../css/tokens.css">
-    <link rel="stylesheet" href="../css/trip.css">
+    <link rel="stylesheet" href="../../css/tokens.css">
+    <link rel="stylesheet" href="../../css/trip.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="../js/color.js"></script>
+    <script src="../../js/color.js"></script>
+    <script src="../../js/trip-model.js"></script>
+    <script src="../../js/trip-render.js"></script>
+    <script src="../../js/trip-routing.js"></script>
 </head>
 <body>
     <div class="page">
         <nav class="site-nav" aria-label="站点导航">
-            <a class="back-home" href="../index.html">← 返回主页</a>
+            <a class="back-home" href="../../index.html">← 返回主页</a>
         </nav>
         <header class="trip-head">
             <p class="kicker">Australia · 2026</p>
@@ -53,7 +56,7 @@
 
     <script>
         // 一级为目的地，二级为该目的地内的具体活动。
-        const waypoints = [
+        const waypoints = TripModel.prepareStops([
             {
                 name: "Park Hyatt Sydney",
                 time: "09:00 出发 · 约 21:50 返抵",
@@ -147,20 +150,14 @@
                     { time: "21:30", text: "驱车返回 Park Hyatt" }
                 ]
             }
-        ];
+        ]);
 
         // 返程绕经 Grand Pacific Drive 上的 Sea Cliff Bridge，OSRM 会把它作为必经点。
         const seaCliffBridge = { name: "Sea Cliff Bridge", desc: "返程途经 · 悬于海崖之上的观景桥", lat: -34.2543, lng: 150.9734 };
 
-        const map = L.map("map", { zoomControl: true }).setView([-34.3, 150.7], 9);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            maxZoom: 19,
-            attribution: "&copy; OpenStreetMap contributors"
-        }).addTo(map);
-
+        const map = TripRender.createMap("map", [-34.3, 150.7], 9);
         const glanceEl = document.getElementById("glance");
         const itineraryEl = document.getElementById("itinerary");
-        const markers = [];
 
         document.getElementById("detailNote").textContent =
             `${waypoints.length} 个地点 · 其中 ${waypoints.filter((stop) => stop.optional).length} 个可选`;
@@ -198,188 +195,40 @@
         })
             .addTo(map)
             .bindPopup(
-                `<p class="popup-title">${escapeHtml(seaCliffBridge.name)}</p>
-                 <p class="popup-desc">${escapeHtml(seaCliffBridge.desc)}</p>`
+                `<p class="popup-title">${TripRender.escapeHtml(seaCliffBridge.name)}</p>
+                 <p class="popup-desc">${TripRender.escapeHtml(seaCliffBridge.desc)}</p>`
             );
 
-        waypoints.forEach((stop, index) => {
-            const number = index + 1;
-            const optionalClass = stop.optional ? " is-optional" : "";
-            const marker = L.marker([stop.lat, stop.lng], {
-                icon: L.divIcon({
-                    className: "",
-                    html: `<div class="num-marker${optionalClass}">${number}</div>`,
-                    iconSize: [28, 28],
-                    iconAnchor: [14, 14],
-                    popupAnchor: [0, -16]
-                })
-            }).addTo(map);
-
-            const activityRows = stop.activities
-                .map((item) => `
-                    <li class="activity">
-                        <span class="activity-time">${escapeHtml(item.time)}</span>
-                        <span class="activity-text">${escapeHtml(item.text)}</span>
-                    </li>`)
-                .join("");
-
-            const timeLine = [stop.drive, stop.time].filter(Boolean).join(" · ");
-            const optionalTag = stop.optional ? '<span class="stop-tag">可选</span>' : "";
-            const optionalNote = stop.note
-                ? `<span class="stop-note">${escapeHtml(stop.note)}</span>`
-                : "";
-            marker.bindPopup(
-                `<p class="popup-title">${number}. ${escapeHtml(stop.name)}${optionalTag}</p>
-                 <p class="popup-desc">${escapeHtml(timeLine)}</p>
-                 ${optionalNote}
-                 <ul class="activities activities--popup">${activityRows}</ul>`
-            );
-            marker.on("click", () => setActive(index, false));
-            markers.push(marker);
-
-            const glanceItem = document.createElement("li");
-            glanceItem.className = "glance-item";
-            glanceItem.innerHTML = `
-                <button class="stop" type="button" data-index="${index}">
-                    <span class="badge${optionalClass}">${number}</span>
-                    <span>
-                        <span class="stop-title">${escapeHtml(stop.name)}${optionalTag}</span>
-                        <span class="stop-meta">${escapeHtml(stop.time || "")}</span>
-                    </span>
-                </button>`;
-            glanceEl.appendChild(glanceItem);
-
-            const item = document.createElement("li");
-            item.className = "timeline-item";
-            item.innerHTML = `
-                ${stop.drive ? `<p class="leg-row">${escapeHtml(stop.drive)}</p>` : ""}
-                <article class="stop-card">
-                    <button class="stop" type="button" data-index="${index}">
-                        <span class="badge${optionalClass}">${number}</span>
-                        <span>
-                            <span class="stop-title">${escapeHtml(stop.name)}${optionalTag}</span>
-                            <span class="stop-meta">${escapeHtml(stop.time || "")}</span>
-                        </span>
-                    </button>
-                    <ul class="activities">${activityRows}</ul>
-                    ${optionalNote}
-                </article>`;
-            itineraryEl.appendChild(item);
+        const markers = TripRender.renderStops({
+            map,
+            stops: waypoints,
+            glanceEl,
+            itineraryEl
         });
 
-        [glanceEl, itineraryEl].forEach((container) => {
-            container.addEventListener("click", (event) => {
-                const button = event.target.closest(".stop");
-                if (!button) return;
-                setActive(Number(button.dataset.index), true, container === glanceEl);
+        function focusStop(index, { scroll = false } = {}) {
+            TripRender.focusStop({
+                map,
+                markers,
+                itineraryEl,
+                index,
+                zoom: 12,
+                scroll
             });
-        });
+        }
+
+        TripRender.bindStopClicks([glanceEl, itineraryEl], focusStop);
 
         map.fitBounds(fallbackLine.getBounds().extend(returnLine.getBounds()).pad(0.12));
-        loadDrivingRoutes();
-
-        function setActive(index, fly, scroll = false) {
-            document.querySelectorAll(".stop").forEach((el) => {
-                el.classList.toggle("is-active", Number(el.dataset.index) === index);
-            });
-            document.querySelectorAll(".stop-card").forEach((card, i) => {
-                card.classList.toggle("is-active", i === index);
-            });
-            if (fly) {
-                map.flyTo([waypoints[index].lat, waypoints[index].lng], 12, { duration: 0.7 });
-                markers[index].openPopup();
-            }
-            if (scroll) {
-                itineraryEl.children[index].scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-        }
-
-        async function loadDrivingRoutes() {
-            await Promise.all([
-                drawLeg(outboundCoords, fallbackLine, "routeStat", "去程"),
-                drawLeg(returnCoords, returnLine, "returnStat", "返程经 Sea Cliff Bridge → Me-Gal")
-            ]);
+        Promise.all([
+            TripRouting.drivingLine({ coords: outboundCoords, line: fallbackLine, statEl: document.getElementById("routeStat"), label: "去程" }),
+            TripRouting.drivingLine({ coords: returnCoords, line: returnLine, statEl: document.getElementById("returnStat"), label: "返程经 Sea Cliff Bridge → Me-Gal" })
+        ]).then(() => {
             const bounds = fallbackLine.getBounds().extend(returnLine.getBounds());
             map.fitBounds(bounds.pad(0.12));
-        }
+        });
 
-        async function drawLeg(coords, line, statId, label) {
-            const statEl = document.getElementById(statId);
-            const path = coords.map(([lat, lng]) => `${lng},${lat}`).join(";");
-            const url = `https://router.project-osrm.org/route/v1/driving/${path}?overview=full&geometries=geojson`;
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error("route request failed");
-                const data = await response.json();
-                const route = data.routes && data.routes[0];
-                if (!route) throw new Error("no route returned");
-
-                line.setLatLngs(route.geometry.coordinates.map(([lng, lat]) => [lat, lng]));
-                line.setStyle({ dashArray: null, opacity: 0.85 });
-
-                const km = (route.distance / 1000).toFixed(0);
-                const hours = Math.floor(route.duration / 3600);
-                const mins = Math.round((route.duration % 3600) / 60);
-                const time = hours ? `${hours} 小时 ${mins} 分` : `${mins} 分`;
-                statEl.textContent = `${label} ${km} km · ${time}`;
-            } catch (error) {
-                statEl.textContent = `${label}路线暂不可用，显示直线示意`;
-            }
-        }
-
-        function escapeHtml(value) {
-            return String(value)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;");
-        }
     </script>
-    <script>
-        (function () {
-            const tabs = document.getElementById("dayTabs");
-            const arrows = document.querySelectorAll(".day-arrow");
-            if (tabs && arrows.length) {
-                const updateArrows = function () {
-                    const max = tabs.scrollWidth - tabs.clientWidth;
-                    const overflow = max > 4;
-                    arrows.forEach(function (arrow) {
-                        arrow.hidden = !overflow;
-                        const dir = Number(arrow.dataset.dir);
-                        arrow.disabled = dir < 0 ? tabs.scrollLeft <= 2 : tabs.scrollLeft >= max - 2;
-                    });
-                };
-                arrows.forEach(function (arrow) {
-                    arrow.addEventListener("click", function () {
-                        const amount = Math.max(tabs.clientWidth * 0.72, 96);
-                        tabs.scrollBy({ left: Number(arrow.dataset.dir) * amount, behavior: "smooth" });
-                    });
-                });
-                tabs.addEventListener("scroll", updateArrows, { passive: true });
-                window.addEventListener("resize", updateArrows);
-                updateArrows();
-            }
-            const root = document.documentElement;
-            const button = document.getElementById("detailExpand");
-            const detail = document.querySelector(".detail");
-            if (!button || !detail) return;
-            button.addEventListener("click", function () {
-                const expanded = !root.classList.contains("is-page-scroll");
-                root.classList.toggle("is-page-scroll", expanded);
-                button.setAttribute("aria-expanded", expanded ? "true" : "false");
-                button.textContent = expanded ? "收起" : "展开";
-                if (expanded) {
-                    requestAnimationFrame(function () {
-                        detail.scrollIntoView({ behavior: "smooth", block: "start" });
-                    });
-                } else {
-                    const timeline = document.querySelector(".timeline");
-                    if (timeline) timeline.scrollTop = 0;
-                    window.scrollTo(0, 0);
-                }
-                window.dispatchEvent(new Event("resize"));
-            });
-        })();
-    </script>
+    <script src="../../js/trip-chrome.js"></script>
 </body>
 </html>
