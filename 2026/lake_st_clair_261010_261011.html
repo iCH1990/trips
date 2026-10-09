@@ -8,16 +8,16 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root {
-            --ink: #17324d;
-            --muted: #52657a;
-            --line: #dce5ec;
-            --accent: #2f6b4f;
-            --accent-soft: #e8f3ec;
-            --warm: #b45f24;
-            --warm-soft: #fff0df;
+            --ink: #1a365d;
+            --muted: #4a5568;
+            --line: #e2e8f0;
+            --accent: #2b6cb0;
+            --accent-soft: #ebf5ff;
+            --warm: #c05621;
+            --warm-soft: #feebc8;
             --stay: #6b4ea0;
             --stay-soft: #f0eafa;
-            --bg: #f4f7f9;
+            --bg: #f7fafc;
             --shadow: 0 1px 2px rgba(15, 35, 55, 0.05);
             --shadow-lift: 0 10px 28px rgba(15, 35, 55, 0.1);
         }
@@ -93,15 +93,53 @@
             min-height: 260px;
             padding: 16px;
         }
-        .day-tabs {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
-            gap: 6px;
+        .overview:has(.day-scroller) { grid-template-columns: minmax(0, 1fr) 400px; }
+        .overview:has(.day-scroller) #map,
+        .overview:has(.day-scroller) .side {
+            height: min(340px, 32vh);
+            min-height: 240px;
         }
+        .day-scroller {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex: none;
+        }
+        .day-scroller:not(:has(.day-tab)) { display: none; }
+        .day-tabs {
+            display: flex;
+            flex: 1;
+            gap: 6px;
+            min-width: 0;
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            scrollbar-width: none;
+        }
+        .day-tabs::-webkit-scrollbar { display: none; }
+        .day-tabs:empty { display: none; }
+        .day-arrow {
+            display: grid;
+            flex: none;
+            place-items: center;
+            width: 26px;
+            height: 26px;
+            padding: 0;
+            border: 1px solid var(--line);
+            border-radius: 50%;
+            background: #fff;
+            color: var(--accent);
+            cursor: pointer;
+        }
+        .day-arrow svg { width: 12px; height: 12px; }
+        .day-arrow:hover, .day-arrow:focus-visible { border-color: var(--accent); background: var(--accent-soft); outline: none; }
+        .day-arrow:disabled { opacity: 0.35; cursor: default; }
+        .day-arrow[hidden] { display: none; }
         .day-tab {
+            flex: 0 0 auto;
+            min-width: 68px;
             border: 1px solid var(--line);
             border-radius: 10px;
-            padding: 8px 4px;
+            padding: 6px 8px;
             background: #fff;
             color: var(--muted);
             cursor: pointer;
@@ -110,14 +148,10 @@
         }
         .day-tab:hover, .day-tab:focus-visible { border-color: var(--accent); outline: none; }
         .day-tab.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; }
-        .day-summary {
-            padding: 10px 12px;
-            border-left: 3px solid var(--accent);
-            border-radius: 6px;
-            background: #f5f9fb;
-        }
-        .day-title { margin: 0; color: var(--ink); font-size: 14px; font-weight: 700; }
-        .day-meta { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+        .day-summary:empty { display: none; }
+        .day-summary { padding: 0 2px; }
+        .day-title { margin: 0; color: var(--muted); font-size: 12px; font-weight: 650; line-height: 1.45; }
+        .day-meta { margin: 2px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
         .glance {
             flex: 1;
             overflow: auto;
@@ -197,21 +231,21 @@
         .detail-head {
             display: flex;
             flex: none;
-            align-items: flex-start;
-            gap: 12px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--line);
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 0;
         }
         .detail-heading {
             display: flex;
             flex: 1 1 auto;
             flex-wrap: wrap;
             align-items: baseline;
-            gap: 4px 12px;
+            gap: 2px 8px;
             min-width: 0;
         }
-        .detail-head h2 { margin: 0; font-size: 20px; }
-        .detail-note { margin: 0; color: var(--muted); font-size: 13px; }
+        .detail-head h2 { margin: 0; color: var(--muted); font-size: 12px; font-weight: 650; line-height: 1.45; }
+        .detail-head h2:empty, .detail-note:empty { display: none; }
+        .detail-note { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
         .detail-expand {
             flex: none;
             margin-top: 1px;
@@ -230,15 +264,18 @@
             background: var(--accent-soft);
             outline: none;
         }
+        .detail-scroll {
+            flex: 1 1 auto;
+            min-height: 0;
+            margin-top: 8px;
+            overflow: auto;
+            overscroll-behavior: contain;
+        }
         .timeline {
             display: grid;
             gap: 10px;
-            flex: 1 1 auto;
-            min-height: 0;
-            margin: 12px 0 0;
-            padding: 2px 6px 12px 0;
-            overflow: auto;
-            overscroll-behavior: contain;
+            margin: 0;
+            padding: 0 6px 4px 0;
             list-style: none;
         }
         .timeline-item { display: grid; gap: 10px; }
@@ -305,11 +342,12 @@
             line-height: 1.5;
         }
         .hint {
-            flex: none;
-            margin: 10px 0 0;
-            color: #6c7d8e;
+            margin: 12px 2px 4px 0;
+            padding-top: 10px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
             font-size: 12px;
-            line-height: 1.6;
+            line-height: 1.5;
         }
         .popup-title { margin: 0 0 4px; color: var(--ink); font-size: 14px; font-weight: 700; }
         .popup-meta { margin: 0; color: var(--muted); font-size: 12px; }
@@ -322,22 +360,16 @@
             .subtitle { margin-top: 4px; }
             .stats { flex-wrap: nowrap; margin-top: 8px; overflow-x: auto; }
             .stat { flex: none; }
-            .overview { grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 10px; }
-            #map { height: 180px; min-height: 180px; }
-            .side { height: auto; min-height: 0; max-height: none; gap: 8px; padding: 10px 12px; }
-            .day-summary, .glance { display: none; }
-            .side:has(.day-tab) { gap: 0; padding: 8px; }
-            .side:has(.day-tab) .day-tabs {
-                display: flex;
-                gap: 6px;
-                overflow-x: auto;
-                overscroll-behavior: contain;
-            }
-            .side:has(.day-tab) .day-tab { flex: 0 0 auto; min-width: 72px; }
+            .overview,
+            .overview:has(.day-scroller) { grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 10px; }
+            #map,
+            .overview:has(.day-scroller) #map { height: 180px; min-height: 180px; }
+            .side,
+            .overview:has(.day-scroller) .side { height: auto; min-height: 0; max-height: none; gap: 8px; padding: 10px 12px; }
+            .glance { display: none; }
+            .side:has(.day-tab) { gap: 8px; padding: 8px; }
             .side:has(.day-tab) .route-stat { display: none; }
             .detail { margin-top: 8px; padding: 10px 12px 6px; }
-            .detail-head h2 { font-size: 16px; }
-            .hint { max-height: 3.2em; overflow: auto; overscroll-behavior: contain; }
         }
         @media (max-width: 560px) {
             .page { padding: 12px 12px 10px; }
@@ -363,13 +395,10 @@
             overflow: visible;
             scroll-margin-top: 12px;
         }
+        html.is-page-scroll .detail-scroll,
         html.is-page-scroll .timeline {
             flex: none;
             min-height: auto;
-            overflow: visible;
-        }
-        html.is-page-scroll .hint {
-            max-height: none;
             overflow: visible;
         }
     </style>
@@ -394,7 +423,15 @@
                 <div id="map" role="application" aria-label="Chatswood 至 Lake St Clair 两日自驾地图"></div>
             </div>
             <div class="card side">
-                <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+                <div class="day-scroller">
+                    <button type="button" class="day-arrow" data-dir="-1" aria-label="更早的日期" hidden>
+                        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M7.6 2.2 4 6l3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+                    <button type="button" class="day-arrow" data-dir="1" aria-label="更晚的日期" hidden>
+                        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.4 2.2 8 6l-3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                </div>
                 <div class="day-summary" id="daySummary"></div>
                 <ol class="glance" id="glance"></ol>
                 <p class="route-stat" id="routeStat">正在规划当日路线…</p>
@@ -408,9 +445,11 @@
                 </div>
                 <button type="button" class="detail-expand" id="detailExpand" aria-expanded="false">展开</button>
             </div>
-            <ol class="timeline" id="itinerary"></ol>
+            <div class="detail-scroll">
+                <ol class="timeline" id="itinerary"></ol>
+                <p class="hint">驾驶时间按 OSRM 常规路况估算，不含停车与拥堵。营位必须提前在 Singleton Council 网站预订，办公室 17:00 下班且不收现金。想早到家就从 Singleton 直接上高速。</p>
+            </div>
         </section>
-        <p class="hint">驾驶时间按 OSRM 常规路况估算，不含停车与拥堵。周六 10:30 出发，Pie in the Sky 午饭，Singleton 下午茶后大约 15:40 到营地。晚上用自带碳火烤炉，先预热木炭，再和火锅一起吃，22:15 左右上床。营位必须提前在 Singleton Council 网站预订，办公室 17:00 下班且不收现金。周日早上离场后走 Wollombi 吃午饭，经 Great North Road 回 M1；想早到家就从 Singleton 直接上高速。</p>
     </div>
 
     <script>
@@ -418,8 +457,8 @@
             {
                 date: "10/10",
                 weekday: "周六",
-                title: "Pie in the Sky 午餐 → Singleton 下午茶",
-                meta: "约 227 km · 驾驶约 3 小时 10 分 · 车内过夜",
+                title: "Pie in the Sky → Kurri Kurri → Singleton",
+                meta: "约 220 km · 驾驶约 3 小时 10 分 · 车内过夜",
                 color: "#27756d",
                 stops: [
                     {
@@ -439,35 +478,46 @@
                         lat: -33.5739, lng: 151.1925,
                         activities: [
                             { time: "11:10–12:00", text: "肉饼当午饭，咖啡，在店外观景台坐一会儿" },
-                            { time: "12:10", text: "上 M1 继续北上" }
+                            { time: "12:10", text: "上 M1，下一站在 Kurri Kurri 下高速" }
                         ],
                         note: "1296 Pacific Hwy, Cowan；周六 8:00–17:00。"
                     },
                     {
+                        name: "Kurri Kurri",
+                        time: "13:30–13:50",
+                        drive: "驾驶约 1 小时 20 分",
+                        lat: -32.8152, lng: 151.4890,
+                        activities: [
+                            { time: "13:30–13:50", text: "Lang Street 主街壁画，下来走一圈" },
+                            { time: "13:50", text: "回到 Hunter Expressway，继续去 Singleton" }
+                        ],
+                        note: "壁画沿 Lang Street 露天排开，不用买票。出口就在镇边，停 20 分钟就够。"
+                    },
+                    {
                         name: "Singleton",
-                        time: "14:10–15:05",
-                        drive: "驾驶约 2 小时",
+                        time: "14:30–15:20",
+                        drive: "驾驶约 40 分钟",
                         kind: "highlight",
                         lat: -32.5653, lng: 151.1690,
                         activities: [
-                            { time: "14:10–14:45", text: "The Coffee Club 下午茶（Gowrie 与 John 街口，周六大约开到 17:00）" },
-                            { time: "14:45–15:05", text: "Burdekin Park 短走，进营地前最后歇一下" }
+                            { time: "14:30–15:05", text: "The Coffee Club 下午茶（Gowrie 与 John 街口，周六大约开到 17:00）" },
+                            { time: "15:05–15:20", text: "Burdekin Park 短走，进营地前最后歇一下" }
                         ],
-                        note: "这条高速上值得下来的只有 Kurri Kurri 主街壁画，几乎不绕路，走 15 分钟即可。不去就直开这里。走完经 Bridgman Road / Carrowbrook Road。"
+                        note: "走完经 Bridgman Road / Carrowbrook Road。"
                     },
                     {
                         name: "Lake St Clair Campgrounds",
-                        time: "15:40 入住",
+                        time: "15:55 入住",
                         drive: "驾驶约 35 分钟",
                         kind: "stay",
                         lat: -32.3344, lng: 151.2917,
                         activities: [
-                            { time: "15:40", text: "办公室登记。没有预订不能进营位" },
-                            { time: "16:00–16:30", text: "选高处、地面硬的非动力营位，车里铺好过夜" },
-                            { time: "16:30–17:00", text: "沿 Carrowbrook Road 看东岸，或在船坡附近走走" },
-                            { time: "17:00–17:30", text: "回营位生火，木炭预热" },
-                            { time: "17:30–18:00", text: "处理肉和菜，炭火继续烧透，卡式炉就位" },
-                            { time: "18:00–21:20", text: "碳火烤炉加热锅，慢慢吃，看着天黑" },
+                            { time: "15:55", text: "办公室登记。没有预订不能进营位" },
+                            { time: "16:15–16:45", text: "选高处、地面硬的非动力营位，车里铺好过夜" },
+                            { time: "16:45–17:15", text: "沿 Carrowbrook Road 看东岸，或在船坡附近走走" },
+                            { time: "17:15–17:45", text: "回营位生火，木炭预热" },
+                            { time: "17:45–18:15", text: "处理肉和菜，炭火继续烧透，卡式炉就位" },
+                            { time: "18:15–21:20", text: "碳火烤炉加热锅，慢慢吃，看着天黑" },
                             { time: "21:20–22:10", text: "收餐具、淋浴" },
                             { time: "22:15", text: "上床休息" }
                         ],
@@ -478,8 +528,8 @@
             {
                 date: "10/11",
                 weekday: "周日",
-                title: "湖边早晨 → Wollombi → Chatswood",
-                meta: "约 208 km · 驾驶约 3 小时 15 分 · 下午到家",
+                title: "Wollombi 午饭 → Saddles → Chatswood",
+                meta: "约 214 km · 驾驶约 3 小时 30 分 · 下午到家",
                 color: "#b45f24",
                 stops: [
                     {
@@ -502,17 +552,27 @@
                         lat: -32.9388, lng: 151.1406,
                         activities: [
                             { time: "11:45–13:15", text: "村子里午饭，木火披萨；Great North Road 两侧可以慢慢看" },
-                            { time: "13:15", text: "沿 Tourist Drive 33 回 Calga，再上 M1" }
+                            { time: "13:15", text: "沿 Tourist Drive 33 往 Mount White" }
                         ],
-                        note: "2994 Great North Rd, Wollombi；大约 10:00 开门。山路弯多，比高速大约多 20 分钟。想赶路就从 Singleton 直接上 Hunter Expressway。"
+                        note: "2994 Great North Rd, Wollombi；大约 10:00 开门。出村 8 分钟会过 Laguna，刚吃完午饭不用下。山路弯多。想赶路就从 Singleton 直接上 Hunter Expressway。"
+                    },
+                    {
+                        name: "Saddles",
+                        time: "14:30–15:00",
+                        drive: "驾驶约 1 小时 10 分",
+                        lat: -33.4527, lng: 151.1951,
+                        activities: [
+                            { time: "14:30–15:00", text: "坝边喝咖啡、伸展一下。山路开完再上高速" }
+                        ],
+                        note: "20 Ashbrookes Rd, Mount White；苗圃里的咖啡馆，每天大约 8:00–17:00。"
                     },
                     {
                         name: "Chatswood",
-                        time: "15:05 抵达",
-                        drive: "驾驶约 1 小时 50 分",
+                        time: "15:50 抵达",
+                        drive: "驾驶约 50 分钟",
                         lat: -33.7969, lng: 151.1833,
                         activities: [
-                            { time: "15:05", text: "回到 Chatswood，行程结束" }
+                            { time: "15:50", text: "回到 Chatswood，行程结束" }
                         ]
                     }
                 ]
@@ -576,12 +636,19 @@
             const day = days[dayIndex];
             document.querySelectorAll(".day-tab").forEach((tab, index) => {
                 tab.classList.toggle("is-active", index === dayIndex);
+                if (index === dayIndex) {
+                    const tabsRect = tabsEl.getBoundingClientRect();
+                    const tabRect = tab.getBoundingClientRect();
+                    if (tabRect.left < tabsRect.left) {
+                        tabsEl.scrollLeft -= tabsRect.left - tabRect.left;
+                    } else if (tabRect.right > tabsRect.right) {
+                        tabsEl.scrollLeft += tabRect.right - tabsRect.right;
+                    }
+                }
             });
-            summaryEl.innerHTML = `
-                <p class="day-title">${escapeHtml(day.date)} ${escapeHtml(day.weekday)}</p>
-                <p class="day-meta">${escapeHtml(day.title)}</p>`;
-            detailTitleEl.textContent = [`${day.date} ${day.weekday}`, day.title].filter(Boolean).join(" · ");
-            detailNoteEl.textContent = [`${day.stops.length} 个地点`, day.meta].filter(Boolean).join(" · ");
+            summaryEl.innerHTML = "";
+            detailTitleEl.textContent = day.title || "";
+            detailNoteEl.textContent = "";
             glanceEl.innerHTML = "";
             itineraryEl.innerHTML = "";
             markers.forEach((marker) => marker.remove());
@@ -701,6 +768,28 @@
     </script>
     <script>
         (function () {
+            const tabs = document.getElementById("dayTabs");
+            const arrows = document.querySelectorAll(".day-arrow");
+            if (tabs && arrows.length) {
+                const updateArrows = function () {
+                    const max = tabs.scrollWidth - tabs.clientWidth;
+                    const overflow = max > 4;
+                    arrows.forEach(function (arrow) {
+                        arrow.hidden = !overflow;
+                        const dir = Number(arrow.dataset.dir);
+                        arrow.disabled = dir < 0 ? tabs.scrollLeft <= 2 : tabs.scrollLeft >= max - 2;
+                    });
+                };
+                arrows.forEach(function (arrow) {
+                    arrow.addEventListener("click", function () {
+                        const amount = Math.max(tabs.clientWidth * 0.72, 96);
+                        tabs.scrollBy({ left: Number(arrow.dataset.dir) * amount, behavior: "smooth" });
+                    });
+                });
+                tabs.addEventListener("scroll", updateArrows, { passive: true });
+                window.addEventListener("resize", updateArrows);
+                updateArrows();
+            }
             const root = document.documentElement;
             const button = document.getElementById("detailExpand");
             const detail = document.querySelector(".detail");

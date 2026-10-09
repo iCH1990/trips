@@ -8,29 +8,40 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root {
-            --ink: #17324d;
-            --muted: #52657a;
-            --line: #dce5ec;
-            --accent: #2f6b4f;
-            --accent-soft: #e8f3ec;
-            --warm: #b45f24;
-            --warm-soft: #fff0df;
+            --ink: #1a365d;
+            --muted: #4a5568;
+            --line: #e2e8f0;
+            --accent: #2b6cb0;
+            --accent-soft: #ebf5ff;
+            --warm: #c05621;
+            --warm-soft: #feebc8;
             --stay: #6b4ea0;
             --stay-soft: #f0eafa;
-            --bg: #f4f7f9;
+            --bg: #f7fafc;
             --shadow: 0 1px 2px rgba(15, 35, 55, 0.05);
             --shadow-lift: 0 10px 28px rgba(15, 35, 55, 0.1);
         }
         * { box-sizing: border-box; }
+        html, body { height: 100%; }
         body {
             margin: 0;
+            overflow: hidden;
             background: var(--bg);
             color: var(--ink);
             font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
         }
         button { font: inherit; }
-        .page { max-width: 1140px; margin: 0 auto; padding: 40px 24px 72px; }
-        .site-nav { margin: 0 0 20px; }
+        .page {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 20px 24px 16px;
+            overflow: hidden;
+        }
+        .site-nav { flex: none; margin: 0 0 12px; }
+        .trip-head { flex: none; }
         .back-home {
             display: inline-flex;
             align-items: center;
@@ -69,26 +80,66 @@
             display: grid;
             grid-template-columns: minmax(0, 1fr) 316px;
             gap: 16px;
-            margin: 24px 0 0;
+            flex: none;
+            margin: 16px 0 0;
         }
         .map-card { overflow: hidden; }
-        #map { width: 100%; height: 100%; min-height: 520px; }
+        #map { width: 100%; height: min(380px, 36vh); min-height: 260px; }
         .side {
             display: flex;
             flex-direction: column;
             gap: 12px;
-            max-height: 520px;
+            height: min(380px, 36vh);
+            min-height: 260px;
             padding: 16px;
         }
-        .day-tabs {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
-            gap: 6px;
+        .overview:has(.day-scroller) { grid-template-columns: minmax(0, 1fr) 400px; }
+        .overview:has(.day-scroller) #map,
+        .overview:has(.day-scroller) .side {
+            height: min(340px, 32vh);
+            min-height: 240px;
         }
+        .day-scroller {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex: none;
+        }
+        .day-scroller:not(:has(.day-tab)) { display: none; }
+        .day-tabs {
+            display: flex;
+            flex: 1;
+            gap: 6px;
+            min-width: 0;
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            scrollbar-width: none;
+        }
+        .day-tabs::-webkit-scrollbar { display: none; }
+        .day-tabs:empty { display: none; }
+        .day-arrow {
+            display: grid;
+            flex: none;
+            place-items: center;
+            width: 26px;
+            height: 26px;
+            padding: 0;
+            border: 1px solid var(--line);
+            border-radius: 50%;
+            background: #fff;
+            color: var(--accent);
+            cursor: pointer;
+        }
+        .day-arrow svg { width: 12px; height: 12px; }
+        .day-arrow:hover, .day-arrow:focus-visible { border-color: var(--accent); background: var(--accent-soft); outline: none; }
+        .day-arrow:disabled { opacity: 0.35; cursor: default; }
+        .day-arrow[hidden] { display: none; }
         .day-tab {
+            flex: 0 0 auto;
+            min-width: 68px;
             border: 1px solid var(--line);
             border-radius: 10px;
-            padding: 8px 4px;
+            padding: 6px 8px;
             background: #fff;
             color: var(--muted);
             cursor: pointer;
@@ -97,14 +148,10 @@
         }
         .day-tab:hover, .day-tab:focus-visible { border-color: var(--accent); outline: none; }
         .day-tab.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; }
-        .day-summary {
-            padding: 10px 12px;
-            border-left: 3px solid var(--accent);
-            border-radius: 6px;
-            background: #f5f9fb;
-        }
-        .day-title { margin: 0; color: var(--ink); font-size: 14px; font-weight: 700; }
-        .day-meta { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+        .day-summary:empty { display: none; }
+        .day-summary { padding: 0 2px; }
+        .day-title { margin: 0; color: var(--muted); font-size: 12px; font-weight: 650; line-height: 1.45; }
+        .day-meta { margin: 2px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
         .glance {
             flex: 1;
             overflow: auto;
@@ -168,18 +215,69 @@
             vertical-align: 1px;
         }
         .tag--stay { background: var(--stay-soft); color: var(--stay); }
-        .detail { margin: 32px 0 0; }
+        .detail {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+            min-height: 0;
+            margin: 16px 0 0;
+            padding: 14px 16px 8px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
         .detail-head {
             display: flex;
+            flex: none;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 0;
+        }
+        .detail-heading {
+            display: flex;
+            flex: 1 1 auto;
             flex-wrap: wrap;
             align-items: baseline;
-            gap: 4px 12px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--line);
+            gap: 2px 8px;
+            min-width: 0;
         }
-        .detail-head h2 { margin: 0; font-size: 20px; }
-        .detail-note { margin: 0; color: var(--muted); font-size: 13px; }
-        .timeline { display: grid; gap: 10px; margin: 18px 0 0; padding: 0; list-style: none; }
+        .detail-head h2 { margin: 0; color: var(--muted); font-size: 12px; font-weight: 650; line-height: 1.45; }
+        .detail-head h2:empty, .detail-note:empty { display: none; }
+        .detail-note { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+        .detail-expand {
+            flex: none;
+            margin-top: 1px;
+            padding: 5px 12px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: #fff;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 650;
+            line-height: 1.3;
+            cursor: pointer;
+        }
+        .detail-expand:hover, .detail-expand:focus-visible {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+            outline: none;
+        }
+        .detail-scroll {
+            flex: 1 1 auto;
+            min-height: 0;
+            margin-top: 8px;
+            overflow: auto;
+            overscroll-behavior: contain;
+        }
+        .timeline {
+            display: grid;
+            gap: 10px;
+            margin: 0;
+            padding: 0 6px 4px 0;
+            list-style: none;
+        }
         .timeline-item { display: grid; gap: 10px; }
         .leg-row {
             display: flex;
@@ -243,24 +341,65 @@
             font-size: 12.5px;
             line-height: 1.5;
         }
-        .hint { margin: 28px 0 0; color: #6c7d8e; font-size: 12px; line-height: 1.6; }
+        .hint {
+            margin: 12px 2px 4px 0;
+            padding-top: 10px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
         .popup-title { margin: 0 0 4px; color: var(--ink); font-size: 14px; font-weight: 700; }
         .popup-meta { margin: 0; color: var(--muted); font-size: 12px; }
         .activities--popup { gap: 5px; margin-top: 8px; font-size: 12px; }
         .activities--popup .activity { grid-template-columns: 72px 1fr; gap: 8px; font-size: 12px; }
         .leaflet-popup-content { margin: 10px 13px; min-width: 235px; }
         @media (max-width: 880px) {
-            .overview { grid-template-columns: minmax(0, 1fr); }
-            #map { min-height: 380px; }
-            .side { max-height: none; }
-            .glance { overflow: visible; }
+            .page { padding: 12px 12px 10px; }
+            h1 { margin-top: 4px; font-size: 22px; }
+            .subtitle { margin-top: 4px; }
+            .stats { flex-wrap: nowrap; margin-top: 8px; overflow-x: auto; }
+            .stat { flex: none; }
+            .overview,
+            .overview:has(.day-scroller) { grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 10px; }
+            #map,
+            .overview:has(.day-scroller) #map { height: 180px; min-height: 180px; }
+            .side,
+            .overview:has(.day-scroller) .side { height: auto; min-height: 0; max-height: none; gap: 8px; padding: 10px 12px; }
+            .glance { display: none; }
+            .side:has(.day-tab) { gap: 8px; padding: 8px; }
+            .side:has(.day-tab) .route-stat { display: none; }
+            .detail { margin-top: 8px; padding: 10px 12px 6px; }
         }
         @media (max-width: 560px) {
-            .page { padding: 28px 16px 56px; }
-            h1 { font-size: 23px; }
+            .page { padding: 12px 12px 10px; }
+            h1 { font-size: 22px; }
             .stop-card { padding: 14px 15px; }
             .stop-card .stop-title { font-size: 16px; }
             .activity { grid-template-columns: 72px 1fr; gap: 8px; font-size: 13px; }
+        }
+
+        html.is-page-scroll,
+        html.is-page-scroll body {
+            height: auto;
+            min-height: 100%;
+            overflow: visible;
+        }
+        html.is-page-scroll .page {
+            height: auto;
+            overflow: visible;
+            padding-bottom: 72px;
+        }
+        html.is-page-scroll .detail {
+            flex: none;
+            overflow: visible;
+            scroll-margin-top: 12px;
+        }
+        html.is-page-scroll .detail-scroll,
+        html.is-page-scroll .timeline {
+            flex: none;
+            min-height: auto;
+            overflow: visible;
         }
     </style>
 </head>
@@ -284,7 +423,15 @@
                 <div id="map" role="application" aria-label="Chatswood 至 Hunter Valley、Terrigal 三日自驾地图"></div>
             </div>
             <div class="card side">
-                <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+                <div class="day-scroller">
+                    <button type="button" class="day-arrow" data-dir="-1" aria-label="更早的日期" hidden>
+                        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M7.6 2.2 4 6l3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+                    <button type="button" class="day-arrow" data-dir="1" aria-label="更晚的日期" hidden>
+                        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.4 2.2 8 6l-3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                </div>
                 <div class="day-summary" id="daySummary"></div>
                 <ol class="glance" id="glance"></ol>
                 <p class="route-stat" id="routeStat">正在规划当日路线…</p>
@@ -292,12 +439,17 @@
         </section>
         <section class="detail" aria-label="当日详细安排">
             <div class="detail-head">
-                <h2 id="detailTitle"></h2>
-                <p class="detail-note" id="detailNote"></p>
+                <div class="detail-heading">
+                    <h2 id="detailTitle"></h2>
+                    <p class="detail-note" id="detailNote"></p>
+                </div>
+                <button type="button" class="detail-expand" id="detailExpand" aria-expanded="false">展开</button>
             </div>
-            <ol class="timeline" id="itinerary"></ol>
+            <div class="detail-scroll">
+                <ol class="timeline" id="itinerary"></ol>
+                <p class="hint">驾驶时间按 OSRM 常规路况估算，不含停车与拥堵。品酒请留指定司机。Glenworth 骑马周末常满，须提前订。</p>
+            </div>
         </section>
-        <p class="hint">驾驶时间按 OSRM 常规路况估算，不含停车与拥堵。周五晚饭后走 M1 夜路入住 voco Kirkton Park。周六上午品酒、酒庄午餐，下午再去 Anna Bay，Terrigal 可晚到。品酒请留指定司机。Glenworth 骑马周末常满，须提前订；周日从 Terrigal 出发订 11:00 场，约 40 分钟车程。</p>
     </div>
 
     <script>
@@ -503,12 +655,19 @@
             const day = days[dayIndex];
             document.querySelectorAll(".day-tab").forEach((tab, index) => {
                 tab.classList.toggle("is-active", index === dayIndex);
+                if (index === dayIndex) {
+                    const tabsRect = tabsEl.getBoundingClientRect();
+                    const tabRect = tab.getBoundingClientRect();
+                    if (tabRect.left < tabsRect.left) {
+                        tabsEl.scrollLeft -= tabsRect.left - tabRect.left;
+                    } else if (tabRect.right > tabsRect.right) {
+                        tabsEl.scrollLeft += tabRect.right - tabsRect.right;
+                    }
+                }
             });
-            summaryEl.innerHTML = `
-                <p class="day-title">${escapeHtml(day.date)} ${escapeHtml(day.weekday)}</p>
-                <p class="day-meta">${escapeHtml(day.title)}</p>`;
-            detailTitleEl.textContent = [`${day.date} ${day.weekday}`, day.title].filter(Boolean).join(" · ");
-            detailNoteEl.textContent = [`${day.stops.length} 个地点`, day.meta].filter(Boolean).join(" · ");
+            summaryEl.innerHTML = "";
+            detailTitleEl.textContent = day.title || "";
+            detailNoteEl.textContent = "";
             glanceEl.innerHTML = "";
             itineraryEl.innerHTML = "";
             markers.forEach((marker) => marker.remove());
@@ -625,6 +784,52 @@
         }
 
         renderDay(0);
+    </script>
+    <script>
+        (function () {
+            const tabs = document.getElementById("dayTabs");
+            const arrows = document.querySelectorAll(".day-arrow");
+            if (tabs && arrows.length) {
+                const updateArrows = function () {
+                    const max = tabs.scrollWidth - tabs.clientWidth;
+                    const overflow = max > 4;
+                    arrows.forEach(function (arrow) {
+                        arrow.hidden = !overflow;
+                        const dir = Number(arrow.dataset.dir);
+                        arrow.disabled = dir < 0 ? tabs.scrollLeft <= 2 : tabs.scrollLeft >= max - 2;
+                    });
+                };
+                arrows.forEach(function (arrow) {
+                    arrow.addEventListener("click", function () {
+                        const amount = Math.max(tabs.clientWidth * 0.72, 96);
+                        tabs.scrollBy({ left: Number(arrow.dataset.dir) * amount, behavior: "smooth" });
+                    });
+                });
+                tabs.addEventListener("scroll", updateArrows, { passive: true });
+                window.addEventListener("resize", updateArrows);
+                updateArrows();
+            }
+            const root = document.documentElement;
+            const button = document.getElementById("detailExpand");
+            const detail = document.querySelector(".detail");
+            if (!button || !detail) return;
+            button.addEventListener("click", function () {
+                const expanded = !root.classList.contains("is-page-scroll");
+                root.classList.toggle("is-page-scroll", expanded);
+                button.setAttribute("aria-expanded", expanded ? "true" : "false");
+                button.textContent = expanded ? "收起" : "展开";
+                if (expanded) {
+                    requestAnimationFrame(function () {
+                        detail.scrollIntoView({ behavior: "smooth", block: "start" });
+                    });
+                } else {
+                    const timeline = document.querySelector(".timeline");
+                    if (timeline) timeline.scrollTop = 0;
+                    window.scrollTo(0, 0);
+                }
+                window.dispatchEvent(new Event("resize"));
+            });
+        })();
     </script>
 </body>
 </html>
