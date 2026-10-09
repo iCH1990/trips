@@ -1,0 +1,32 @@
+/* 全站颜色。行程页和首页都引用这一份。
+   重点是 --warm，住宿是 --stay。
+   --route-1 到 --route-9 只给当天路线和普通停靠点，按当天顺序使用，不要用暖橙或紫色。 */
+:root {
+    --ink: #1a365d;
+    --muted: #4a5568;
+    --line: #e2e8f0;
+    --surface: #ffffff;
+    --accent: #2b6cb0;
+    --accent-rgb: 43, 108, 176;
+    --accent-soft: #ebf5ff;
+    --warm: #c05621;
+    --warm-soft: #feebc8;
+    --stay: #6b4ea0;
+    --stay-soft: #f0eafa;
+    --chip: #edf2f7;
+    --ocean: #f4f8fb;
+    --bg: #f7fafc;
+    --map-land: #dfe6ee;
+    --map-hover: #90bce7;
+    --shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    --shadow-lift: 0 10px 24px rgba(15, 23, 42, 0.1);
+    --route-1: #c23b3b;
+    --route-2: #2b6cb0;
+    --route-3: #0f766e;
+    --route-4: #4f6d7a;
+    --route-5: #9f2d3a;
+    --route-6: #0369a1;
+    --route-7: #155e75;
+    --route-8: #2f6f4e;
+    --route-9: #3d5a80;
+}

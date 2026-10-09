@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8">
-    <title>美国 Miami / Key West 2024/02/03</title>
+    <title>中国长沙 2023/10/05–2023/10/08</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="../css/tokens.css">
@@ -16,18 +16,17 @@
             <a class="back-home" href="../index.html">← 返回主页</a>
         </nav>
         <header class="trip-head">
-            <p class="kicker">United States · 2024</p>
-            <h1>美国 Miami / Key West 2024/02/03</h1>
-            <p class="subtitle">🇺🇸 · 一天 · 自驾 · Overseas Highway 往返 Key West</p>
+            <p class="kicker">China · 2023</p>
+            <h1>中国长沙 2023/10/05–2023/10/08</h1>
+            <p class="subtitle">🇨🇳 · 四天 · FM9389 / MU8940</p>
             <div class="stats">
-                <span class="stat">1 天</span>
-                <span class="stat">Brickell 出发</span>
-                <span class="stat">Key West</span>
+                <span class="stat">3 晚 · 喜来登两晚，W 一晚</span>
+                <span class="stat">文和友 · 五一广场 · 橘子洲 · 岳麓山</span>
             </div>
         </header>
         <section class="overview" aria-label="行程总览">
             <div class="card map-card">
-                <div id="map" role="application" aria-label="Miami 至 Key West 一日自驾地图"></div>
+                <div id="map" role="application" aria-label="长沙行程地图"></div>
             </div>
             <div class="card side">
                 <div class="day-scroller">
@@ -54,7 +53,7 @@
             </div>
             <div class="detail-scroll">
                 <ol class="timeline" id="itinerary"></ol>
-                <p class="hint">Overseas Highway 桥上不能停车拍照，观景请用指定停车区。Vista Point 车位少，停一下就走。海明威故居约 17:00 关门，需提前入馆。当天 Key West 日落约 18:17。Bobalu's 周六开到 21:30。驾驶时间按 OSRM 常规路况估算。</p>
+                <p class="hint">实线为步行（OSRM）。虚线为航班、打车或滑道示意。去程 FM9389 虹桥到黄花，返程 MU8940 黄花回虹桥。滑板车速降标在东门出口，大学城小吃标在麓山南路。农家菜、按摩和湘江边的具体地点未写。工农兵标在黄兴北路254号一带，费大厨标在运达汇店。</p>
             </div>
         </section>
     </div>
@@ -62,122 +61,325 @@
     <script>
         const days = [
             {
-                date: "2/3",
-                weekday: "周六",
-                title: "Brickell 出发，沿 Overseas Highway 到 Key West，日落后再回",
-                meta: "Mrs. Mac's brunch · 途中观景 · 最南端与海明威故居 · Mallory Square 日落 · Big Coppitt 晚饭",
+                date: "10/5",
+                weekday: "周四",
+                title: "FM9389 飞抵长沙，文和友，逛到五一广场",
+                meta: "虹桥 FM9389 到黄花 · 打车文和友 · 步行街走到五一广场",
                 color: tokenColor("var(--route-1)"),
+                zoom: 15,
+                flightStat: "FM9389 虹桥 → 黄花",
                 stops: [
                     {
-                        name: "Brickell",
-                        time: "09:00 出发",
-                        kind: "stay",
-                        lat: 25.7664, lng: -80.1920,
+                        name: "上海虹桥国际机场",
+                        time: "出发",
+                        lat: 31.1979, lng: 121.3363,
                         activities: [
-                            { time: "09:00", text: "出发前往 Key Largo，走 US-1，车程约 1 小时 20 分" }
+                            { time: "出发", text: "乘坐 FM9389 飞往长沙" }
+                        ],
+                        note: "T2"
+                    },
+                    {
+                        name: "长沙黄花国际机场",
+                        time: "抵达",
+                        drive: "FM9389",
+                        leg: "flight",
+                        lat: 28.19063, lng: 113.21980,
+                        activities: [
+                            { time: "抵达", text: "FM9389 抵达黄花机场" }
+                        ],
+                        note: "T2"
+                    },
+                    {
+                        name: "超级文和友",
+                        time: "晚饭",
+                        drive: "打车进城",
+                        leg: "taxi",
+                        kind: "highlight",
+                        lat: 28.19236, lng: 112.96419,
+                        activities: [
+                            { time: "晚饭", text: "先去文和友吃小龙虾" }
+                        ],
+                        note: "湘江中路36号海信广场"
+                    },
+                    {
+                        name: "黄兴路步行街",
+                        time: "晚饭后",
+                        drive: "沿坡子街步行",
+                        lat: 28.19107, lng: 112.97081,
+                        activities: [
+                            { time: "晚饭后", text: "在附近步行街逛街，往五一广场走" }
                         ]
                     },
                     {
-                        name: "Mrs. Mac's Kitchen (Original)",
-                        time: "10:20–11:35",
-                        drive: "开车约 1 小时 20 分",
-                        lat: 25.0920, lng: -80.4440,
-                        activities: [
-                            { time: "10:20–11:35", text: "在 Original / Little 店吃 brunch，再继续南下" }
-                        ],
-                        note: "99336 Overseas Hwy, Key Largo, FL 33037 · 不要去 Big 店"
-                    },
-                    {
-                        name: "Anne's Beach",
-                        time: "12:15–12:40",
-                        drive: "开车约 40 分钟",
-                        lat: 24.8467, lng: -80.7443,
-                        activities: [
-                            { time: "12:15–12:40", text: "Islamorada 浅滩观景拍照，之后继续南下" }
-                        ],
-                        note: "MM 73.5 US-1 Oceanside, Islamorada"
-                    },
-                    {
-                        name: "7 Mile Bridge - Vista Point",
-                        time: "13:25–13:50",
-                        drive: "开车约 45 分钟",
+                        name: "五一广场",
+                        time: "宵夜",
+                        drive: "沿步行街走到北口",
                         kind: "highlight",
-                        lat: 24.7116, lng: -81.1230,
+                        lat: 28.19860, lng: 112.97092,
                         activities: [
-                            { time: "13:25–13:50", text: "在 Knights Key 指定停车区停留拍照，可走一小段旧桥" }
-                        ],
-                        note: "Marathon / Knights Key，MM 47 附近。桥上车道上不要停车"
-                    },
-                    {
-                        name: "Bahia Honda State Park",
-                        time: "14:05–14:25",
-                        drive: "开车约 15 分钟",
-                        lat: 24.6642, lng: -81.2745,
-                        activities: [
-                            { time: "14:05–14:25", text: "看 Old Bahia Honda Bridge 与水色，短停后直奔 Key West" }
-                        ],
-                        note: "36850 Overseas Hwy, Big Pine Key, FL 33043 · 进园可能收费"
-                    },
-                    {
-                        name: "Southernmost Point of the Continental U.S.A.",
-                        time: "15:10–15:35",
-                        drive: "开车约 45 分钟",
-                        kind: "highlight",
-                        lat: 24.5465, lng: -81.7977,
-                        activities: [
-                            { time: "15:10–15:35", text: "南端浮标打卡，人多就快速拍完去海明威故居" }
-                        ],
-                        note: "Whitehead St & South St, Key West, FL 33040"
-                    },
-                    {
-                        name: "The Ernest Hemingway Home & Museum",
-                        time: "15:45–16:50",
-                        drive: "开车约 5 分钟",
-                        kind: "highlight",
-                        lat: 24.5512, lng: -81.8006,
-                        activities: [
-                            { time: "15:45–16:50", text: "参观故居与多趾猫，关门前离开" }
-                        ],
-                        note: "907 Whitehead St, Key West, FL 33040 · 约 17:00 关门，尽量 16:30 前入馆"
-                    },
-                    {
-                        name: "Mallory Square",
-                        time: "17:40–18:50",
-                        drive: "开车约 8 分钟",
-                        kind: "highlight",
-                        lat: 24.5597, lng: -81.8074,
-                        activities: [
-                            { time: "17:40–18:17", text: "日落前到广场占位置，看街头表演与落日（约 18:17）" },
-                            { time: "18:20–18:50", text: "日落后再在 Old Town / Duval Street 逛一下" }
-                        ],
-                        note: "400 Wall St, Key West, FL 33040"
-                    },
-                    {
-                        name: "Bobalu's Southern Cafe",
-                        time: "19:20–20:40",
-                        drive: "开车约 20 分钟",
-                        lat: 24.5987, lng: -81.6573,
-                        activities: [
-                            { time: "19:20–20:40", text: "路过 Big Coppitt Key 吃晚饭，吃完直接回 Brickell" }
-                        ],
-                        note: "301 US-1, Big Coppitt Key, FL 33040 · 周六约 21:30 关门"
-                    },
-                    {
-                        name: "Brickell",
-                        time: "23:50 行程结束",
-                        drive: "开车约 3 小时",
-                        kind: "stay",
-                        lat: 25.7664, lng: -80.1920,
-                        activities: [
-                            { time: "20:50", text: "从 Big Coppitt 上 US-1 直接返回" },
-                            { time: "23:50", text: "回到 Brickell，行程结束" }
+                            { time: "晚上", text: "逛到五一广场，吃小吃宵夜" }
                         ]
+                    },
+                    {
+                        name: "茶颜悦色",
+                        time: "晚上",
+                        drive: "步行",
+                        lat: 28.19506, lng: 112.97249,
+                        activities: [
+                            { time: "晚上", text: "喝茶颜悦色" }
+                        ],
+                        note: "具体门店未写，标在解放西路、五一广场南侧"
+                    },
+                    {
+                        name: "长沙运达喜来登酒店",
+                        time: "入住",
+                        drive: "步行回酒店",
+                        kind: "stay",
+                        lat: 28.20639, lng: 112.97946,
+                        activities: [
+                            { time: "晚上", text: "回酒店休息。前两晚住这里" }
+                        ],
+                        note: "芙蓉中路一段478号"
+                    }
+                ]
+            },
+            {
+                date: "10/6",
+                weekday: "周五",
+                title: "工农兵粉，橘子洲，爱晚亭和滑板车速降",
+                meta: "早上嗦粉 · 橘子洲 · 坐车到爱晚亭 · 滑板车速降 · 大学城小吃 · 五一广场农家菜和按摩",
+                color: tokenColor("var(--route-2)"),
+                zoom: 14,
+                stops: [
+                    {
+                        name: "长沙运达喜来登酒店",
+                        time: "早上出发",
+                        kind: "stay",
+                        lat: 28.20639, lng: 112.97946,
+                        activities: [
+                            { time: "早上", text: "从喜来登出发" }
+                        ]
+                    },
+                    {
+                        name: "工农兵粉店",
+                        time: "早餐",
+                        drive: "步行",
+                        kind: "highlight",
+                        lat: 28.20642, lng: 112.97002,
+                        activities: [
+                            { time: "早上", text: "吃工农兵粉" }
+                        ],
+                        note: "黄兴北路254号一带。2019 年从通泰街迁来，门牌未在地图上标出"
+                    },
+                    {
+                        name: "橘子洲头",
+                        time: "上午",
+                        drive: "打车",
+                        leg: "taxi",
+                        kind: "highlight",
+                        lat: 28.17017, lng: 112.95482,
+                        activities: [
+                            { time: "上午", text: "打车去橘子洲头逛一下" }
+                        ]
+                    },
+                    {
+                        name: "爱晚亭",
+                        time: "下午",
+                        drive: "打车到岳麓山，坐车上去",
+                        leg: "taxi",
+                        kind: "highlight",
+                        lat: 28.18401, lng: 112.93217,
+                        activities: [
+                            { time: "下午", text: "在岳麓山坐车到爱晚亭，看风景" }
+                        ]
+                    },
+                    {
+                        name: "岳麓山滑板车速降",
+                        time: "下午",
+                        drive: "滑道速降",
+                        leg: "slide",
+                        kind: "highlight",
+                        lat: 28.19566, lng: 112.94486,
+                        activities: [
+                            { time: "下午", text: "玩滑板车速降" }
+                        ],
+                        note: "麓山景区滑道，只能下行，出来在东门"
+                    },
+                    {
+                        name: "大学城",
+                        time: "下午",
+                        drive: "出来后步行",
+                        lat: 28.17906, lng: 112.93960,
+                        activities: [
+                            { time: "下午", text: "在附近大学城逛一下，吃小吃" }
+                        ],
+                        note: "具体店未写，标在湖南大学麓山南路一带"
+                    },
+                    {
+                        name: "五一广场农家菜",
+                        time: "晚饭",
+                        drive: "打车回五一广场",
+                        leg: "taxi",
+                        lat: 28.19790, lng: 112.97420,
+                        activities: [
+                            { time: "晚上", text: "返程到五一广场，吃特色农家菜" }
+                        ],
+                        note: "店名未写，标在五一广场东侧"
+                    },
+                    {
+                        name: "五一广场附近按摩",
+                        time: "晚上",
+                        drive: "步行",
+                        lat: 28.20050, lng: 112.97380,
+                        activities: [
+                            { time: "晚上", text: "吃完去按摩" }
+                        ],
+                        note: "店名未写"
+                    },
+                    {
+                        name: "长沙运达喜来登酒店",
+                        time: "回酒店",
+                        drive: "步行",
+                        kind: "stay",
+                        lat: 28.20639, lng: 112.97946,
+                        activities: [
+                            { time: "晚上", text: "回喜来登，住第二晚" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "10/7",
+                weekday: "周六",
+                title: "换到 W，费大厨，湘江边和天宝兄弟",
+                meta: "中午 W 附近费大厨 · 湘江边逛 · 天宝兄弟 · 五一广场买特产",
+                color: tokenColor("var(--route-3)"),
+                zoom: 14,
+                stops: [
+                    {
+                        name: "长沙运达喜来登酒店",
+                        time: "上午退房",
+                        kind: "stay",
+                        lat: 28.20639, lng: 112.97946,
+                        activities: [
+                            { time: "上午", text: "喜来登退房" }
+                        ]
+                    },
+                    {
+                        name: "长沙 W 酒店",
+                        time: "中午入住",
+                        drive: "打车",
+                        leg: "taxi",
+                        kind: "stay",
+                        lat: 28.17315, lng: 113.03785,
+                        activities: [
+                            { time: "中午", text: "入住 W，最后一晚住这里" }
+                        ],
+                        note: "雨花区长沙大道567号运达中央广场，标在地铁长沙大道站北侧"
+                    },
+                    {
+                        name: "费大厨辣椒炒肉",
+                        time: "午餐",
+                        drive: "步行",
+                        kind: "highlight",
+                        lat: 28.17250, lng: 113.03840,
+                        activities: [
+                            { time: "中午", text: "在 W 附近吃费大厨" }
+                        ],
+                        note: "具体门店未写，标在运达汇店（沙湾路567号 B1）"
+                    },
+                    {
+                        name: "湘江边",
+                        time: "下午",
+                        drive: "打车",
+                        leg: "taxi",
+                        kind: "highlight",
+                        lat: 28.18846, lng: 112.96306,
+                        activities: [
+                            { time: "下午", text: "去湘江周边逛一下" }
+                        ],
+                        note: "具体地点未写，标在杜甫江阁"
+                    },
+                    {
+                        name: "天宝兄弟",
+                        time: "晚饭",
+                        drive: "沿江步行",
+                        kind: "highlight",
+                        lat: 28.17761, lng: 112.96401,
+                        activities: [
+                            { time: "晚上", text: "在附近吃天宝兄弟" }
+                        ],
+                        note: "白沙路汇景发展环球中心，长沙只有这一家。标在汇景城"
+                    },
+                    {
+                        name: "五一广场",
+                        time: "晚上",
+                        drive: "打车",
+                        leg: "taxi",
+                        kind: "highlight",
+                        lat: 28.19860, lng: 112.97092,
+                        activities: [
+                            { time: "晚上", text: "去五一广场买特产" }
+                        ]
+                    },
+                    {
+                        name: "长沙 W 酒店",
+                        time: "回酒店",
+                        drive: "打车",
+                        leg: "taxi",
+                        kind: "stay",
+                        lat: 28.17315, lng: 113.03785,
+                        activities: [
+                            { time: "晚上", text: "回 W 休息" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "10/8",
+                weekday: "周日",
+                title: "退房，MU8940 飞回虹桥",
+                meta: "W 退房后去黄花机场，MU8940 回虹桥",
+                color: tokenColor("var(--route-4)"),
+                zoom: 12,
+                flightStat: "MU8940 黄花 → 虹桥",
+                stops: [
+                    {
+                        name: "长沙 W 酒店",
+                        time: "上午退房",
+                        kind: "stay",
+                        lat: 28.17315, lng: 113.03785,
+                        activities: [
+                            { time: "上午", text: "退房离开" }
+                        ]
+                    },
+                    {
+                        name: "长沙黄花国际机场",
+                        time: "返程",
+                        drive: "打车",
+                        leg: "taxi",
+                        lat: 28.19063, lng: 113.21980,
+                        activities: [
+                            { time: "返程", text: "前往黄花机场，乘坐 MU8940" }
+                        ],
+                        note: "T2"
+                    },
+                    {
+                        name: "上海虹桥国际机场",
+                        time: "抵达",
+                        drive: "MU8940",
+                        leg: "flight",
+                        lat: 31.1979, lng: 121.3363,
+                        activities: [
+                            { time: "抵达", text: "MU8940 抵达虹桥，行程结束" }
+                        ],
+                        note: "T2"
                     }
                 ]
             }
         ];
 
-        const map = L.map("map", { zoomControl: true }).setView([24.9, -81.0], 8);
+        const map = L.map("map", { zoomControl: true }).setView([28.19, 112.98], 13);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,
             attribution: "&copy; OpenStreetMap contributors"
@@ -214,7 +416,7 @@
 
         function focusStop(index, { scroll = false } = {}) {
             highlightStop(index);
-            const zoom = days[activeDay].zoom || 12;
+            const zoom = days[activeDay].zoom || 14;
             map.flyTo(markers[index].getLatLng(), zoom, { duration: 0.7 });
             markers[index].openPopup();
             if (scroll) {
@@ -230,11 +432,15 @@
             });
         });
 
+        function stopLeg(stop) {
+            return stop.leg || "walk";
+        }
+
         function splitLegs(day, coords) {
             const groups = [];
-            let current = { type: "drive", points: [coords[0]] };
+            let current = { type: "walk", points: [coords[0]] };
             for (let i = 1; i < day.stops.length; i++) {
-                const type = day.stops[i].leg === "flight" ? "flight" : "drive";
+                const type = stopLeg(day.stops[i]);
                 if (type === current.type) {
                     current.points.push(coords[i]);
                 } else {
@@ -349,19 +555,20 @@
         }
 
         async function loadRoute(day, coords, expectedDay, fallback) {
+            routeStatEl.textContent = "正在规划当日路线…";
             const groups = splitLegs(day, coords);
-            const profile = day.mode === "foot" ? "foot" : "driving";
-            const waiting = day.mode === "foot" ? "正在规划步行路线…" : "正在规划当日路线…";
-            routeStatEl.textContent = waiting;
-
-            let driveKm = 0;
-            let driveMin = 0;
-            let hasFlight = false;
-            let routed = false;
+            let walkKm = 0;
+            let walkMin = 0;
+            let walked = false;
+            let transit = false;
+            let flight = false;
+            let slide = false;
 
             for (const group of groups) {
-                if (group.type === "flight") {
-                    hasFlight = true;
+                if (group.type === "metro" || group.type === "taxi" || group.type === "flight" || group.type === "slide") {
+                    if (group.type === "flight") flight = true;
+                    else if (group.type === "slide") slide = true;
+                    else transit = true;
                     const line = L.polyline(group.points, {
                         color: day.color,
                         weight: 3,
@@ -372,7 +579,7 @@
                     continue;
                 }
                 const path = group.points.map(([lat, lng]) => `${lng},${lat}`).join(";");
-                const url = `https://router.project-osrm.org/route/v1/${profile}/${path}?overview=full&geometries=geojson`;
+                const url = `https://router.project-osrm.org/route/v1/foot/${path}?overview=full&geometries=geojson`;
                 try {
                     const response = await fetch(url);
                     if (!response.ok) throw new Error("route request failed");
@@ -385,9 +592,9 @@
                         { color: day.color, weight: 4, opacity: 0.85 }
                     ).addTo(map);
                     routeLines.push(line);
-                    driveKm += route.distance / 1000;
-                    driveMin += route.duration / 60;
-                    routed = true;
+                    walkKm += route.distance / 1000;
+                    walkMin += route.duration / 60;
+                    walked = true;
                 } catch (error) {
                     const line = L.polyline(group.points, {
                         color: day.color,
@@ -406,18 +613,17 @@
             }
 
             const parts = [];
-            if (hasFlight) parts.push(day.flightStat || "航班示意线");
-            if (routed) {
-                const km = profile === "foot" ? driveKm.toFixed(1) : Math.round(driveKm);
-                const minutes = Math.round(driveMin);
+            if (walked) {
+                const minutes = Math.round(walkMin);
                 const time = minutes >= 60
                     ? `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分`
                     : `${minutes} 分`;
-                const label = profile === "foot" ? "步行" : "自驾";
-                parts.push(`${label}约 ${km} km · ${time}`);
-            } else if (!hasFlight) {
-                parts.push(profile === "foot" ? "步行路线暂不可用，显示直线示意" : "路线暂不可用，显示直线示意");
+                parts.push(`步行约 ${walkKm.toFixed(1)} km · ${time}`);
             }
+            if (flight) parts.push(day.flightStat || "航班示意线");
+            if (slide) parts.push("滑道为示意线");
+            if (transit) parts.push("打车为示意线");
+            if (!parts.length) parts.push("路线暂不可用，显示直线示意");
             routeStatEl.textContent = parts.join(" · ");
 
             const bounds = routeLines.reduce((acc, line) => acc.extend(line.getBounds()), routeLines[0].getBounds());

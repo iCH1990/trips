@@ -23,8 +23,14 @@
 ```text
 trips/
 ├── index.html                 首页
+├── css/
+│   ├── tokens.css             全站颜色
+│   ├── home.css               首页
+│   ├── home-noscript.css      首页无脚本时的年份标题
+│   └── trip.css               行程页
+├── js/color.js                把颜色变量解析成地图能用的色值
 ├── data/countries.geo.json    足迹图国界（Natural Earth，公有领域）
-├── 2018/  2019/  2024/  2025/  2026/
+├── 2018/  2019/  2023/  2024/  2025/  2026/
 │   └── {地点}_{YYMMDD}_{YYMMDD}.html
 └── README.md
 ```
@@ -40,6 +46,7 @@ trips/
 | `2026/southern_highlands_260906.html` | Southern Highlands 一日 |
 | `2026/los_angeles_las_vegas_260207_260208.html` | Los Angeles → Las Vegas |
 | `2024/los_angeles_240127_240128.html` | Los Angeles |
+| `2023/changsha_231005_231008.html` | 上海 → 长沙 |
 
 ---
 
@@ -61,3 +68,5 @@ python3 -m http.server 8765
 2. 在 `index.html` 对应年份的列表里加一张卡片，`href` 指向新文件。
 3. 页头放返回主页：`<a class="back-home" href="../index.html">← 返回主页</a>`。
 4. 年份 tab 上的「N 段行程」数字一并改掉。
+5. 样式用 `../css/tokens.css` 和 `../css/trip.css`，不要再在页面里写一份。
+6. 当天路线色按顺序写 `tokenColor("var(--route-1)")` 起。重点用 `kind: "highlight"`，住宿用 `kind: "stay"`，不要把路线色设成暖橙或紫色。

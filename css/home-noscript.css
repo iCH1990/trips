@@ -1,0 +1,16 @@
+.year-tabs { display: none; }
+.year[hidden] { display: block; }
+.year { margin: 32px 0 0; }
+.year-title {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+    clip-path: none;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    font-weight: 650;
+}
