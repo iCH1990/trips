@@ -1,8 +1,9 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { Script, createContext } from "node:vm";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = fileURLToPath(new URL("..", import.meta.url));
 const context = createContext({ tokenColor: (value) => value, console });
 context.globalThis = context;
 new Script(readFileSync(join(root, "js/trip-model.js"), "utf8")).runInContext(context);

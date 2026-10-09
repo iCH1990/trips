@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>中国 云南 2026/11/21–2026/12/20</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="../../css/tokens.css">
+    <link rel="stylesheet" href="../../css/trip.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="../../js/color.js"></script>
+    <script src="../../js/trip-model.js"></script>
+    <script src="../../js/trip-render.js"></script>
+    <script src="../../js/trip-routing.js"></script>
+</head>
+<body>
+    <div class="page">
+        <nav class="site-nav" aria-label="站点导航">
+            <a class="back-home" href="../../index.html">← 返回主页</a>
+        </nav>
+        <header class="trip-head">
+            <p class="kicker">China · 2026</p>
+            <h1>中国 云南 2026/11/21–2026/12/20</h1>
+            <p class="subtitle">🇨🇳 · 四周 · 工作日下班后，周末全天</p>
+            <div class="stats">
+                <span class="stat">30 天</span>
+                <span class="stat">丽江 · 大理 · 腾冲 · 版纳</span>
+                <span class="stat">一段夜路 + 三程飞机</span>
+            </div>
+        </header>
+        <section class="overview" aria-label="行程总览">
+            <div class="card map-card">
+                <div id="map" role="application" aria-label="云南四周行程地图"></div>
+            </div>
+            <div class="card side">
+                <div class="day-scroller">
+                    <button type="button" class="day-arrow" data-dir="-1" aria-label="更早的日期" hidden>
+                        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M7.6 2.2 4 6l3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+                    <button type="button" class="day-arrow" data-dir="1" aria-label="更晚的日期" hidden>
+                        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.4 2.2 8 6l-3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                </div>
+                <div class="day-summary" id="daySummary"></div>
+                <ol class="glance" id="glance"></ol>
+                <p class="route-stat" id="routeStat">正在规划当日路线…</p>
+            </div>
+        </section>
+        <section class="detail" aria-label="当日详细安排">
+            <div class="detail-head">
+                <div class="detail-heading">
+                    <h2 id="detailTitle"></h2>
+                    <p class="detail-note" id="detailNote"></p>
+                </div>
+                <button type="button" class="detail-expand" id="detailExpand" aria-expanded="false">展开</button>
+            </div>
+            <div class="detail-scroll">
+                <ol class="timeline" id="itinerary"></ol>
+                <p class="hint">工作日 07:00–15:00 上班，16:00 后再出门。周末全天可安排。丽江住和府洲际，版纳住西双版纳洲际。11/29 白天经沙溪去大理。12/6 晚饭后约 20:30 大理去腾冲。12/13 白天去芒市，晚上从芒市机场飞景洪；直飞多在上午，要留出白天就订经昆明、当晚到达的航班。丽江取车、芒市机场还；版纳工作日打车，12/19 和 12/20 另租。12/20 晚上 CZ5126，20:30 嘎洒飞深圳。玉龙雪山、千古情、三塔和热海按当日停售时间走。</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const days = TripModel.prepareDays([
+            {
+                date: "11/21",
+                weekday: "周六",
+                title: "HO1945 到丽江，下午玉龙雪山",
+                meta: "09:25 到三义 · 入住后上山 · 蓝月谷",
+                color: "var(--route-1)",
+                flightStat: "HO1945 深圳 → 丽江",
+                stops: [
+                    {
+                        name: "深圳宝安机场",
+                        time: "06:40 起飞",
+                        lat: 22.6393, lng: 113.8107,
+                        note: "宝安国际机场 T3。",
+                        activities: [
+                            { time: "06:40", text: "HO1945 从宝安 T3 起飞" }
+                        ]
+                    },
+                    {
+                        name: "丽江三义机场",
+                        time: "09:25 抵达",
+                        drive: "飞行约 2 小时 45 分",
+                        leg: "flight",
+                        lat: 26.68, lng: 100.2461,
+                        activities: [
+                            { time: "09:25", text: "HO1945 到达三义机场，取行李" }
+                        ]
+                    },
+                    {
+                        name: "丽江和府洲际",
+                        time: "约 10:30 入住",
+                        drive: "打车约 40 分钟",
+                        kind: "stay",
+                        lat: 26.8685, lng: 100.2375,
+                        note: "祥和路276号。丽江住到 11/29。古城走路，远的地方再打车。",
+                        activities: [
+                            { time: "约 10:30", text: "入住，放下行李" },
+                            { time: "11:00", text: "出发去玉龙雪山。羽绒服、墨镜、晕动药" }
+                        ]
+                    },
+                    {
+                        name: "玉龙雪山",
+                        time: "12:00–15:00",
+                        drive: "驾驶约 45 分钟",
+                        kind: "highlight",
+                        lat: 27.083, lng: 100.232,
+                        note: "索道要提前订。下午才到，按当日停运时间下撤。印象丽江不排进今天。",
+                        activities: [
+                            { time: "12:00–14:30", text: "冰川公园索道。十一月海拔高、风大，停运就改去蓝月谷" },
+                            { time: "14:30–15:00", text: "山下午饭" }
+                        ]
+                    },
+                    {
+                        name: "蓝月谷",
+                        time: "15:20–17:00",
+                        drive: "景区内短驳",
+                        lat: 27.07, lng: 100.246,
+                        activities: [
+                            { time: "15:20–17:00", text: "沿湖走到白水河，之后回酒店" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "11/22",
+                weekday: "周日",
+                title: "拉市海",
+                meta: "全天 · 不排远路",
+                color: "var(--route-2)",
+                stops: [
+                    {
+                        name: "丽江和府洲际",
+                        time: "09:00 出发",
+                        kind: "stay",
+                        lat: 26.8685, lng: 100.2375,
+                        activities: [
+                            { time: "09:00", text: "睡到自然醒再出门" }
+                        ]
+                    },
+                    {
+                        name: "拉市海",
+                        time: "09:40–15:30",
+                        drive: "驾驶约 30 分钟",
+                        kind: "highlight",
+                        lat: 26.856, lng: 100.145,
+                        activities: [
+                            { time: "09:40–12:00", text: "湿地骑马或划船，选一项" },
+                            { time: "12:00–15:30", text: "湖边午饭，下午回酒店休息" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "11/23",
+                weekday: "周一",
+                title: "黑龙潭",
+                meta: "下班后 · 关门早",
+                color: "var(--route-3)",
+                stops: [
+                    {
+                        name: "丽江和府洲际",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 26.8685, lng: 100.2375,
+                        activities: [
+                            { time: "07:00–15:00", text: "上班" },
+                            { time: "16:00", text: "出门。黑龙潭冬天关门早，赶不上就改去古城" }
+                        ]
+                    },
+                    {
+                        name: "黑龙潭",
+                        time: "16:10–17:30",
+                        drive: "打车约 10 分钟",
+                        kind: "highlight",
+                        lat: 26.889, lng: 100.234,
+                        note: "以当日闭园时间为准。赶不上就改去古城。",
+                        activities: [
+                            { time: "16:10–17:20", text: "得月楼和雪山下的水面" },
+                            { time: "17:30", text: "回酒店或顺路在古城吃饭" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "11/24",
+                weekday: "周二",
+                title: "白沙壁画",
+                meta: "下班后 · 白沙古镇",
+                color: "var(--route-4)",
+                stops: [
+                    {
+                        name: "丽江和府洲际",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 26.8685, lng: 100.2375,
+                        activities: [
+                            { time: "07:00–15:00", text: "上班" }
+                        ]
+                    },
+                    {
+                        name: "白沙古镇",
+                        time: "16:30–18:30",
+                        drive: "驾驶约 25 分钟",
+                        kind: "highlight",
+                        lat: 26.951, lng: 100.222,
+                        activities: [
+                            { time: "16:30–17:30", text: "白沙壁画和琉璃殿" },
+                            { time: "17:30–18:30", text: "古镇晚饭，天黑前回酒店" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "11/25",
+                weekday: "周三",
+                title: "丽江千古情",
+                meta: "下班后赶晚场",
+                color: "var(--route-5)",
+                stops: [
+                    {
+                        name: "丽江和府洲际",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 26.8685, lng: 100.2375,
+                        activities: [
+                            { time: "07:00–15:00", text: "上班" }
+                        ]
+                    },
+                    {
+                        name: "丽江千古情",
+                        time: "晚场",
+                        drive: "打车约 25 分钟",
+                        kind: "highlight",
+                        lat: 26.93, lng: 100.205,
+                        note: "场次以出票为准。若只有下午场，这天改去束河夜游，千古情挪到 11/22。",
+                        activities: [
+                            { time: "17:30", text: "按票面提前到场" },
+                            { time: "晚场", text: "看完直接回酒店" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "11/26",
+                weekday: "周四",
+                title: "束河夜游",
+                meta: "下班后打车去束河",
+                color: "var(--route-6)",
+                stops: [
+                    {
+                        name: "丽江和府洲际",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 26.8685, lng: 100.2375,
+                        activities: [
+                            { time: "07:00–15:00", text: "酒店上班" }
+                        ]
+                    },
+                    {
+                        name: "束河古镇",
+                        time: "16:20–21:00",
+                        drive: "打车约 20 分钟",
+                        lat: 26.9112, lng: 100.2208,
+                        activities: [
+                            { time: "16:20–18:00", text: "九鼎龙潭、青龙桥，茶马古道走一段" },
+                            { time: "18:00–19:30", text: "束河晚饭" },
+                            { time: "19:30–21:00", text: "主街走到灯亮，然后回酒店" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "11/27",
+                weekday: "周五",
+                title: "古城晚饭",
+                meta: "下班后大研 · 不排新景区",
+                color: "var(--route-7)",
+                stops: [
+                    {
+                        name: "丽江和府洲际",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 26.8685, lng: 100.2375,
+                        activities: [
+                            { time: "07:00–15:00", text: "上班" }
+                        ]
+                    },
+                    {
+                        name: "大研古城",
+                        time: "16:00–20:00",
+                        drive: "步行约 10 分钟",
+                        lat: 26.8721, lng: 100.2342,
+                        activities: [
+                            { time: "16:00–18:00", text: "木府外街和新华街，木府若已关门就只看外立面" },
+                            { time: "18:00–20:00", text: "古城晚饭，回酒店" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "11/28",
+                weekday: "周六",
+                title: "上虎跳",
+                meta: "全天往返 · 不走完整峡谷",
+                color: "var(--route-8)",
+                stops: [
+                    {
+                        name: "丽江和府洲际",
+                        time: "08:00 出发",
+                        kind: "stay",
+                        lat: 26.8685, lng: 100.2375,
+                        activities: [
+                            { time: "08:00", text: "早饭后出发。只看上虎跳，不进两日徒步" }
+                        ]
+                    },
+                    {
+                        name: "上虎跳",
+                        time: "10:00–15:00",
+                        drive: "驾驶约 2 小时",
+                        kind: "highlight",
+                        lat: 27.186, lng: 100.078,
+                        note: "十一月白天够用。峡谷里风大，别排到天黑还在山上。",
+                        activities: [
+                            { time: "10:00–13:00", text: "观景台看江面" },
+                            { time: "13:00–15:00", text: "虎跳峡镇午饭，下午开回酒店" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "11/29",
+                weekday: "周日",
+                title: "经沙溪去大理",
+                meta: "约 212 km · 驾驶约 2 小时 50 分 · 沙溪半天",
+                color: "var(--route-9)",
+                stops: [
+                    {
+                        name: "丽江和府洲际",
+                        time: "08:30 出发",
+                        kind: "stay",
+                        lat: 26.8685, lng: 100.2375,
+                        activities: [
+                            { time: "08:00", text: "退房，行李放上车" },
+                            { time: "08:30", text: "出发去沙溪。今天不进大研古城" }
+                        ]
+                    },
+                    {
+                        name: "沙溪古镇",
+                        time: "10:00–15:00",
+                        drive: "驾驶约 1 小时 15 分",
+                        kind: "highlight",
+                        lat: 26.3208, lng: 99.851,
+                        note: "甸南下高速后是山路，弯多。古镇免费开放，兴教寺等文保点大约开到 17:30。",
+                        activities: [
+                            { time: "10:00–12:00", text: "寺登街和古戏台" },
+                            { time: "12:00–13:00", text: "古镇午饭" },
+                            { time: "13:00–14:30", text: "兴教寺" },
+                            { time: "14:30–15:00", text: "玉津桥看黑惠江，然后上路" }
+                        ]
+                    },
+                    {
+                        name: "大理古城",
+                        time: "约 16:50 入住",
+                        drive: "驾驶约 1 小时 40 分",
+                        kind: "stay",
+                        lat: 25.6939, lng: 100.1625,
+                        note: "大理住到 12/6。沙溪到大理走山路接高速，不绕洱海。",
+                        activities: [
+                            { time: "约 16:50", text: "办理入住" },
+                            { time: "19:00", text: "古城晚饭" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "11/30",
+                weekday: "周一",
+                title: "大理古城",
+                meta: "前一晚到达 · 下班后人民路",
+                color: "var(--route-1)",
+                stops: [
+                    {
+                        name: "大理古城",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 25.6939, lng: 100.1625,
+                        activities: [
+                            { time: "07:00–15:00", text: "古城内上班" },
+                            { time: "16:00–18:30", text: "人民路、洋人街走到南门" },
+                            { time: "18:30–20:00", text: "古城晚饭" }
+                        ]
+                    },
+                    {
+                        name: "大理古城南门",
+                        time: "16:00–18:30",
+                        lat: 25.688, lng: 100.163,
+                        activities: [
+                            { time: "16:00–18:30", text: "城墙和南门外的街，作为今天的出门" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/1",
+                weekday: "周二",
+                title: "崇圣寺三塔",
+                meta: "16:00 出门 · 关门早",
+                color: "var(--route-2)",
+                stops: [
+                    {
+                        name: "大理古城",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 25.6939, lng: 100.1625,
+                        activities: [
+                            { time: "07:00–15:00", text: "上班" },
+                            { time: "16:00", text: "出门。三塔冬季停止入园早" }
+                        ]
+                    },
+                    {
+                        name: "崇圣寺三塔",
+                        time: "16:15–17:30",
+                        drive: "驾驶约 10 分钟",
+                        kind: "highlight",
+                        lat: 25.7085, lng: 100.1415,
+                        note: "若 15:30 已停止入园，这天改去才村，三塔挪到 12/6 上午。",
+                        activities: [
+                            { time: "16:15–17:20", text: "三塔和寺内主轴，不把每个院落走完" },
+                            { time: "17:30", text: "回古城晚饭" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/2",
+                weekday: "周三",
+                title: "才村日落",
+                meta: "下班后洱海东岸看一截",
+                color: "var(--route-3)",
+                stops: [
+                    {
+                        name: "大理古城",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 25.6939, lng: 100.1625,
+                        activities: [
+                            { time: "07:00–15:00", text: "上班" }
+                        ]
+                    },
+                    {
+                        name: "才村码头",
+                        time: "16:20–18:20",
+                        drive: "驾驶约 20 分钟",
+                        kind: "highlight",
+                        lat: 25.753, lng: 100.205,
+                        activities: [
+                            { time: "16:20–17:50", text: "生态廊道走或骑一段，等日落" },
+                            { time: "18:00", text: "回古城晚饭。十二月日落大约 18:00 前" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/3",
+                weekday: "周四",
+                title: "龙龛骑行",
+                meta: "下班后只骑南段",
+                color: "var(--route-4)",
+                stops: [
+                    {
+                        name: "大理古城",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 25.6939, lng: 100.1625,
+                        activities: [
+                            { time: "07:00–15:00", text: "上班" }
+                        ]
+                    },
+                    {
+                        name: "龙龛码头",
+                        time: "16:20–18:00",
+                        drive: "驾驶约 20 分钟",
+                        kind: "highlight",
+                        lat: 25.678, lng: 100.185,
+                        note: "不环洱海。风大就改走路。",
+                        activities: [
+                            { time: "16:20–17:40", text: "租车骑生态廊道，来回控制在 1 小时左右" },
+                            { time: "17:40", text: "还车，回古城晚饭" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/4",
+                weekday: "周五",
+                title: "喜洲",
+                meta: "下班后严家大院和粑粑",
+                color: "var(--route-5)",
+                stops: [
+                    {
+                        name: "大理古城",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 25.6939, lng: 100.1625,
+                        activities: [
+                            { time: "07:00–15:00", text: "上班" }
+                        ]
+                    },
+                    {
+                        name: "喜洲",
+                        time: "16:40–19:00",
+                        drive: "驾驶约 35 分钟",
+                        kind: "highlight",
+                        lat: 25.855, lng: 100.131,
+                        activities: [
+                            { time: "16:40–17:40", text: "严家大院和喜洲老街" },
+                            { time: "17:30–19:00", text: "喜洲粑粑当晚饭，之后回古城" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/5",
+                weekday: "周六",
+                title: "洱海北线",
+                meta: "周城 · 双廊 · 小普陀",
+                color: "var(--route-6)",
+                stops: [
+                    {
+                        name: "周城",
+                        time: "09:00–10:30",
+                        drive: "驾驶约 30 分钟",
+                        lat: 25.833, lng: 100.148,
+                        activities: [
+                            { time: "09:00–10:30", text: "看扎染，不买太多" }
+                        ]
+                    },
+                    {
+                        name: "双廊",
+                        time: "11:10–15:30",
+                        drive: "驾驶约 30 分钟",
+                        kind: "highlight",
+                        lat: 25.907, lng: 100.194,
+                        activities: [
+                            { time: "11:10–13:00", text: "玉几岛午饭，看洱海" },
+                            { time: "13:00–15:30", text: "双廊老街" }
+                        ]
+                    },
+                    {
+                        name: "小普陀",
+                        time: "16:00–17:10",
+                        drive: "驾驶约 20 分钟",
+                        lat: 25.892, lng: 100.176,
+                        activities: [
+                            { time: "16:00–17:10", text: "看岛和日落前的湖面，天黑前回大理古城" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/6",
+                weekday: "周日",
+                title: "苍山半天，夜里去腾冲",
+                meta: "约 313 km · 驾驶约 4 小时 30 分 · 宿腾冲",
+                color: "var(--route-7)",
+                stops: [
+                    {
+                        name: "感通索道",
+                        time: "09:30–14:30",
+                        drive: "驾驶约 20 分钟",
+                        kind: "highlight",
+                        lat: 25.635, lng: 100.148,
+                        note: "转场日不排洗马潭。若 12/1 没看成三塔，索道改成上午去三塔。",
+                        activities: [
+                            { time: "09:30–13:00", text: "感通索道上山，不换洗马潭" },
+                            { time: "13:00–14:30", text: "下山，回古城退房，行李放车上" }
+                        ]
+                    },
+                    {
+                        name: "大理古城",
+                        time: "17:00–19:40",
+                        kind: "stay",
+                        lat: 25.6939, lng: 100.1625,
+                        activities: [
+                            { time: "17:00–19:40", text: "古城晚饭。吃完再上高速" }
+                        ]
+                    },
+                    {
+                        name: "腾冲市区",
+                        time: "约 01:00 入住",
+                        drive: "20:30 出发 · 杭瑞 / 保腾高速约 4 小时 30 分",
+                        kind: "stay",
+                        lat: 25.0208, lng: 98.4972,
+                        note: "腾冲住到 12/13 早上。夜路长，中途在保山服务区歇一次。周一晚上只安排近处。",
+                        activities: [
+                            { time: "20:30", text: "经保山上保腾高速" },
+                            { time: "约 01:00", text: "到腾冲市区入住" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/7",
+                weekday: "周一",
+                title: "叠水河",
+                meta: "凌晨到达 · 下班后只去近的",
+                color: "var(--route-8)",
+                stops: [
+                    {
+                        name: "腾冲市区",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 25.0208, lng: 98.4972,
+                        activities: [
+                            { time: "07:00–15:00", text: "照常上班。前一晚约 01:00 才到" }
+                        ]
+                    },
+                    {
+                        name: "叠水河瀑布",
+                        time: "16:10–17:30",
+                        drive: "驾驶约 10 分钟",
+                        kind: "highlight",
+                        lat: 25.017, lng: 98.47,
+                        activities: [
+                            { time: "16:10–17:00", text: "瀑布看一圈" },
+                            { time: "17:30", text: "市区晚饭，早回" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/8",
+                weekday: "周二",
+                title: "和顺古镇",
+                meta: "下班后走到晚饭",
+                color: "var(--route-9)",
+                stops: [
+                    {
+                        name: "腾冲市区",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 25.0208, lng: 98.4972,
+                        activities: [
+                            { time: "07:00–15:00", text: "上班" }
+                        ]
+                    },
+                    {
+                        name: "和顺古镇",
+                        time: "16:20–19:00",
+                        drive: "驾驶约 15 分钟",
+                        kind: "highlight",
+                        lat: 25.007, lng: 98.458,
+                        activities: [
+                            { time: "16:20–17:40", text: "弯楼子、洗衣亭和主街" },
+                            { time: "17:40–19:00", text: "和顺晚饭，回市区" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/9",
+                weekday: "周三",
+                title: "热海",
+                meta: "下班后入园 · 来不及就改墓园",
+                color: "var(--route-1)",
+                stops: [
+                    {
+                        name: "腾冲市区",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 25.0208, lng: 98.4972,
+                        activities: [
+                            { time: "07:00–15:00", text: "上班" },
+                            { time: "16:00", text: "出门。热海停止入园时间要当天确认" }
+                        ]
+                    },
+                    {
+                        name: "热海",
+                        time: "16:20–17:40",
+                        drive: "驾驶约 20 分钟",
+                        kind: "highlight",
+                        lat: 24.954, lng: 98.439,
+                        note: "若已经停止入园，改去国殇墓园，周五的绮罗保留。",
+                        activities: [
+                            { time: "16:20–17:20", text: "大滚锅和主要步道，不排长时间温泉" },
+                            { time: "17:40", text: "回市区晚饭" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/10",
+                weekday: "周四",
+                title: "国殇墓园",
+                meta: "下班后 · 关门前能看完",
+                color: "var(--route-2)",
+                stops: [
+                    {
+                        name: "腾冲市区",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 25.0208, lng: 98.4972,
+                        activities: [
+                            { time: "07:00–15:00", text: "上班" }
+                        ]
+                    },
+                    {
+                        name: "国殇墓园",
+                        time: "16:10–17:20",
+                        drive: "驾驶约 10 分钟",
+                        kind: "highlight",
+                        lat: 25.034, lng: 98.511,
+                        activities: [
+                            { time: "16:10–17:10", text: "墓园和纪念馆" },
+                            { time: "17:20", text: "回市区晚饭" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/11",
+                weekday: "周五",
+                title: "绮罗古镇",
+                meta: "下班后 · 不专程追银杏",
+                color: "var(--route-3)",
+                stops: [
+                    {
+                        name: "腾冲市区",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 25.0208, lng: 98.4972,
+                        activities: [
+                            { time: "07:00–15:00", text: "上班" }
+                        ]
+                    },
+                    {
+                        name: "绮罗古镇",
+                        time: "16:20–18:30",
+                        drive: "驾驶约 15 分钟",
+                        kind: "highlight",
+                        lat: 25.002, lng: 98.512,
+                        note: "银杏村最好看的时候多在 11 月中下旬，12 月上旬通常已经过了，不专程去固东。",
+                        activities: [
+                            { time: "16:20–17:40", text: "文昌宫和村中老宅" },
+                            { time: "18:00", text: "回市区晚饭" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/12",
+                weekday: "周六",
+                title: "火山公园 + 北海湿地",
+                meta: "全天 · 先火山后湿地",
+                color: "var(--route-4)",
+                stops: [
+                    {
+                        name: "腾冲火山地质公园",
+                        time: "09:00–13:30",
+                        drive: "驾驶约 30 分钟",
+                        kind: "highlight",
+                        lat: 25.219, lng: 98.501,
+                        activities: [
+                            { time: "09:00–12:30", text: "大空山、黑空山。柱状节理看体力" },
+                            { time: "12:30–13:30", text: "园区外午饭" }
+                        ]
+                    },
+                    {
+                        name: "北海湿地",
+                        time: "14:20–17:00",
+                        drive: "驾驶约 40 分钟",
+                        kind: "highlight",
+                        lat: 25.126, lng: 98.555,
+                        activities: [
+                            { time: "14:20–16:40", text: "草排或栈道，看一圈就回市区" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/13",
+                weekday: "周日",
+                title: "芒市白天，晚上飞景洪",
+                meta: "腾冲 → 芒市约 2 小时 · 当晚到嘎洒",
+                color: "var(--route-5)",
+                stops: [
+                    {
+                        name: "腾冲市区",
+                        time: "08:00 退房出发",
+                        kind: "stay",
+                        lat: 25.0208, lng: 98.4972,
+                        activities: [
+                            { time: "08:00", text: "退房。这趟是白天的行程，不是夜里的转场" }
+                        ]
+                    },
+                    {
+                        name: "勐焕大金塔",
+                        time: "10:15–12:30",
+                        drive: "驾驶约 2 小时",
+                        kind: "highlight",
+                        lat: 24.433, lng: 98.585,
+                        activities: [
+                            { time: "10:15–12:00", text: "大金塔" },
+                            { time: "12:00–12:30", text: "前往树包塔" }
+                        ]
+                    },
+                    {
+                        name: "树包塔",
+                        time: "12:40–15:00",
+                        drive: "驾驶约 10 分钟",
+                        lat: 24.441, lng: 98.577,
+                        activities: [
+                            { time: "12:40–13:30", text: "树包塔和附近午饭" },
+                            { time: "13:30–15:00", text: "勐焕大街走一圈" }
+                        ]
+                    },
+                    {
+                        name: "德宏芒市机场",
+                        time: "16:00 还车",
+                        drive: "驾驶约 25 分钟",
+                        kind: "highlight",
+                        lat: 24.401, lng: 98.531,
+                        note: "地图只画到芒市机场，不把航班画成公路。版纳工作日打车；周六日再租车。",
+                        activities: [
+                            { time: "16:00", text: "机场还车，办登机" },
+                            { time: "17:00 前后", text: "芒市起飞。直飞景洪多在上午，订经昆明、当晚到嘎洒的航班" },
+                            { time: "约 22:30", text: "到西双版纳嘎洒机场，打车去西双版纳洲际" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/14",
+                weekday: "周一",
+                title: "告庄夜市",
+                meta: "前一晚入住洲际 · 下班后去告庄",
+                color: "var(--route-6)",
+                stops: [
+                    {
+                        name: "西双版纳洲际",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 21.9771, lng: 100.8276,
+                        note: "版纳住西双版纳洲际到 12/20，景帕杭路8号。告庄约 10 分钟车程，工作日打车。",
+                        activities: [
+                            { time: "07:00–15:00", text: "酒店上班。前一晚约 22:30 才到" }
+                        ]
+                    },
+                    {
+                        name: "告庄夜市",
+                        time: "16:10–19:30",
+                        drive: "打车约 10 分钟",
+                        lat: 22.008, lng: 100.821,
+                        activities: [
+                            { time: "16:10–17:30", text: "沿澜沧江走到夜市" },
+                            { time: "17:30–19:30", text: "夜市晚饭，回酒店" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/15",
+                weekday: "周二",
+                title: "曼听公园和总佛寺",
+                meta: "下班后景洪市区",
+                color: "var(--route-7)",
+                stops: [
+                    {
+                        name: "西双版纳洲际",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 21.9771, lng: 100.8276,
+                        activities: [
+                            { time: "07:00–15:00", text: "上班" }
+                        ]
+                    },
+                    {
+                        name: "总佛寺",
+                        time: "16:15–17:00",
+                        drive: "打车约 15 分钟",
+                        kind: "highlight",
+                        lat: 22.001, lng: 100.797,
+                        activities: [
+                            { time: "16:15–17:00", text: "总佛寺。关门就改看外观" }
+                        ]
+                    },
+                    {
+                        name: "曼听公园",
+                        time: "17:10–18:30",
+                        drive: "步行约 10 分钟",
+                        lat: 21.991, lng: 100.803,
+                        activities: [
+                            { time: "17:10–18:20", text: "公园和白塔" },
+                            { time: "18:30", text: "市区晚饭后回酒店" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/16",
+                weekday: "周三",
+                title: "澜沧江夜游",
+                meta: "下班后打车去告庄码头",
+                color: "var(--route-8)",
+                stops: [
+                    {
+                        name: "西双版纳洲际",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 21.9771, lng: 100.8276,
+                        activities: [
+                            { time: "07:00–15:00", text: "上班" }
+                        ]
+                    },
+                    {
+                        name: "澜沧江夜游",
+                        time: "19:00 前后",
+                        drive: "打车约 10 分钟",
+                        kind: "highlight",
+                        lat: 22.008, lng: 100.818,
+                        activities: [
+                            { time: "18:30", text: "告庄晚饭，吃完再上船" },
+                            { time: "19:00", text: "告庄码头夜游，以当天船期为准" },
+                            { time: "约 20:30", text: "下船回酒店" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/17",
+                weekday: "周四",
+                title: "橄榄坝傣族园",
+                meta: "下班后往返 · 不看夜间演出",
+                color: "var(--route-9)",
+                stops: [
+                    {
+                        name: "西双版纳洲际",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 21.9771, lng: 100.8276,
+                        activities: [
+                            { time: "07:00–15:00", text: "上班" },
+                            { time: "16:00", text: "打车或包车去橄榄坝" }
+                        ]
+                    },
+                    {
+                        name: "傣族园",
+                        time: "16:40–18:20",
+                        drive: "约 40 分钟",
+                        kind: "highlight",
+                        lat: 21.857, lng: 100.94,
+                        note: "工作日不留到看泼水或夜间演出。",
+                        activities: [
+                            { time: "16:40–18:00", text: "曼春满佛寺和村寨走一圈" },
+                            { time: "18:20", text: "回景洪吃晚饭。赶不上就改在园里吃完再回" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/18",
+                weekday: "周五",
+                title: "勐泐大佛寺",
+                meta: "下班后看晚霞",
+                color: "var(--route-1)",
+                stops: [
+                    {
+                        name: "西双版纳洲际",
+                        time: "07:00–15:00 上班",
+                        kind: "stay",
+                        lat: 21.9771, lng: 100.8276,
+                        activities: [
+                            { time: "07:00–15:00", text: "上班" }
+                        ]
+                    },
+                    {
+                        name: "勐泐大佛寺",
+                        time: "16:30–18:10",
+                        drive: "打车约 25 分钟",
+                        kind: "highlight",
+                        lat: 22.025, lng: 100.735,
+                        activities: [
+                            { time: "16:30–17:50", text: "大佛和寺前看晚霞" },
+                            { time: "18:10", text: "回酒店晚饭" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/19",
+                weekday: "周六",
+                title: "热带植物园",
+                meta: "勐仑全天 · 早上取车",
+                color: "var(--route-2)",
+                stops: [
+                    {
+                        name: "西双版纳洲际",
+                        time: "08:00 取车出发",
+                        kind: "stay",
+                        lat: 21.9771, lng: 100.8276,
+                        activities: [
+                            { time: "08:00", text: "从酒店去景洪取车，只租到 12/20 晚上" }
+                        ]
+                    },
+                    {
+                        name: "中科院热带植物园",
+                        time: "09:20–16:30",
+                        drive: "驾驶约 1 小时 10 分",
+                        kind: "highlight",
+                        lat: 21.921, lng: 101.255,
+                        activities: [
+                            { time: "09:20–12:30", text: "东区。王莲和棕榈园优先" },
+                            { time: "12:30–13:30", text: "园内午饭" },
+                            { time: "13:30–16:30", text: "西区走到关门前，回酒店" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/20",
+                weekday: "周日",
+                title: "野象谷，CZ5126 回深圳",
+                meta: "下午回景洪还车 · 20:30 嘎洒起飞 · 22:45 到宝安",
+                color: "var(--route-3)",
+                flightStat: "CZ5126 景洪 → 深圳",
+                stops: [
+                    {
+                        name: "西双版纳洲际",
+                        time: "08:30 出发",
+                        kind: "stay",
+                        lat: 21.9771, lng: 100.8276,
+                        activities: [
+                            { time: "08:30", text: "早饭后北上。晚上要赶 CZ5126，下午必须回景洪" }
+                        ]
+                    },
+                    {
+                        name: "野象谷",
+                        time: "09:40–15:00",
+                        drive: "驾驶约 1 小时",
+                        kind: "highlight",
+                        lat: 22.171, lng: 100.861,
+                        activities: [
+                            { time: "09:40–12:30", text: "栈道和观象台，能否看到象看运气" },
+                            { time: "12:30–15:00", text: "午饭后离开，不再补看" }
+                        ]
+                    },
+                    {
+                        name: "景洪还车",
+                        time: "16:30 前",
+                        drive: "驾驶约 1 小时",
+                        lat: 22.008, lng: 100.797,
+                        activities: [
+                            { time: "16:30", text: "还车。这辆车只租到今天" }
+                        ]
+                    },
+                    {
+                        name: "西双版纳嘎洒机场",
+                        time: "18:30 到达",
+                        drive: "打车约 25 分钟",
+                        lat: 21.9739, lng: 100.76,
+                        note: "国内航班，20:30 起飞前留出值机时间。",
+                        activities: [
+                            { time: "18:30", text: "到嘎洒机场办登机" },
+                            { time: "20:30", text: "CZ5126 起飞，飞深圳" }
+                        ]
+                    },
+                    {
+                        name: "深圳宝安机场",
+                        time: "22:45 抵达",
+                        drive: "飞行约 2 小时 15 分",
+                        leg: "flight",
+                        lat: 22.6393, lng: 113.8107,
+                        note: "宝安国际机场 T3。周一、三、日的航班，12/20 是周日。",
+                        activities: [
+                            { time: "22:45", text: "CZ5126 到达宝安，行程结束" }
+                        ]
+                    }
+                ]
+            }
+        ]);
+
+        const map = TripRender.createMap("map", [24.8, 99.6], 6);
+
+        const tabsEl = document.getElementById("dayTabs");
+        const summaryEl = document.getElementById("daySummary");
+        const glanceEl = document.getElementById("glance");
+        const itineraryEl = document.getElementById("itinerary");
+        const detailTitleEl = document.getElementById("detailTitle");
+        const detailNoteEl = document.getElementById("detailNote");
+        const routeStatEl = document.getElementById("routeStat");
+        let routeLines = [];
+        let markers = [];
+        let activeDay = 0;
+
+        TripRender.createDayTabs(tabsEl, days, renderDay);
+
+        function focusStop(index, { scroll = false } = {}) {
+            TripRender.focusStop({
+                map,
+                markers,
+                itineraryEl,
+                index,
+                zoom: 11,
+                scroll
+            });
+        }
+
+        TripRender.bindStopClicks([glanceEl, itineraryEl], focusStop);
+
+        async function renderDay(dayIndex) {
+            activeDay = dayIndex;
+            const day = days[dayIndex];
+            TripRender.selectDayTab(tabsEl, dayIndex);
+            summaryEl.innerHTML = "";
+            detailTitleEl.textContent = day.title || "";
+            detailNoteEl.textContent = day.meta || "";
+            glanceEl.innerHTML = "";
+            itineraryEl.innerHTML = "";
+            markers.forEach((marker) => marker.remove());
+            markers = [];
+            routeLines.forEach((line) => line.remove());
+            routeLines = [];
+
+            const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
+
+            markers = TripRender.renderStops({
+                map,
+                stops: day.stops,
+                color: day.color,
+                glanceEl,
+                itineraryEl
+            });
+
+            const fallback = L.polyline(coords, {
+                color: day.color,
+                weight: 4,
+                opacity: 0.82,
+                dashArray: "8, 8"
+            }).addTo(map);
+            routeLines.push(fallback);
+            map.fitBounds(fallback.getBounds().pad(0.18));
+            await TripRouting.road({
+                map,
+                day,
+                coords,
+                lines: routeLines,
+                fallback,
+                isCurrent: () => activeDay === dayIndex,
+                statEl: routeStatEl
+            });
+        }
+
+        renderDay(0);
+    </script>
+    <script src="../../js/trip-chrome.js"></script>
+</body>
+</html>
