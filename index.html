@@ -24,9 +24,44 @@
             <ul class="places" id="places"></ul>
         </section>
         <p id="routeStatus" class="route-status" hidden></p>
-        <nav class="year-tabs" id="yearTabs" role="tablist" aria-label="按年份查看行程"></nav>
-        <div id="yearPanels"></div>
-        <noscript><p class="year-title">开启 JavaScript 后可以按年份查看行程。</p></noscript>
+        <div class="filters" id="tripFilters" role="group" aria-label="筛选行程">
+            <label class="filter">
+                <span>时长</span>
+                <select id="filterDuration" autocomplete="off">
+                    <option value="">所有</option>
+                    <option value="一日游">一日游</option>
+                    <option value="两天一晚">两天一晚</option>
+                    <option value="常规">常规</option>
+                    <option value="深度">深度</option>
+                </select>
+            </label>
+            <label class="filter">
+                <span>类型</span>
+                <select id="filterType" autocomplete="off">
+                    <option value="">所有</option>
+                    <option value="度假">度假</option>
+                    <option value="旅行">旅行</option>
+                    <option value="自驾">自驾</option>
+                    <option value="露营">露营</option>
+                </select>
+            </label>
+            <label class="filter">
+                <span>年份</span>
+                <select id="filterYear" autocomplete="off">
+                    <option value="">所有</option>
+                </select>
+            </label>
+            <label class="filter">
+                <span>国家</span>
+                <select id="filterCountry" autocomplete="off">
+                    <option value="">所有</option>
+                </select>
+            </label>
+        </div>
+        <p id="tripCount" class="trip-count" aria-live="polite"></p>
+        <ul class="trips" id="tripList"></ul>
+        <button type="button" class="trip-more" id="tripMore" hidden>加载更多</button>
+        <noscript><p class="year-title">开启 JavaScript 后可以筛选并查看行程。</p></noscript>
     </main>
     <p class="trip-loading">正在打开行程…</p>
     <iframe id="tripFrame" class="trip-frame" title="行程"></iframe>
@@ -157,99 +192,172 @@
             </li>`).join("");
 
         function renderCatalog(catalog) {
-            const tabsEl = document.getElementById("yearTabs");
-            const panelsEl = document.getElementById("yearPanels");
-            catalog.years.forEach((group) => {
-                group.trips.forEach((trip) => {
-                    trip.routeId = TripRoute.idFromHref(trip.href);
-                });
-                const published = group.trips.filter((trip) => trip.published);
-                const button = document.createElement("button");
-                button.type = "button";
-                button.className = "year-tab";
-                button.id = `tab-${group.year}`;
-                button.dataset.year = String(group.year);
-                button.setAttribute("role", "tab");
-                button.setAttribute("aria-controls", `panel-${group.year}`);
-                const yearLabel = document.createElement("b");
-                yearLabel.textContent = String(group.year);
-                const count = document.createElement("span");
-                count.textContent = `${published.length} 段行程`;
-                button.append(yearLabel, count);
-                tabsEl.append(button);
+            const filtersEl = document.getElementById("tripFilters");
+            const durationSelect = document.getElementById("filterDuration");
+            const typeSelect = document.getElementById("filterType");
+            const yearSelect = document.getElementById("filterYear");
+            const countrySelect = document.getElementById("filterCountry");
+            const listEl = document.getElementById("tripList");
+            const moreBtn = document.getElementById("tripMore");
+            const countEl = document.getElementById("tripCount");
+            const routeStatus = document.getElementById("routeStatus");
+            const frame = document.getElementById("tripFrame");
+            const pageSize = 5;
+            const trips = [];
+            const years = [];
+            const countries = [];
+            const byId = new Map();
 
-                const panel = document.createElement("section");
-                panel.className = "year";
-                panel.id = `panel-${group.year}`;
-                panel.setAttribute("role", "tabpanel");
-                panel.setAttribute("aria-labelledby", button.id);
-                const heading = document.createElement("h2");
-                heading.className = "visually-hidden year-title";
-                heading.textContent = String(group.year);
-                const list = document.createElement("ul");
-                list.className = "trips";
-                published.forEach((trip) => {
-                    const item = document.createElement("li");
-                    const link = document.createElement("a");
-                    link.className = "trip";
-                    link.href = `#${trip.routeId}`;
-                    const tags = document.createElement("p");
-                    tags.className = "trip-tags";
-                    const flag = document.createElement("span");
-                    flag.className = "trip-tag trip-tag--flag";
-                    flag.textContent = trip.flag;
-                    tags.append(flag);
-                    trip.tags.forEach((tag) => {
-                        const span = document.createElement("span");
-                        span.className = "trip-tag";
-                        span.textContent = tag;
-                        tags.append(span);
-                    });
-                    const title = document.createElement("h3");
-                    title.textContent = trip.title;
-                    const summary = document.createElement("p");
-                    summary.textContent = trip.summary;
-                    link.append(tags, title, summary);
-                    item.append(link);
-                    list.append(item);
+            catalog.years.forEach((group) => {
+                let publishedCount = 0;
+                group.trips.forEach((trip) => {
+                    trip.year = group.year;
+                    trip.routeId = TripRoute.idFromHref(trip.href);
+                    byId.set(trip.routeId, trip);
+                    if (!trip.published) return;
+                    publishedCount += 1;
+                    trips.push(trip);
+                    if (!countries.includes(trip.country)) countries.push(trip.country);
                 });
-                panel.append(heading, list);
-                panelsEl.append(panel);
+                if (publishedCount) years.push(group.year);
             });
 
-            const yearTabs = Array.from(document.querySelectorAll(".year-tab"));
-            const yearPanels = yearTabs.map((tab) => document.getElementById(tab.getAttribute("aria-controls")));
-            const routeStatus = document.getElementById("routeStatus");
+            const durationOrder = ["一日游", "两天一晚", "常规", "深度"];
+            const typeOrder = ["度假", "旅行", "自驾", "露营"];
+            const selects = [
+                [durationSelect, "duration"],
+                [typeSelect, "type"],
+                [yearSelect, "year"],
+                [countrySelect, "country"]
+            ];
 
-            function selectYear(index, { focus = false, updateHash = false } = {}) {
-                if (updateHash) {
+            let shown = pageSize;
+            let filtered = trips;
+            let armAuto = false;
+            let frameSrc = "";
+
+            function createCard(trip) {
+                const item = document.createElement("li");
+                const link = document.createElement("a");
+                link.className = "trip";
+                link.href = `#${trip.routeId}`;
+                const tags = document.createElement("p");
+                tags.className = "trip-tags";
+                const flag = document.createElement("span");
+                flag.className = "trip-tag trip-tag--flag";
+                flag.textContent = trip.flag;
+                tags.append(flag);
+                [trip.duration, trip.type, String(trip.year), trip.country].forEach((tag) => {
+                    const span = document.createElement("span");
+                    span.className = "trip-tag";
+                    span.textContent = tag;
+                    tags.append(span);
+                });
+                const title = document.createElement("h3");
+                title.textContent = trip.title;
+                const summary = document.createElement("p");
+                summary.textContent = trip.summary;
+                link.append(tags, title, summary);
+                item.append(link);
+                return item;
+            }
+
+            function paint() {
+                listEl.replaceChildren(...filtered.slice(0, shown).map(createCard));
+                moreBtn.hidden = shown >= filtered.length;
+                countEl.textContent = filtered.length ? `${filtered.length} 段行程` : "没有符合条件的行程。";
+                filtersEl.querySelectorAll(".filter").forEach((filter) => {
+                    filter.classList.toggle("is-set", filter.querySelector("select").value !== "");
+                });
+            }
+
+            function matches(trip, ignored) {
+                if (ignored !== "duration" && durationSelect.value && trip.duration !== durationSelect.value) return false;
+                if (ignored !== "type" && typeSelect.value && trip.type !== typeSelect.value) return false;
+                if (ignored !== "year" && yearSelect.value && String(trip.year) !== yearSelect.value) return false;
+                if (ignored !== "country" && countrySelect.value && trip.country !== countrySelect.value) return false;
+                return true;
+            }
+
+            function choices(key) {
+                const pool = trips.filter((trip) => matches(trip, key));
+                if (key === "duration") return durationOrder.filter((value) => pool.some((trip) => trip.duration === value));
+                if (key === "type") return typeOrder.filter((value) => pool.some((trip) => trip.type === value));
+                if (key === "year") return years.filter((year) => pool.some((trip) => trip.year === year)).map(String);
+                return countries.filter((country) => pool.some((trip) => trip.country === country));
+            }
+
+            function fillSelect(select, values) {
+                const current = select.value;
+                const next = values.includes(current) ? current : "";
+                const desired = ["", ...values];
+                const existing = [...select.options].map((option) => option.value);
+                const sameOptions = existing.length === desired.length && existing.every((value, index) => value === desired[index]);
+                if (!sameOptions) {
+                    const fragment = document.createDocumentFragment();
+                    desired.forEach((value) => {
+                        const option = document.createElement("option");
+                        option.value = value;
+                        option.textContent = value || "所有";
+                        fragment.append(option);
+                    });
+                    select.replaceChildren(fragment);
+                }
+                if (select.value !== next) select.value = next;
+                return current !== "" && next === "";
+            }
+
+            function syncOptions(keepKey) {
+                let guard = 0;
+                let cleared = true;
+                while (cleared && guard < 5) {
+                    cleared = false;
+                    guard += 1;
+                    selects.forEach(([select, key]) => {
+                        if (key === keepKey) return;
+                        if (fillSelect(select, choices(key))) cleared = true;
+                    });
+                }
+                selects.forEach(([select, key]) => fillSelect(select, choices(key)));
+            }
+
+            function applyFilters() {
+                filtered = trips.filter((trip) => matches(trip));
+            }
+
+            function syncYearHash() {
+                const url = new URL(window.location.href);
+                url.hash = yearSelect.value;
+                if (url.href !== window.location.href) history.replaceState(null, "", url);
+            }
+
+            function refresh(keepKey, { syncHash = true } = {}) {
+                shown = pageSize;
+                armAuto = false;
+                syncOptions(keepKey);
+                if (syncHash) {
                     routeStatus.hidden = true;
                     routeStatus.textContent = "";
+                    syncYearHash();
                 }
-                yearTabs.forEach((tab, i) => {
-                    const isActive = i === index;
-                    tab.classList.toggle("is-active", isActive);
-                    tab.setAttribute("aria-selected", String(isActive));
-                    tab.tabIndex = isActive ? 0 : -1;
-                    yearPanels[i].hidden = !isActive;
-                });
-                if (focus) yearTabs[index].focus();
-                if (updateHash) history.replaceState(null, "", `#${yearTabs[index].dataset.year}`);
+                applyFilters();
+                paint();
             }
 
-            function indexFromHash() {
-                const year = TripRoute.hashValue(window.location.hash);
-                return yearTabs.findIndex((tab) => tab.dataset.year === year);
+            function loadMore() {
+                if (shown >= filtered.length) return;
+                shown = Math.min(shown + pageSize, filtered.length);
+                paint();
             }
 
-            const byId = new Map();
-            catalog.years.forEach((group) => {
-                group.trips.forEach((trip) => {
-                    byId.set(trip.routeId, trip);
-                });
-            });
-            const frame = document.getElementById("tripFrame");
-            let frameSrc = "";
+            function revealList() {
+                const edge = filtersEl.getBoundingClientRect().bottom + 8;
+                const target = listEl.firstElementChild || countEl;
+                const listTop = target.getBoundingClientRect().top;
+                if (listTop < edge || listTop > window.innerHeight - 40) {
+                    window.scrollBy({ top: listTop - edge });
+                }
+            }
 
             function showTrip(trip) {
                 const root = document.documentElement;
@@ -292,34 +400,62 @@
                     return;
                 }
                 showHome();
-                const yearIndex = indexFromHash();
-                if (yearIndex >= 0) {
+                const knownYear = years.some((year) => String(year) === raw);
+                if (knownYear) {
                     routeStatus.hidden = true;
                     routeStatus.textContent = "";
-                    selectYear(yearIndex);
-                    return;
-                }
-                if (raw) {
+                    if (![...yearSelect.options].some((option) => option.value === raw)) {
+                        const option = document.createElement("option");
+                        option.value = raw;
+                        option.textContent = raw;
+                        yearSelect.append(option);
+                    }
+                    yearSelect.value = raw;
+                } else if (raw) {
                     routeStatus.hidden = false;
                     routeStatus.textContent = "没有找到这段行程。";
+                    yearSelect.value = "";
                 } else {
                     routeStatus.hidden = true;
                     routeStatus.textContent = "";
+                    yearSelect.value = "";
                 }
-                selectYear(0);
+                refresh("year", { syncHash: false });
             }
 
-            yearTabs.forEach((tab, index) => {
-                tab.addEventListener("click", () => selectYear(index, { updateHash: true }));
-                tab.addEventListener("keydown", (event) => {
-                    const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
-                    if (!step) return;
-                    event.preventDefault();
-                    selectYear((index + step + yearTabs.length) % yearTabs.length, { focus: true, updateHash: true });
+            function maybeAutoLoad() {
+                if (moreBtn.hidden || document.documentElement.classList.contains("is-trip-route")) {
+                    armAuto = true;
+                    return;
+                }
+                const rect = moreBtn.getBoundingClientRect();
+                const near = rect.top <= window.innerHeight + 120 && rect.bottom >= 0;
+                if (!near) {
+                    armAuto = true;
+                    return;
+                }
+                if (!armAuto) return;
+                armAuto = false;
+                loadMore();
+            }
+
+            selects.forEach(([select, key]) => {
+                select.addEventListener("change", () => {
+                    refresh(key);
+                    revealList();
                 });
             });
-
+            moreBtn.addEventListener("click", () => {
+                loadMore();
+                armAuto = false;
+            });
+            window.addEventListener("scroll", maybeAutoLoad, { passive: true });
             window.addEventListener("hashchange", applyRoute);
+            durationSelect.value = "";
+            typeSelect.value = "";
+            countrySelect.value = "";
+            yearSelect.value = "";
+            selects.forEach(([select, key]) => fillSelect(select, choices(key)));
             applyRoute();
         }
 
@@ -331,7 +467,7 @@
             .then(renderCatalog)
             .catch((error) => {
                 document.documentElement.classList.remove("is-trip-route", "is-trip-ready");
-                document.getElementById("yearPanels").textContent = "行程列表加载失败，请稍后重试。";
+                document.getElementById("tripCount").textContent = "行程列表加载失败，请稍后重试。";
                 console.error("Failed to load trip list:", error);
             });
     </script>

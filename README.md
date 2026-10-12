@@ -1,6 +1,6 @@
 # Jason's Trip
 
-个人行程公开页。首页看足迹和年份列表，点进去是带地图的逐日安排。
+个人行程公开页。首页看足迹，并按时长、类型、年份和国家筛选行程。点进去是带地图的逐日安排。
 
 [打开站点](https://ich1990.github.io/trips/) · [浏览仓库](https://github.com/iCH1990/trips)
 
@@ -10,11 +10,11 @@
 
 | 页面 | 内容 |
 | --- | --- |
-| **首页** | 世界足迹图、到访次数，以及按年份切换的行程卡片。年份地址是 `#2026` |
+| **首页** | 世界足迹图、到访次数，以及按时长、类型、年份、国家筛选的行程卡片。年份地址是 `#2026`，会选中该年 |
 | **行程** | 地址是文件名去掉 `.html`，例如 `#tokyo_260808_260809`、`#miami_240203`。页面里仍是 Leaflet 地图和当日路线 |
 | **返回** | 每个行程页顶部都有「返回主页」 |
 
-行程覆盖自驾、飞机 + 自驾、海岛和城市步行，年份从 2016 到 2026。
+行程覆盖度假、旅行、自驾和露营，年份从 2016 到 2026。
 
 ---
 
@@ -38,7 +38,7 @@ trips/
 ├── trips/
 │   ├── data/countries.geo.json    足迹图国界（Natural Earth，公有领域）
 │   ├── data/trip.schema.json      行程数据契约
-│   ├── data/trips.json            首页行程清单、年份和发布状态
+│   ├── data/trips.json            首页行程清单、时长、类型和发布状态
 │   └── 2016/  2018/  2019/  2023/  2024/  2025/  2026/
 │       └── {地点}_{YYMMDD}_{YYMMDD}.html
 ├── SPEC.md                    开发规范。架构调整时同步更新
@@ -78,7 +78,7 @@ python3 -m http.server 8765
 完整约定在 [SPEC.md](SPEC.md)。下面是最短步骤。
 
 1. 在对应年份目录里按上面的规则起名。
-2. 在 `trips/data/trips.json` 对应年份里加一条记录，`href` 从站点根目录写起，例如 `trips/2026/example_260101.html`。还没公开的行程把 `published` 设为 `false`，段数会按已公开的记录自动计算。
+2. 在 `trips/data/trips.json` 对应年份里加一条记录，`href` 从站点根目录写起，例如 `trips/2026/example_260101.html`。写上 `country`、`duration` 和 `type`，取值见 [SPEC.md](SPEC.md)。还没公开的行程把 `published` 设为 `false`。
 3. 页头放返回主页：`<a class="back-home" href="../../index.html" target="_top">← 返回主页</a>`。
 4. 样式用 `../../css/tokens.css` 和 `../../css/trip.css`。charset 后面先放 `../../js/trip-route.js`。数据交给 `../../js/trip-model.js`，地图和停点用 `../../js/trip-render.js`，路线用 `../../js/trip-routing.js`，日期切换和展开收起用 `../../js/trip-chrome.js`，不要再在页面里各写一份。公开地址就是文件名去掉 `.html`，例如 `example_260101_260103.html` 对应 `#example_260101_260103`。
 5. 多日行程写成 `const days = TripModel.prepareDays([...])`。当天路线色按顺序写 `"var(--route-1)"` 起。重点用 `kind: "highlight"`，住宿用 `kind: "stay"`，不要把路线色设成暖橙或紫色。

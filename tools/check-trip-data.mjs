@@ -60,6 +60,36 @@ for (const year of years) {
     }
 }
 
+const DURATIONS = ["一日游", "两天一晚", "常规", "深度"];
+const TYPES = ["度假", "旅行", "自驾", "露营"];
+
+function parseYYMMDD(value, href) {
+    if (!/^\d{6}$/.test(value)) throw new Error(`${href} 的日期 ${value} 无效`);
+    const year = 2000 + Number(value.slice(0, 2));
+    const month = Number(value.slice(2, 4));
+    const day = Number(value.slice(4, 6));
+    const utc = Date.UTC(year, month - 1, day);
+    const date = new Date(utc);
+    if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
+        throw new Error(`${href} 的日期 ${value} 无效`);
+    }
+    return utc;
+}
+
+function durationFromHref(href) {
+    const name = href.split("/").pop().replace(/\.html$/, "");
+    const matched = name.match(/_(\d{6})(?:_(\d{6}))?$/);
+    if (!matched) throw new Error(`${href} 无法从文件名得到行程天数`);
+    const start = parseYYMMDD(matched[1], href);
+    const end = parseYYMMDD(matched[2] || matched[1], href);
+    if (end < start) throw new Error(`${href} 结束日期早于开始日期`);
+    const days = Math.round((end - start) / 86400000) + 1;
+    if (days <= 1) return "一日游";
+    if (days === 2) return "两天一晚";
+    if (days <= 14) return "常规";
+    return "深度";
+}
+
 const catalog = JSON.parse(readFileSync(join(contentRoot, "data/trips.json"), "utf8"));
 const listed = new Set();
 const routeIds = new Map();
@@ -69,7 +99,11 @@ for (const group of catalog.years) {
         for (const field of ["href", "flag", "title", "summary"]) {
             if (typeof trip[field] !== "string" || !trip[field].trim()) throw new Error(`${trip.href || group.year} 缺少 ${field}`);
         }
-        if (!Array.isArray(trip.tags) || trip.tags.some((tag) => typeof tag !== "string")) throw new Error(`${trip.href} 的 tags 无效`);
+        if ("tags" in trip || "types" in trip) throw new Error(`${trip.href} 还在使用 tags 或 types，请改成单个 type`);
+        if (typeof trip.country !== "string" || !trip.country.trim()) throw new Error(`${trip.href} 缺少 country`);
+        const duration = durationFromHref(trip.href);
+        if (!DURATIONS.includes(duration) || trip.duration !== duration) throw new Error(`${trip.href} 的时长应为 ${duration}`);
+        if (!TYPES.includes(trip.type)) throw new Error(`${trip.href} 的类型无效：${trip.type}`);
         if (typeof trip.published !== "boolean") throw new Error(`${trip.href} 缺少 published`);
         if (!existsSync(join(root, trip.href))) throw new Error(`${trip.href} 文件不存在`);
         if (listed.has(trip.href)) throw new Error(`${trip.href} 在清单里重复`);
