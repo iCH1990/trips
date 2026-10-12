@@ -164,6 +164,16 @@
       "year": 2024,
       "trips": [
         {
+          "href": "trips/2024/wollongong_kiama_241224.html",
+          "flag": "🇦🇺",
+          "country": "澳大利亚",
+          "duration": "一日游",
+          "type": "自驾",
+          "title": "澳大利亚 Wollongong / Kiama 2024/12/24",
+          "summary": "平安夜从 St Leonards 自驾南下，Sea Cliff Bridge 停车打卡、吃带的食物，Mount Keira 喝咖啡俯瞰城市，南天寺逛完吃斋饭。到 Kiama 先看 Minnamurra 观景台的心形沙滩，再去灯塔和 Blowhole，结束后直接去 Little Betty's 吃晚餐，餐后在 Hindmarsh Park 闲逛约 15 分钟再回家。",
+          "published": true
+        },
+        {
           "href": "trips/2024/gold_coast_241218_241222.html",
           "flag": "🇦🇺",
           "country": "澳大利亚",

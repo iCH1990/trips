@@ -55,7 +55,7 @@ for (const year of years) {
         if (!html.includes('class="back-home" href="../../index.html" target="_top"')) {
             throw new Error(`${href} 的返回主页链接需要 target="_top"`);
         }
-        pages.push({ href, routeId });
+        pages.push({ href, routeId, html });
         console.log(`ok #${routeId} ${href}`);
     }
 }
@@ -114,6 +114,41 @@ for (const group of catalog.years) {
         routeIds.set(routeId, trip.href);
     }
 }
+function decodeText(value) {
+    return value
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, "\"");
+}
+
+function headerTags(html) {
+    const block = html.match(/<p class="trip-tags"[^>]*>([\s\S]*?)<\/p>/);
+    if (!block) return null;
+    return [...block[1].matchAll(/<span class="([^"]+)">([^<]*)<\/span>/g)].map((match) => ({
+        className: match[1],
+        text: decodeText(match[2])
+    }));
+}
+
+for (const page of pages) {
+    const tags = headerTags(page.html);
+    const trip = catalog.years.flatMap((group) => group.trips).find((item) => item.href === page.href);
+    if (!tags) throw new Error(`${page.href} 的页头缺少分类标签`);
+    const expected = [
+        { className: "trip-tag trip-tag--flag", text: trip.flag },
+        { className: "trip-tag", text: trip.duration },
+        { className: "trip-tag", text: trip.type }
+    ];
+    const sameTags = tags.length === expected.length && tags.every((tag, index) => tag.className === expected[index].className && tag.text === expected[index].text);
+    if (!sameTags) throw new Error(`${page.href} 的页头标签应为国旗、${trip.duration}、${trip.type}`);
+    if (!page.html.includes('href="../../css/tags.css"')) throw new Error(`${page.href} 的分类标签要复用 css/tags.css`);
+    const stats = [...page.html.matchAll(/<span class="stat">([^<]*)<\/span>/g)].map((match) => decodeText(match[1]).trim());
+    if (!stats.length || stats.length > 5) throw new Error(`${page.href} 的特色标签需要 1 到 5 个`);
+    if (stats.some((stat) => !stat)) throw new Error(`${page.href} 有空的特色标签`);
+    if (new Set(stats).size !== stats.length) throw new Error(`${page.href} 的特色标签重复`);
+}
+
 const missing = pages.filter((page) => !listed.has(page.href));
 if (missing.length) throw new Error(`这些页面还没写进 trips/data/trips.json：${missing.map((page) => page.href).join(", ")}`);
 console.log(`checked ${pages.length}`);

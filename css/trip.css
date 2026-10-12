@@ -44,6 +44,7 @@ button { font: inherit; }
 }
 h1 { margin: 8px 0 0; color: var(--ink); font-size: 30px; line-height: 1.25; }
 .subtitle { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.trip-head .trip-tags { margin: 8px 0 0; }
 .stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; }
 .stat {
     padding: 5px 11px;

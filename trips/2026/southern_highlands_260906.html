@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="../../css/tokens.css">
+    <link rel="stylesheet" href="../../css/tags.css">
     <link rel="stylesheet" href="../../css/trip.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="../../js/color.js"></script>
@@ -22,11 +23,17 @@
         <header class="trip-head">
             <p class="kicker">Australia · 2026</p>
             <h1>澳大利亚 Southern Highlands 2026/09/06</h1>
-            <p class="subtitle">🇦🇺 · 一天 · 自驾</p>
+            <p class="trip-tags">
+                <span class="trip-tag trip-tag--flag">🇦🇺</span>
+                <span class="trip-tag">一日游</span>
+                <span class="trip-tag">自驾</span>
+            </p>
             <div class="stats">
-                <span class="stat">6 站 + 2 可选</span>
-                <span class="stat">Park Hyatt 往返</span>
-                <span class="stat">Bowral · Fitzroy Falls · Kiama</span>
+                <span class="stat">Bowral</span>
+                <span class="stat">Fitzroy Falls</span>
+                <span class="stat">Kangaroo Valley</span>
+                <span class="stat">Kiama Blowhole</span>
+                <span class="stat">Me-Gal 港景晚餐</span>
             </div>
         </header>
         <section class="overview" aria-label="行程总览">
@@ -61,6 +68,7 @@
             {
                 name: "Park Hyatt Sydney",
                 time: "09:00 出发 · 约 21:50 返抵",
+                kind: "stay",
                 lat: -33.8573,
                 lng: 151.2093,
                 activities: [
@@ -71,6 +79,7 @@
             {
                 name: "Bowral",
                 time: "10:45–12:20",
+                kind: "highlight",
                 drive: "开车约 1 小时 50 分",
                 lat: -34.4811,
                 lng: 150.4175,
@@ -82,6 +91,7 @@
             {
                 name: "Fitzroy Falls",
                 time: "12:45–14:20",
+                kind: "highlight",
                 drive: "开车约 25 分钟",
                 lat: -34.6462,
                 lng: 150.4789,
@@ -93,6 +103,7 @@
             {
                 name: "Kangaroo Valley",
                 time: "14:45–15:50",
+                kind: "highlight",
                 drive: "开车约 25 分钟",
                 lat: -34.7333,
                 lng: 150.5333,
@@ -118,6 +129,7 @@
             {
                 name: "Kiama",
                 time: "17:10–17:45",
+                kind: "highlight",
                 drive: "开车约 15 分钟",
                 note: "跳过 Gerringong 则可 16:35 抵达。17:45 须离开才能经 Sea Cliff Bridge 赶上 20:00 晚餐",
                 lat: -34.6719,

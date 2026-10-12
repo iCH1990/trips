@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <script src="../../js/trip-route.js"></script>
+    <title>澳大利亚 Wollongong / Kiama 2024/12/24</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="../../css/tokens.css">
+    <link rel="stylesheet" href="../../css/tags.css">
+    <link rel="stylesheet" href="../../css/trip.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="../../js/color.js"></script>
+    <script src="../../js/trip-model.js"></script>
+    <script src="../../js/trip-render.js"></script>
+    <script src="../../js/trip-routing.js"></script>
+</head>
+<body>
+    <div class="page">
+        <nav class="site-nav" aria-label="站点导航">
+            <a class="back-home" href="../../index.html" target="_top">← 返回主页</a>
+        </nav>
+        <header class="trip-head">
+            <p class="kicker">Australia · 2024</p>
+            <h1>澳大利亚 Wollongong / Kiama 2024/12/24</h1>
+            <p class="trip-tags">
+                <span class="trip-tag trip-tag--flag">🇦🇺</span>
+                <span class="trip-tag">一日游</span>
+                <span class="trip-tag">自驾</span>
+            </p>
+            <div class="stats">
+                <span class="stat">Sea Cliff Bridge</span>
+                <span class="stat">Mount Keira 观景</span>
+                <span class="stat">南天寺</span>
+                <span class="stat">心形沙滩</span>
+                <span class="stat">Kiama Blowhole</span>
+            </div>
+        </header>
+        <section class="overview" aria-label="行程总览">
+            <div class="card map-card">
+                <div id="map" role="application" aria-label="Wollongong 至 Kiama 一日自驾地图"></div>
+            </div>
+            <div class="card side">
+                <div class="day-scroller">
+                    <button type="button" class="day-arrow" data-dir="-1" aria-label="更早的日期" hidden>
+                        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M7.6 2.2 4 6l3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+                    <button type="button" class="day-arrow" data-dir="1" aria-label="更晚的日期" hidden>
+                        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.4 2.2 8 6l-3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                </div>
+                <div class="day-summary" id="daySummary"></div>
+                <ol class="glance" id="glance"></ol>
+                <p class="route-stat" id="routeStat">正在规划当日路线…</p>
+            </div>
+        </section>
+        <section class="detail" aria-label="当日详细安排">
+            <div class="detail-head">
+                <div class="detail-heading">
+                    <h2 id="detailTitle"></h2>
+                    <p class="detail-note" id="detailNote"></p>
+                </div>
+                <button type="button" class="detail-expand" id="detailExpand" aria-expanded="false">展开</button>
+            </div>
+            <div class="detail-scroll">
+                <ol class="timeline" id="itinerary"></ol>
+                <p class="hint">Sea Cliff Bridge 桥上不能停车，车停在桥两端的停车场再走上桥。南天寺斋堂午饭时段较短，逛完尽量在 14:00 前去买。平安夜餐厅营业时间可能调整，Little Betty's 需提前订位并确认营业。驾驶时间按 OSRM 常规路况估算，节前南下车流可能更多。</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const days = TripModel.prepareDays([
+            {
+                date: "12/24",
+                weekday: "周二",
+                title: "St Leonards 出发，沿海经 Wollongong 到 Kiama，晚餐后闲逛再回家",
+                meta: "Sea Cliff Bridge 打卡 · Mount Keira 咖啡 · 南天寺斋饭 · 心形沙滩 · 灯塔与喷水洞 · Little Betty's 晚餐 · Hindmarsh Park 闲逛",
+                color: "var(--route-1)",
+                zoom: 14,
+                stops: [
+                    {
+                        name: "St Leonards",
+                        time: "08:30 出发",
+                        lat: -33.8230, lng: 151.1950,
+                        activities: [
+                            { time: "08:30", text: "带上路上吃的食物，自驾出发，经 M1 和 Lawrence Hargrave Drive 去 Sea Cliff Bridge" }
+                        ]
+                    },
+                    {
+                        name: "Sea Cliff Bridge",
+                        time: "09:35–10:20",
+                        drive: "开车约 1 小时 5 分",
+                        kind: "highlight",
+                        lat: -34.2543, lng: 150.9734,
+                        activities: [
+                            { time: "09:35–10:00", text: "停车休息，走上海崖边的桥面打卡拍照" },
+                            { time: "10:00–10:20", text: "在停车场边吃一点带来的食物，再继续上路" }
+                        ],
+                        note: "Lawrence Hargrave Dr, Clifton NSW 2515 · 桥上不能停车"
+                    },
+                    {
+                        name: "Mount Keira Coffee",
+                        time: "10:55–11:45",
+                        drive: "开车约 35 分钟",
+                        lat: -34.3986, lng: 150.8564,
+                        activities: [
+                            { time: "10:55–11:45", text: "山顶喝咖啡，从观景台俯瞰 Wollongong 城市与海岸线" }
+                        ],
+                        note: "Mount Keira Summit Park, Queen Elizabeth Dr, Mount Keira NSW 2500"
+                    },
+                    {
+                        name: "Nan Tien Temple 南天寺",
+                        time: "12:10–13:50",
+                        drive: "开车约 25 分钟",
+                        kind: "highlight",
+                        lat: -34.4772, lng: 150.8522,
+                        activities: [
+                            { time: "12:10–13:05", text: "逛大雄宝殿、万佛塔和园林" },
+                            { time: "13:05–13:50", text: "逛完在寺里买一些斋饭吃" }
+                        ],
+                        note: "180 Berkeley Rd, Berkeley NSW 2506 · 斋堂午饭时段较短，尽量 14:00 前去买"
+                    },
+                    {
+                        name: "Minnamurra Whale Watching Platform",
+                        time: "14:20–15:30",
+                        drive: "开车约 30 分钟",
+                        kind: "highlight",
+                        lat: -34.6290, lng: 150.8620,
+                        activities: [
+                            { time: "14:20–14:50", text: "观景台看心形沙滩" },
+                            { time: "14:50–15:30", text: "在旁边草坪上休息一会儿" }
+                        ],
+                        note: "Minnamurra 岬角，Kiama Downs 北侧"
+                    },
+                    {
+                        name: "Kiama Lighthouse & Blowhole",
+                        time: "15:45–17:30",
+                        drive: "开车约 15 分钟",
+                        kind: "highlight",
+                        lat: -34.6720, lng: 150.8630,
+                        activities: [
+                            { time: "15:45–16:30", text: "Kiama Lighthouse 灯塔与岬角海岸" },
+                            { time: "16:30–17:30", text: "看 Kiama Blowhole 海浪喷水" }
+                        ],
+                        note: "Blowhole Point Rd, Kiama NSW 2533"
+                    },
+                    {
+                        name: "Little Betty's",
+                        time: "17:40–19:10",
+                        drive: "开车约 5 分钟",
+                        lat: -34.6705, lng: 150.8555,
+                        activities: [
+                            { time: "17:40–19:10", text: "喷水洞结束后直接过来吃晚餐" }
+                        ],
+                        note: "Kiama 市中心 · 平安夜需提前订位并确认营业时间"
+                    },
+                    {
+                        name: "Hindmarsh Park",
+                        time: "19:15–19:30",
+                        drive: "步行约 5 分钟",
+                        lat: -34.6712, lng: 150.8575,
+                        activities: [
+                            { time: "19:15–19:30", text: "晚餐后在公园稍微闲逛休息，大约 15 分钟后回家" }
+                        ],
+                        note: "Manning St, Kiama NSW 2533"
+                    },
+                    {
+                        name: "St Leonards",
+                        time: "21:10 行程结束",
+                        drive: "开车约 1 小时 40 分",
+                        lat: -33.8230, lng: 151.1950,
+                        activities: [
+                            { time: "19:30", text: "从 Kiama 上 M1 直接返回" },
+                            { time: "21:10", text: "回到 St Leonards，行程结束" }
+                        ]
+                    }
+                ]
+            }
+        ]);
+
+        const map = TripRender.createMap("map", [-34.25, 151.0], 9);
+
+        const tabsEl = document.getElementById("dayTabs");
+        const summaryEl = document.getElementById("daySummary");
+        const glanceEl = document.getElementById("glance");
+        const itineraryEl = document.getElementById("itinerary");
+        const detailTitleEl = document.getElementById("detailTitle");
+        const detailNoteEl = document.getElementById("detailNote");
+        const routeStatEl = document.getElementById("routeStat");
+        let routeLines = [];
+        let markers = [];
+        let activeDay = 0;
+
+        TripRender.createDayTabs(tabsEl, days, renderDay);
+
+        function focusStop(index, { scroll = false } = {}) {
+            TripRender.focusStop({
+                map,
+                markers,
+                itineraryEl,
+                index,
+                zoom: days[activeDay].zoom || 12,
+                scroll
+            });
+        }
+
+        TripRender.bindStopClicks([glanceEl, itineraryEl], focusStop);
+
+        async function renderDay(dayIndex) {
+            activeDay = dayIndex;
+            const day = days[dayIndex];
+            TripRender.selectDayTab(tabsEl, dayIndex);
+            summaryEl.innerHTML = "";
+            detailTitleEl.textContent = day.title || "";
+            detailNoteEl.textContent = "";
+            glanceEl.innerHTML = "";
+            itineraryEl.innerHTML = "";
+            markers.forEach((marker) => marker.remove());
+            markers = [];
+            routeLines.forEach((line) => line.remove());
+            routeLines = [];
+
+            const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
+
+            markers = TripRender.renderStops({
+                map,
+                stops: day.stops,
+                color: day.color,
+                glanceEl,
+                itineraryEl
+            });
+
+            const fallback = L.polyline(coords, {
+                color: day.color,
+                weight: 4,
+                opacity: 0.82,
+                dashArray: "8, 8"
+            }).addTo(map);
+            routeLines.push(fallback);
+            map.fitBounds(fallback.getBounds().pad(0.18));
+            await TripRouting.road({
+                map,
+                day,
+                coords,
+                lines: routeLines,
+                fallback,
+                isCurrent: () => activeDay === dayIndex,
+                statEl: routeStatEl
+            });
+        }
+
+
+        renderDay(0);
+    </script>
+    <script src="../../js/trip-chrome.js"></script>
+</body>
+</html>

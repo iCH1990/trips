@@ -1,0 +1,20 @@
+/* 首页卡片和行程页页头共用的分类标签。 */
+.trip-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+}
+.trip-tag {
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--chip);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 650;
+    line-height: 1.5;
+}
+.trip-tag--flag {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
