@@ -11,6 +11,47 @@ main {
     margin: 0 auto;
     padding: 48px 20px 72px;
 }
+html.is-trip-route,
+html.is-trip-route body {
+    height: 100%;
+    overflow: hidden;
+}
+html.is-trip-route main { display: none; }
+.trip-loading {
+    display: none;
+    margin: 0;
+}
+html.is-trip-route:not(.is-trip-ready) .trip-loading {
+    display: block;
+    position: fixed;
+    inset: 0;
+    padding: 48px 20px;
+    background: var(--bg);
+    color: var(--muted);
+    font-size: 14px;
+}
+.trip-frame {
+    display: none;
+    border: 0;
+    background: var(--bg);
+}
+html.is-trip-route .trip-frame {
+    display: block;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+}
+html.is-trip-route:not(.is-trip-ready) .trip-frame {
+    visibility: hidden;
+    pointer-events: none;
+}
+.route-status {
+    margin: 28px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+}
 .visually-hidden {
     position: absolute;
     width: 1px;

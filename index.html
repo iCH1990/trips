@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/home.css">
+    <script src="js/trip-route.js"></script>
     <script src="js/color.js"></script>
     <noscript><link rel="stylesheet" href="css/home-noscript.css"></noscript>
 </head>
@@ -22,10 +23,13 @@
             <div class="stats" id="stats"></div>
             <ul class="places" id="places"></ul>
         </section>
+        <p id="routeStatus" class="route-status" hidden></p>
         <nav class="year-tabs" id="yearTabs" role="tablist" aria-label="按年份查看行程"></nav>
         <div id="yearPanels"></div>
         <noscript><p class="year-title">开启 JavaScript 后可以按年份查看行程。</p></noscript>
     </main>
+    <p class="trip-loading">正在打开行程…</p>
+    <iframe id="tripFrame" class="trip-frame" title="行程"></iframe>
     <script>
         // 只保留最近去过的年份和次数，不放具体日期和行程。
         const places = [
@@ -156,6 +160,9 @@
             const tabsEl = document.getElementById("yearTabs");
             const panelsEl = document.getElementById("yearPanels");
             catalog.years.forEach((group) => {
+                group.trips.forEach((trip) => {
+                    trip.routeId = TripRoute.idFromHref(trip.href);
+                });
                 const published = group.trips.filter((trip) => trip.published);
                 const button = document.createElement("button");
                 button.type = "button";
@@ -185,7 +192,7 @@
                     const item = document.createElement("li");
                     const link = document.createElement("a");
                     link.className = "trip";
-                    link.href = trip.href;
+                    link.href = `#${trip.routeId}`;
                     const tags = document.createElement("p");
                     tags.className = "trip-tags";
                     const flag = document.createElement("span");
@@ -212,8 +219,13 @@
 
             const yearTabs = Array.from(document.querySelectorAll(".year-tab"));
             const yearPanels = yearTabs.map((tab) => document.getElementById(tab.getAttribute("aria-controls")));
+            const routeStatus = document.getElementById("routeStatus");
 
             function selectYear(index, { focus = false, updateHash = false } = {}) {
+                if (updateHash) {
+                    routeStatus.hidden = true;
+                    routeStatus.textContent = "";
+                }
                 yearTabs.forEach((tab, i) => {
                     const isActive = i === index;
                     tab.classList.toggle("is-active", isActive);
@@ -226,8 +238,75 @@
             }
 
             function indexFromHash() {
-                const year = decodeURIComponent(window.location.hash.slice(1));
+                const year = TripRoute.hashValue(window.location.hash);
                 return yearTabs.findIndex((tab) => tab.dataset.year === year);
+            }
+
+            const byId = new Map();
+            catalog.years.forEach((group) => {
+                group.trips.forEach((trip) => {
+                    byId.set(trip.routeId, trip);
+                });
+            });
+            const frame = document.getElementById("tripFrame");
+            let frameSrc = "";
+
+            function showTrip(trip) {
+                const root = document.documentElement;
+                root.classList.add("is-trip-route");
+                root.classList.remove("is-trip-ready");
+                document.title = trip.title;
+                frame.title = trip.title;
+                if (frameSrc !== trip.href) {
+                    frameSrc = trip.href;
+                    frame.src = trip.href;
+                } else {
+                    root.classList.add("is-trip-ready");
+                    frame.focus();
+                }
+            }
+
+            function showHome() {
+                document.documentElement.classList.remove("is-trip-route", "is-trip-ready");
+                document.title = "Jason's Trip";
+                if (frameSrc) {
+                    frameSrc = "";
+                    frame.src = "about:blank";
+                    frame.title = "行程";
+                }
+            }
+
+            frame.addEventListener("load", () => {
+                if (!frameSrc || !document.documentElement.classList.contains("is-trip-route")) return;
+                document.documentElement.classList.add("is-trip-ready");
+                frame.focus();
+            });
+
+            function applyRoute() {
+                const raw = TripRoute.hashValue(window.location.hash);
+                const trip = byId.get(raw);
+                if (trip) {
+                    routeStatus.hidden = true;
+                    routeStatus.textContent = "";
+                    showTrip(trip);
+                    return;
+                }
+                showHome();
+                const yearIndex = indexFromHash();
+                if (yearIndex >= 0) {
+                    routeStatus.hidden = true;
+                    routeStatus.textContent = "";
+                    selectYear(yearIndex);
+                    return;
+                }
+                if (raw) {
+                    routeStatus.hidden = false;
+                    routeStatus.textContent = "没有找到这段行程。";
+                } else {
+                    routeStatus.hidden = true;
+                    routeStatus.textContent = "";
+                }
+                selectYear(0);
             }
 
             yearTabs.forEach((tab, index) => {
@@ -240,13 +319,8 @@
                 });
             });
 
-            window.addEventListener("hashchange", () => {
-                const index = indexFromHash();
-                if (index >= 0) selectYear(index);
-            });
-
-            const initialYear = indexFromHash();
-            selectYear(initialYear >= 0 ? initialYear : 0);
+            window.addEventListener("hashchange", applyRoute);
+            applyRoute();
         }
 
         fetch("trips/data/trips.json")
@@ -256,6 +330,7 @@
             })
             .then(renderCatalog)
             .catch((error) => {
+                document.documentElement.classList.remove("is-trip-route", "is-trip-ready");
                 document.getElementById("yearPanels").textContent = "行程列表加载失败，请稍后重试。";
                 console.error("Failed to load trip list:", error);
             });

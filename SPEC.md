@@ -10,7 +10,12 @@
 
 站点部署在 GitHub Pages，是纯静态页面。不引入框架，不加构建或打包。
 
-共享脚本用普通 `<script>`，不用 `type="module"`。`TripModel`、`TripRender`、`TripRouting` 挂在 `globalThis` 上，页面里的后续脚本可以直接调用。
+公开地址用 hash，这样刷新和直接打开都不依赖服务端重写：
+
+- 首页年份是 `#2026` 这种四位年份。
+- 行程 hash 就是文件名去掉 `.html`。一天的 Miami 是 `#miami_240203`。跨天的 Tokyo 是 `#tokyo_260808_260809`，Los Angeles 到 Las Vegas 是 `#los_angeles_las_vegas_260207_260208`。地点可以有下划线。
+
+共享脚本用普通 `<script>`，不用 `type="module"`。`TripModel`、`TripRender`、`TripRouting`、`TripRoute` 挂在 `globalThis` 上，页面里的后续脚本可以直接调用。
 
 行程页放在 `trips/{年份}/`，样式和脚本都用 `../../`。用本地静态服务器打开，不要直接双击 HTML。已有服务占着 `8765` 时，继续用那个地址，不要再起一份。
 
@@ -27,6 +32,7 @@ Leaflet 和 ECharts 不能直接使用 CSS 变量。数据里的路线色写 `va
 | `js/trip-model.js` | 校验天数、停点和路线色 |
 | `js/trip-render.js` | 地图、日期标签、停点标记、总览列表和时间线 |
 | `js/trip-routing.js` | 路线策略。页面只选择策略，不自己请求 OSRM |
+| `js/trip-route.js` | 用文件名（去掉 `.html`）作为 hash。直接打开行程文件时换到这个 hash；首页据此识别地址 |
 | `js/trip-chrome.js` | 日期条滚动、方向键、展开和收起 |
 | `trips/data/trip.schema.json` | 天和停点的字段契约，与 `trip-model.js` 保持一致 |
 | `trips/data/trips.json` | 首页年份、卡片和发布状态 |
@@ -69,9 +75,11 @@ Leaflet 和 ECharts 不能直接使用 CSS 变量。数据里的路线色写 `va
 
 没有日期切换的一日页可以不放 `#dayTabs`。`trip-chrome.js` 仍放在 `body` 末尾，展开和收起继续生效。
 
-页头必须有 `<a class="back-home" href="../../index.html">← 返回主页</a>`。
+页头必须有 `<a class="back-home" href="../../index.html" target="_top">← 返回主页</a>`。`target="_top"` 让首页 iframe 里的这枚链接回到主页，而不是在 iframe 里面再打开一层首页。
 
-`<head>` 里的脚本顺序固定：
+`<head>` 里，`../../js/trip-route.js` 紧跟在 charset 后面。直接打开行程文件时，它会在画出页面前换到同名 hash。在首页 iframe 里打开时不换地址。
+
+其余脚本顺序固定：
 
 1. Leaflet
 2. `../../js/color.js`
@@ -174,10 +182,12 @@ Leaflet 和 ECharts 不能直接使用 CSS 变量。数据里的路线色写 `va
 
 `index.html` 读取这份清单后生成 `#yearTabs` 和 `#yearPanels`。
 
-- `published: false` 的行程不显示。年份上的「N 段行程」只数已公开的记录。
-- 卡片文字用 `textContent` 写入，不用 `innerHTML`。
+- `published: false` 的行程不显示。年份上的「N 段行程」只数已公开的记录。知道 hash 时仍然可以打开。
+- 卡片文字用 `textContent` 写入，不用 `innerHTML`。卡片链接是文件名去掉 `.html` 的 hash。年份目录仍写在 `href` 里，首页用这个 hash 找到对应文件。
 - 年份顺序跟清单里的 `years` 顺序一致。
 - 点击年份会更新地址为 `#2026` 这种形式。左右方向键切换年份。
+- 打开行程 hash 时，首页藏起清单，用 iframe 载入 `href` 指向的行程文件。地址留在首页的 hash 上，刷新不会 404。
+- 对不上任何行程或年份的 hash，显示「没有找到这段行程。」
 - 没有 JavaScript 时，显示「开启 JavaScript 后可以按年份查看行程。」
 
 每个年份目录里的 HTML 都必须在清单里有且只有一条记录。未公开的页面也要登记，并把 `published` 设为 `false`。
@@ -201,6 +211,6 @@ Leaflet 和 ECharts 不能直接使用 CSS 变量。数据里的路线色写 `va
 node tools/check-trip-data.mjs
 ```
 
-校验器会执行每页的 `prepareDays` 或 `prepareStops`，并确认清单里的链接存在、字段完整、没有重复，而且每个行程页都已登记。
+校验器会执行每页的 `prepareDays` 或 `prepareStops`，并确认清单里的链接存在、字段完整、没有重复，每个行程页都已登记，而且文件名 hash 不会撞车。行程页还要带上 `trip-route.js` 和带 `target="_top"` 的返回链接。
 
-改了页面、首页、样式或交互后，在本地站点里按真实用法点一遍：切换日期或年份、点停点、展开详情。改了某条路线策略，就打开使用该策略的一页，确认统计文字和线还在。改了清单，就看首页对应年份的段数和卡片。
+改了页面、首页、样式或交互后，在本地站点里按真实用法点一遍：切换日期或年份、点停点、展开详情。从首页卡片进入行程，地址应是文件名去掉 `.html`；再直接打开行程文件，确认也会落到同一个 hash。改了某条路线策略，就打开使用该策略的一页，确认统计文字和线还在。改了清单，就看首页对应年份的段数和卡片。

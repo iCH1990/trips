@@ -10,8 +10,8 @@
 
 | 页面 | 内容 |
 | --- | --- |
-| **首页** | 世界足迹图、到访次数，以及按年份切换的行程卡片 |
-| **行程页** | Leaflet 地图 + 当日路线，点日期看停点和时间线 |
+| **首页** | 世界足迹图、到访次数，以及按年份切换的行程卡片。年份地址是 `#2026` |
+| **行程** | 地址是文件名去掉 `.html`，例如 `#tokyo_260808_260809`、`#miami_240203`。页面里仍是 Leaflet 地图和当日路线 |
 | **返回** | 每个行程页顶部都有「返回主页」 |
 
 行程覆盖自驾、飞机 + 自驾、海岛和城市步行，年份从 2016 到 2026。
@@ -32,6 +32,7 @@ trips/
 ├── js/trip-model.js           行程数据校验和路线色解析
 ├── js/trip-render.js          行程页的地图、停点标记和时间线
 ├── js/trip-routing.js         自驾、步行、航班和双程路线策略
+├── js/trip-route.js           用文件名做 hash，以及直接打开文件时的跳转
 ├── js/trip-chrome.js          行程页的日期切换、键盘操作和展开收起
 ├── tools/check-trip-data.mjs  校验全部行程数据
 ├── trips/
@@ -78,7 +79,7 @@ python3 -m http.server 8765
 
 1. 在对应年份目录里按上面的规则起名。
 2. 在 `trips/data/trips.json` 对应年份里加一条记录，`href` 从站点根目录写起，例如 `trips/2026/example_260101.html`。还没公开的行程把 `published` 设为 `false`，段数会按已公开的记录自动计算。
-3. 页头放返回主页：`<a class="back-home" href="../../index.html">← 返回主页</a>`。
-4. 样式用 `../../css/tokens.css` 和 `../../css/trip.css`。数据交给 `../../js/trip-model.js`，地图和停点用 `../../js/trip-render.js`，路线用 `../../js/trip-routing.js`，日期切换和展开收起用 `../../js/trip-chrome.js`，不要再在页面里各写一份。
+3. 页头放返回主页：`<a class="back-home" href="../../index.html" target="_top">← 返回主页</a>`。
+4. 样式用 `../../css/tokens.css` 和 `../../css/trip.css`。charset 后面先放 `../../js/trip-route.js`。数据交给 `../../js/trip-model.js`，地图和停点用 `../../js/trip-render.js`，路线用 `../../js/trip-routing.js`，日期切换和展开收起用 `../../js/trip-chrome.js`，不要再在页面里各写一份。公开地址就是文件名去掉 `.html`，例如 `example_260101_260103.html` 对应 `#example_260101_260103`。
 5. 多日行程写成 `const days = TripModel.prepareDays([...])`。当天路线色按顺序写 `"var(--route-1)"` 起。重点用 `kind: "highlight"`，住宿用 `kind: "stay"`，不要把路线色设成暖橙或紫色。
 6. 改完后运行 `node tools/check-trip-data.mjs`。它会检查行程数据，也会确认每个页面都在 `trips/data/trips.json` 里。
