@@ -161,6 +161,12 @@ for (const page of pages) {
     if (new Set(stats).size !== stats.length) throw new Error(`${page.href} 的特色标签重复`);
 }
 
+const home = readFileSync(join(root, "index.html"), "utf8");
+if (!existsSync(join(root, "favicon.png"))) throw new Error("缺少 favicon.png");
+if (!home.includes('<link rel="icon" href="favicon.png" type="image/png">')) {
+    throw new Error("首页要使用 favicon.png 作为网站图标");
+}
+
 const missing = pages.filter((page) => !listed.has(page.href));
 if (missing.length) throw new Error(`这些页面还没写进 trips/data/trips.json：${missing.map((page) => page.href).join(", ")}`);
 console.log(`checked ${pages.length}`);

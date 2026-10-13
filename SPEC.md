@@ -39,6 +39,7 @@ Leaflet 和 ECharts 不能直接使用 CSS 变量。数据里的路线色写 `va
 | `trips/data/trips.json` | 首页行程的国家、时长、类型和发布状态 |
 | `trips/{年份}/` | 各年的行程页 |
 | `tools/check-trip-data.mjs` | 校验全部行程页和首页清单 |
+| `favicon.png` | 网站图标。首页用 `<link rel="icon" href="favicon.png" type="image/png">` |
 | `index.html` | 足迹图和首页结构。行程卡片不写死在这里 |
 
 足迹图的国家列表仍写在 `index.html` 的 `places` 数组里。那不是行程卡片，不要放进 `trips/data/trips.json`。
@@ -252,6 +253,6 @@ Leaflet 和 ECharts 不能直接使用 CSS 变量。数据里的路线色写 `va
 node tools/check-trip-data.mjs
 ```
 
-校验器会执行每页的 `prepareDays` 或 `prepareStops`，并确认清单里的链接存在、字段完整、没有重复，每个行程页都已登记，而且文件名 hash 不会撞车。行程页还要带上 `trip-route.js` 和带 `target="_top"` 的返回链接。每张行程页的页头都会核对国旗、时长、类型，标题与清单一致且不重复国家，以及 1 到 8 个不重复的特色标签。特色标签的内容由人挑选，校验器不判断写得好不好。
+校验器会执行每页的 `prepareDays` 或 `prepareStops`，并确认清单里的链接存在、字段完整、没有重复，每个行程页都已登记，而且文件名 hash 不会撞车。首页要链到根目录的 `favicon.png`。行程页还要带上 `trip-route.js` 和带 `target="_top"` 的返回链接。每张行程页的页头都会核对国旗、时长、类型，标题与清单一致且不重复国家，以及 1 到 8 个不重复的特色标签。特色标签的内容由人挑选，校验器不判断写得好不好。
 
 改了页面、首页、样式或交互后，在本地站点里按真实用法点一遍：切换日期或筛选、点停点、展开详情。从首页卡片进入行程，地址应是文件名去掉 `.html`；再直接打开行程文件，确认也会落到同一个 hash。改了某条路线策略，就打开使用该策略的一页，确认统计文字和线还在。改了清单，就看首页筛选后的段数和卡片。
