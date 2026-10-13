@@ -1,28 +1,31 @@
-/* 行程页共用交互：日期条滚动、左右键切换、详情展开与收起。 */
+/* 行程页共用交互：日期条和特色标签滚动、左右键切换、详情展开与收起。 */
 (function () {
-    const tabs = document.getElementById("dayTabs");
-    const arrows = Array.from(document.querySelectorAll(".day-arrow"));
-
-    if (tabs && arrows.length) {
+    function bindScroller(track, arrows) {
+        if (!track || !arrows.length) return;
         const updateArrows = () => {
-            const max = tabs.scrollWidth - tabs.clientWidth;
+            const max = track.scrollWidth - track.clientWidth;
             const overflow = max > 4;
             arrows.forEach((arrow) => {
                 arrow.hidden = !overflow;
                 const dir = Number(arrow.dataset.dir);
-                arrow.disabled = dir < 0 ? tabs.scrollLeft <= 2 : tabs.scrollLeft >= max - 2;
+                arrow.disabled = dir < 0 ? track.scrollLeft <= 2 : track.scrollLeft >= max - 2;
             });
         };
         arrows.forEach((arrow) => {
             arrow.addEventListener("click", () => {
-                const amount = Math.max(tabs.clientWidth * 0.72, 96);
-                tabs.scrollBy({ left: Number(arrow.dataset.dir) * amount, behavior: "smooth" });
+                const amount = Math.max(track.clientWidth * 0.72, 96);
+                track.scrollBy({ left: Number(arrow.dataset.dir) * amount, behavior: "smooth" });
             });
         });
-        tabs.addEventListener("scroll", updateArrows, { passive: true });
+        track.addEventListener("scroll", updateArrows, { passive: true });
         window.addEventListener("resize", updateArrows);
+        if (typeof ResizeObserver === "function") new ResizeObserver(updateArrows).observe(track);
         updateArrows();
     }
+
+    const tabs = document.getElementById("dayTabs");
+    bindScroller(tabs, Array.from(document.querySelectorAll(".day-scroller .day-arrow")));
+    bindScroller(document.querySelector(".stats"), Array.from(document.querySelectorAll(".stat-arrow")));
 
     if (tabs) {
         const dayTabs = () => Array.from(tabs.querySelectorAll(".day-tab"));

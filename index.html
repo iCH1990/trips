@@ -248,7 +248,7 @@
                 flag.className = "trip-tag trip-tag--flag";
                 flag.textContent = trip.flag;
                 tags.append(flag);
-                [trip.duration, trip.type, String(trip.year), trip.country].forEach((tag) => {
+                [trip.country, String(trip.year), trip.duration, trip.type].forEach((tag) => {
                     const span = document.createElement("span");
                     span.className = "trip-tag";
                     span.textContent = tag;

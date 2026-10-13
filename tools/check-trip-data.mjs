@@ -123,28 +123,40 @@ function decodeText(value) {
 }
 
 function headerTags(html) {
-    const block = html.match(/<p class="trip-tags"[^>]*>([\s\S]*?)<\/p>/);
+    const block = html.match(/<p class="kicker"[^>]*>([\s\S]*?)<\/p>/);
     if (!block) return null;
     return [...block[1].matchAll(/<span class="([^"]+)">([^<]*)<\/span>/g)].map((match) => ({
         className: match[1],
-        text: decodeText(match[2])
+        text: decodeText(match[2]).trim()
     }));
 }
 
 for (const page of pages) {
     const tags = headerTags(page.html);
     const trip = catalog.years.flatMap((group) => group.trips).find((item) => item.href === page.href);
-    if (!tags) throw new Error(`${page.href} 的页头缺少分类标签`);
-    const expected = [
-        { className: "trip-tag trip-tag--flag", text: trip.flag },
-        { className: "trip-tag", text: trip.duration },
-        { className: "trip-tag", text: trip.type }
-    ];
-    const sameTags = tags.length === expected.length && tags.every((tag, index) => tag.className === expected[index].className && tag.text === expected[index].text);
-    if (!sameTags) throw new Error(`${page.href} 的页头标签应为国旗、${trip.duration}、${trip.type}`);
+    const year = page.href.split("/")[1];
+    if (!tags) throw new Error(`${page.href} 的页头缺少眉题`);
+    if (/<p class="trip-tags"/.test(page.html)) throw new Error(`${page.href} 的分类标签应写在眉题里`);
+    const [flag, label, duration, type] = tags;
+    const sameTags = tags.length === 4
+        && flag.className === "trip-tag trip-tag--flag" && flag.text === trip.flag
+        && label.className === "kicker-label" && label.text === `${trip.country} · ${year}`
+        && duration.className === "trip-tag" && duration.text === trip.duration
+        && type.className === "trip-tag" && type.text === trip.type;
+    if (!sameTags) throw new Error(`${page.href} 的眉题应为国旗、国家 · ${year}、${trip.duration}、${trip.type}`);
+    const docTitle = decodeText((page.html.match(/<title>([^<]*)<\/title>/) || ["", ""])[1]).trim();
+    const heading = decodeText((page.html.match(/<h1>([^<]*)<\/h1>/) || ["", ""])[1]).trim();
+    if (docTitle !== trip.title || heading !== trip.title) throw new Error(`${page.href} 的标题、h1 和清单 title 要一致`);
+    if (trip.title.startsWith(trip.country)) throw new Error(`${page.href} 的行程名称不要重复国家`);
+    const line = page.html.match(/<div class="trip-line">([\s\S]*?)<\/div>/);
+    if (!line || !/<h1>[^<]*<\/h1>\s*<p class="kicker">/.test(line[1])) throw new Error(`${page.href} 的标题要和眉题在同一行，标题在前`);
+    if (!page.html.includes('class="stat-scroller"')) throw new Error(`${page.href} 的特色标签要放进可滚动的一行`);
+    if (!page.html.includes('class="stat-arrow" data-dir="-1"') || !page.html.includes('class="stat-arrow" data-dir="1"')) {
+        throw new Error(`${page.href} 的特色标签需要左右滑动按钮`);
+    }
     if (!page.html.includes('href="../../css/tags.css"')) throw new Error(`${page.href} 的分类标签要复用 css/tags.css`);
     const stats = [...page.html.matchAll(/<span class="stat">([^<]*)<\/span>/g)].map((match) => decodeText(match[1]).trim());
-    if (!stats.length || stats.length > 5) throw new Error(`${page.href} 的特色标签需要 1 到 5 个`);
+    if (!stats.length || stats.length > 8) throw new Error(`${page.href} 的特色标签需要 1 到 8 个`);
     if (stats.some((stat) => !stat)) throw new Error(`${page.href} 有空的特色标签`);
     if (new Set(stats).size !== stats.length) throw new Error(`${page.href} 的特色标签重复`);
 }
