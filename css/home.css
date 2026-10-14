@@ -7,6 +7,8 @@ body {
     color: var(--ink);
 }
 main {
+    --trip-rail: 76px;
+    --trip-rail-gap: 18px;
     max-width: 760px;
     margin: 0 auto;
     padding: 48px 20px 72px;
@@ -227,8 +229,8 @@ h1 { margin: 0; font-size: 32px; line-height: 1.2; }
 }
 .trip-more {
     display: block;
-    width: 100%;
-    margin: 4px 0 0;
+    width: auto;
+    margin: 4px 0 0 calc(var(--trip-rail) + var(--trip-rail-gap));
     padding: 12px;
     border: 1px dashed var(--line);
     border-radius: 12px;
@@ -245,14 +247,75 @@ h1 { margin: 0; font-size: 32px; line-height: 1.2; }
 }
 .trip-more[hidden] { display: none; }
 .trips {
+    --trip-gap: 14px;
     display: grid;
-    gap: 14px;
+    gap: 0;
     margin: 0;
     padding: 0;
     list-style: none;
 }
+.trip-item {
+    display: grid;
+    grid-template-columns: var(--trip-rail) minmax(0, 1fr);
+    column-gap: var(--trip-rail-gap);
+    align-items: stretch;
+    padding-bottom: var(--trip-gap);
+}
+.trip-item:last-child { padding-bottom: 0; }
+.trip-mark {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    padding-right: 18px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.35;
+    text-align: right;
+}
+.trip-mark::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 5px;
+    bottom: calc(var(--trip-gap) * -1);
+    width: 2px;
+    background: color-mix(in srgb, var(--accent) 32%, var(--line));
+}
+.trip-item:first-child .trip-mark::before { top: 50%; }
+.trip-item:last-child .trip-mark::before { bottom: 50%; }
+.trip-mark::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 0;
+    z-index: 1;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    background: var(--bg);
+    box-shadow: 0 0 0 2px var(--bg);
+    transform: translateY(-50%);
+}
+.trip-item:hover .trip-mark::after,
+.trip-item:focus-within .trip-mark::after {
+    background: var(--accent);
+}
+.trip-year {
+    margin: 0 0 2px;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+.trip-date { display: block; }
 a.trip {
     display: block;
+    min-width: 0;
     padding: 18px 18px 16px;
     border: 1px solid var(--line);
     border-radius: 14px;
@@ -279,7 +342,14 @@ a.trip:hover, a.trip:focus-visible {
     line-height: 1.6;
 }
 @media (max-width: 520px) {
-    main { padding: 32px 16px 56px; }
+    main {
+        --trip-rail: 62px;
+        --trip-rail-gap: 12px;
+        padding: 32px 16px 56px;
+    }
+    .trips { --trip-gap: 12px; }
+    .trip-mark { padding-right: 14px; font-size: 11px; }
+    .trip-year { font-size: 12px; }
     h1 { font-size: 26px; }
     .places { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
     a.trip { padding: 16px 15px 14px; }

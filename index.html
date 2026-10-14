@@ -236,8 +236,37 @@
             let armAuto = false;
             let frameSrc = "";
 
-            function createCard(trip) {
+            function dateFromYYMMDD(value) {
+                const year = 2000 + Number(value.slice(0, 2));
+                const month = value.slice(2, 4);
+                const day = value.slice(4, 6);
+                return { year, iso: `${year}-${month}-${day}`, label: `${Number(month)}月` };
+            }
+
+            function tripSpan(trip) {
+                const matched = trip.href.match(/_(\d{6})(?:_\d{6})?\.html$/);
+                return matched ? dateFromYYMMDD(matched[1]) : null;
+            }
+
+            function createCard(trip, showYear) {
                 const item = document.createElement("li");
+                item.className = "trip-item";
+                const mark = document.createElement("div");
+                mark.className = "trip-mark";
+                const span = tripSpan(trip);
+                if (span) {
+                    if (showYear) {
+                        const year = document.createElement("p");
+                        year.className = "trip-year";
+                        year.textContent = String(span.year);
+                        mark.append(year);
+                    }
+                    const start = document.createElement("time");
+                    start.className = "trip-date";
+                    start.dateTime = span.iso;
+                    start.textContent = span.label;
+                    mark.append(start);
+                }
                 const link = document.createElement("a");
                 link.className = "trip";
                 link.href = `#${trip.routeId}`;
@@ -258,12 +287,20 @@
                 const summary = document.createElement("p");
                 summary.textContent = trip.summary;
                 link.append(tags, title, summary);
-                item.append(link);
+                item.append(mark, link);
                 return item;
             }
 
             function paint() {
-                listEl.replaceChildren(...filtered.slice(0, shown).map(createCard));
+                const visible = filtered.slice(0, shown);
+                let previousYear = null;
+                listEl.replaceChildren(...visible.map((trip) => {
+                    const span = tripSpan(trip);
+                    const year = span ? span.year : trip.year;
+                    const showYear = year !== previousYear;
+                    previousYear = year;
+                    return createCard(trip, showYear);
+                }));
                 moreBtn.hidden = shown >= filtered.length;
                 countEl.textContent = filtered.length ? `${filtered.length} 段行程` : "没有符合条件的行程。";
                 filtersEl.querySelectorAll(".filter").forEach((filter) => {
