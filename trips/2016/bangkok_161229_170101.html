@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <script src="../../js/trip-route.js"></script>
+    <title>Bangkok 2016/12/29–2017/01/01</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="../../css/tokens.css">
+    <link rel="stylesheet" href="../../css/tags.css">
+    <link rel="stylesheet" href="../../css/trip.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="../../js/color.js"></script>
+    <script src="../../js/trip-model.js"></script>
+    <script src="../../js/trip-render.js"></script>
+    <script src="../../js/trip-routing.js"></script>
+</head>
+<body>
+    <div class="page">
+        <header class="trip-head">
+            <nav class="site-nav" aria-label="站点导航">
+                <a class="back-home" href="../../index.html" target="_top" title="返回主页"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.4 2.2 7.2V13.4h4.1V9.3h3.4v4.1h4.1V7.2L8 2.4Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg><span class="back-home-label">返回主页</span></a>
+            </nav>
+            <div class="trip-head-main">
+                <div class="trip-line">
+                    <h1>Bangkok 2016/12/29–2017/01/01</h1>
+                    <p class="kicker"><span class="kicker-place">
+                    <span class="trip-tag trip-tag--flag">🇹🇭</span>
+                    <span class="kicker-label">2016 · 泰国</span>
+                </span>
+                <span class="trip-tag">短途</span>
+                <span class="trip-tag">旅行</span>
+                    </p>
+                </div>
+                <div class="stat-scroller">
+                    <button type="button" class="stat-arrow" data-dir="-1" aria-label="更靠前的特色" hidden><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M7.6 2.2 4 6l3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                    <div class="stats"><span class="stat">大皇宫</span>
+                <span class="stat">卧佛寺</span>
+                <span class="stat">郑王庙</span>
+                <span class="stat">暹罗广场</span>
+                <span class="stat">四面佛</span>
+                <span class="stat">建兴酒家</span>
+                <span class="stat">跨年</span>
+                <span class="stat">水上市场</span>
+                    </div>
+                    <button type="button" class="stat-arrow" data-dir="1" aria-label="更靠后的特色" hidden><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.4 2.2 8 6l-3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                </div>
+            </div>
+        </header>
+        <section class="overview" aria-label="行程总览">
+            <div class="card map-card">
+                <div id="map" role="application" aria-label="曼谷行程地图"></div>
+            </div>
+            <div class="card side">
+                <div class="day-scroller">
+                    <button type="button" class="day-arrow" data-dir="-1" aria-label="更早的日期" hidden>
+                        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M7.6 2.2 4 6l3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+                    <button type="button" class="day-arrow" data-dir="1" aria-label="更晚的日期" hidden>
+                        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.4 2.2 8 6l-3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                </div>
+                <div class="day-summary" id="daySummary"></div>
+                <ol class="glance" id="glance"></ol>
+                <p class="route-stat" id="routeStat">正在规划当日路线…</p>
+            </div>
+        </section>
+        <section class="detail" aria-label="当日详细安排">
+            <div class="detail-head">
+                <div class="detail-heading">
+                    <h2 id="detailTitle"></h2>
+                    <p class="detail-note" id="detailNote"></p>
+                </div>
+                <button type="button" class="detail-expand" id="detailExpand" aria-expanded="false">展开</button>
+            </div>
+            <div class="detail-scroll">
+                <ol class="timeline" id="itinerary"></ol>
+                <p class="hint">30 日景点按顺路排：先大皇宫和玉佛寺，步行到卧佛寺，从贴贴码头坐船到郑王庙，回来在码头一带路上吃。航班时刻没有按当年班表填写。虚线为航班、BTS、打车或渡船，实线为步行。</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const days = TripModel.prepareDays([
+            {
+                date: "12/29",
+                weekday: "周四",
+                title: "ZH9003 飞抵曼谷，入住 W，附近吃夜市",
+                meta: "宝安 ZH9003 到素万那普 · 打车入住 W · 酒店附近夜市",
+                color: "var(--route-1)",
+                zoom: 13,
+                flightStat: "ZH9003 深圳 → 曼谷",
+                stops: [
+                    {
+                        name: "深圳宝安国际机场",
+                        time: "出发",
+                        lat: 22.6393, lng: 113.8107,
+                        activities: [
+                            { time: "出发", text: "乘坐 ZH9003 飞往曼谷" }
+                        ]
+                    },
+                    {
+                        name: "素万那普机场",
+                        time: "抵达",
+                        drive: "ZH9003",
+                        leg: "flight",
+                        lat: 13.69162, lng: 100.75108,
+                        activities: [
+                            { time: "抵达", text: "ZH9003 抵达素万那普" }
+                        ]
+                    },
+                    {
+                        name: "W Bangkok",
+                        time: "入住",
+                        drive: "打车进城",
+                        leg: "taxi",
+                        kind: "stay",
+                        lat: 13.72211, lng: 100.52892,
+                        activities: [
+                            { time: "下午", text: "入住 W。这几晚都住这里" }
+                        ],
+                        note: "北沙吞路 106 号"
+                    },
+                    {
+                        name: "拍蓬夜市",
+                        time: "晚上",
+                        drive: "步行约 15 分钟",
+                        lat: 13.72868, lng: 100.53183,
+                        activities: [
+                            { time: "晚上", text: "在酒店附近吃夜市" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/30",
+                weekday: "周五",
+                title: "大皇宫、玉佛寺、卧佛寺和郑王庙，出来路上吃",
+                meta: "打车去大皇宫和玉佛寺 · 步行卧佛寺 · 坐船郑王庙 · 贴贴码头路上吃",
+                color: "var(--route-2)",
+                zoom: 15,
+                stops: [
+                    {
+                        name: "W Bangkok",
+                        time: "早上出发",
+                        kind: "stay",
+                        lat: 13.72211, lng: 100.52892,
+                        activities: [
+                            { time: "早上", text: "从 W 出发" }
+                        ],
+                        note: "北沙吞路 106 号"
+                    },
+                    {
+                        name: "大皇宫 · 玉佛寺",
+                        time: "白天",
+                        drive: "打车",
+                        leg: "taxi",
+                        kind: "highlight",
+                        lat: 13.75150, lng: 100.49266,
+                        activities: [
+                            { time: "白天", text: "大皇宫和玉佛寺。玉佛寺在皇宫里，一起逛" }
+                        ]
+                    },
+                    {
+                        name: "卧佛寺",
+                        time: "白天",
+                        drive: "步行",
+                        kind: "highlight",
+                        lat: 13.74635, lng: 100.49274,
+                        activities: [
+                            { time: "白天", text: "看卧佛" }
+                        ]
+                    },
+                    {
+                        name: "郑王庙",
+                        time: "白天",
+                        drive: "贴贴码头坐船过河",
+                        leg: "taxi",
+                        kind: "highlight",
+                        lat: 13.74390, lng: 100.48851,
+                        activities: [
+                            { time: "白天", text: "郑王庙" }
+                        ]
+                    },
+                    {
+                        name: "贴贴码头",
+                        time: "出来之后",
+                        drive: "坐船回来",
+                        leg: "taxi",
+                        lat: 13.74579, lng: 100.49040,
+                        activities: [
+                            { time: "出来之后", text: "庙里出来，路上吃东西" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "12/31",
+                weekday: "周六",
+                title: "暹罗广场、四面佛，建兴酒家咖喱炒蟹，晚上跨年",
+                meta: "BTS 到暹罗广场 · 四面佛 · 建兴酒家 · 跨年",
+                color: "var(--route-3)",
+                zoom: 15,
+                stops: [
+                    {
+                        name: "W Bangkok",
+                        time: "出发",
+                        kind: "stay",
+                        lat: 13.72211, lng: 100.52892,
+                        activities: [
+                            { time: "白天", text: "从 W 出发，去暹罗一带" }
+                        ],
+                        note: "北沙吞路 106 号"
+                    },
+                    {
+                        name: "暹罗广场",
+                        time: "下午",
+                        drive: "BTS 席隆线到暹罗站",
+                        leg: "metro",
+                        kind: "highlight",
+                        lat: 13.74460, lng: 100.53310,
+                        activities: [
+                            { time: "下午", text: "暹罗广场和附近商场" }
+                        ]
+                    },
+                    {
+                        name: "四面佛",
+                        time: "下午",
+                        drive: "天桥步行",
+                        kind: "highlight",
+                        lat: 13.74432, lng: 100.54042,
+                        activities: [
+                            { time: "下午", text: "四面佛" }
+                        ],
+                        note: "中央世界门口"
+                    },
+                    {
+                        name: "建兴酒家",
+                        time: "晚饭",
+                        drive: "步行进商场",
+                        kind: "highlight",
+                        lat: 13.74658, lng: 100.53904,
+                        activities: [
+                            { time: "晚饭", text: "吃咖喱炒蟹" }
+                        ]
+                    },
+                    {
+                        name: "中央世界",
+                        time: "晚上跨年",
+                        drive: "走到商场前",
+                        kind: "highlight",
+                        lat: 13.74570, lng: 100.53980,
+                        activities: [
+                            { time: "晚上", text: "跨年" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "1/1",
+                weekday: "周日",
+                title: "邦南蓬水上市场，下午 ZH9004 飞回深圳",
+                meta: "邦南蓬水上市场 · 下午去素万那普 · ZH9004 回宝安",
+                color: "var(--route-4)",
+                zoom: 12,
+                flightStat: "ZH9004 曼谷 → 深圳",
+                stops: [
+                    {
+                        name: "W Bangkok",
+                        time: "早上出发",
+                        kind: "stay",
+                        lat: 13.72211, lng: 100.52892,
+                        activities: [
+                            { time: "早上", text: "退房出发。当天没走远" }
+                        ],
+                        note: "北沙吞路 106 号"
+                    },
+                    {
+                        name: "邦南蓬水上市场",
+                        time: "上午",
+                        drive: "打车",
+                        leg: "taxi",
+                        kind: "highlight",
+                        lat: 13.68027, lng: 100.57606,
+                        activities: [
+                            { time: "上午", text: "邦南蓬水上市场逛一逛、吃东西" }
+                        ],
+                        note: "Phra Pradaeng。1 月 1 日是周日，市集开门"
+                    },
+                    {
+                        name: "素万那普机场",
+                        time: "下午",
+                        drive: "打车",
+                        leg: "taxi",
+                        lat: 13.69162, lng: 100.75108,
+                        activities: [
+                            { time: "下午", text: "前往素万那普，乘坐 ZH9004" }
+                        ]
+                    },
+                    {
+                        name: "深圳宝安国际机场",
+                        time: "抵达",
+                        drive: "ZH9004",
+                        leg: "flight",
+                        lat: 22.6393, lng: 113.8107,
+                        activities: [
+                            { time: "抵达", text: "ZH9004 抵达宝安，行程结束" }
+                        ]
+                    }
+                ]
+            }
+        ]);
+
+        const map = TripRender.createMap("map", [13.73, 100.53], 12);
+
+        const tabsEl = document.getElementById("dayTabs");
+        const summaryEl = document.getElementById("daySummary");
+        const glanceEl = document.getElementById("glance");
+        const itineraryEl = document.getElementById("itinerary");
+        const detailTitleEl = document.getElementById("detailTitle");
+        const detailNoteEl = document.getElementById("detailNote");
+        const routeStatEl = document.getElementById("routeStat");
+        let routeLines = [];
+        let markers = [];
+        let activeDay = 0;
+
+        TripRender.createDayTabs(tabsEl, days, renderDay);
+
+        function focusStop(index, { scroll = false } = {}) {
+            TripRender.focusStop({
+                map,
+                markers,
+                itineraryEl,
+                index,
+                zoom: days[activeDay].zoom || 14,
+                scroll
+            });
+        }
+
+        TripRender.bindStopClicks([glanceEl, itineraryEl], focusStop);
+
+        async function renderDay(dayIndex) {
+            activeDay = dayIndex;
+            const day = days[dayIndex];
+            TripRender.selectDayTab(tabsEl, dayIndex);
+            summaryEl.innerHTML = "";
+            detailTitleEl.textContent = day.title || "";
+            detailNoteEl.textContent = day.meta || "";
+            glanceEl.innerHTML = "";
+            itineraryEl.innerHTML = "";
+            markers.forEach((marker) => marker.remove());
+            markers = [];
+            routeLines.forEach((line) => line.remove());
+            routeLines = [];
+
+            const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
+
+            markers = TripRender.renderStops({
+                map,
+                stops: day.stops,
+                color: day.color,
+                glanceEl,
+                itineraryEl
+            });
+
+            const fallback = L.polyline(coords, {
+                color: day.color,
+                weight: 4,
+                opacity: 0.82,
+                dashArray: "8, 8"
+            }).addTo(map);
+            routeLines.push(fallback);
+            map.fitBounds(fallback.getBounds().pad(0.18));
+            await TripRouting.city({
+                map,
+                day,
+                coords,
+                lines: routeLines,
+                fallback,
+                isCurrent: () => activeDay === dayIndex,
+                statEl: routeStatEl
+            });
+        }
+
+
+        renderDay(0);
+    </script>
+    <script src="../../js/trip-chrome.js"></script>
+</body>
+</html>

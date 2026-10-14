@@ -254,6 +254,16 @@
       "year": 2016,
       "trips": [
         {
+          "href": "trips/2016/bangkok_161229_170101.html",
+          "flag": "🇹🇭",
+          "country": "泰国",
+          "duration": "短途",
+          "type": "旅行",
+          "title": "Bangkok 2016/12/29–2017/01/01",
+          "summary": "12/29 乘 ZH9003 从深圳飞曼谷，入住 W 后在酒店附近吃夜市。30 日大皇宫、玉佛寺、卧佛寺和郑王庙，出来路上吃。31 日暹罗广场和四面佛，建兴酒家咖喱炒蟹，晚上跨年。1 日邦南蓬水上市场，下午乘 ZH9004 飞回深圳。",
+          "published": true
+        },
+        {
           "href": "trips/2016/hong_kong_161119.html",
           "flag": "🇭🇰",
           "country": "中国香港",
