@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <script src="../../js/trip-route.js"></script>
+    <title>成都 2017/04/21–2017/04/24</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="../../css/tokens.css">
+    <link rel="stylesheet" href="../../css/tags.css">
+    <link rel="stylesheet" href="../../css/trip.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="../../js/color.js"></script>
+    <script src="../../js/trip-model.js"></script>
+    <script src="../../js/trip-render.js"></script>
+    <script src="../../js/trip-routing.js"></script>
+</head>
+<body>
+    <div class="page">
+        <header class="trip-head">
+            <nav class="site-nav" aria-label="站点导航">
+                <a class="back-home" href="../../index.html" target="_top" title="返回主页"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.4 2.2 7.2V13.4h4.1V9.3h3.4v4.1h4.1V7.2L8 2.4Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg><span class="back-home-label">返回主页</span></a>
+            </nav>
+            <div class="trip-head-main">
+                <div class="trip-line">
+                    <h1>成都 2017/04/21–2017/04/24</h1>
+                    <p class="kicker"><span class="kicker-place">
+                    <span class="trip-tag trip-tag--flag">🇨🇳</span>
+                    <span class="kicker-label">2017 · 中国</span>
+                </span>
+                <span class="trip-tag">短途</span>
+                <span class="trip-tag">旅行</span>
+                    </p>
+                </div>
+                <div class="stat-scroller">
+                    <button type="button" class="stat-arrow" data-dir="-1" aria-label="更靠前的特色" hidden><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M7.6 2.2 4 6l3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                    <div class="stats"><span class="stat">宽窄巷子</span>
+                <span class="stat">锦里</span>
+                <span class="stat">武侯祠</span>
+                <span class="stat">杜甫草堂</span>
+                <span class="stat">青城山</span>
+                <span class="stat">熊猫基地</span>
+                <span class="stat">太古里</span>
+                <span class="stat">都江堰</span>
+                    </div>
+                    <button type="button" class="stat-arrow" data-dir="1" aria-label="更靠后的特色" hidden><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.4 2.2 8 6l-3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                </div>
+            </div>
+        </header>
+        <section class="overview" aria-label="行程总览">
+            <div class="card map-card">
+                <div id="map" role="application" aria-label="成都行程地图"></div>
+            </div>
+            <div class="card side">
+                <div class="day-scroller">
+                    <button type="button" class="day-arrow" data-dir="-1" aria-label="更早的日期" hidden>
+                        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M7.6 2.2 4 6l3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+                    <button type="button" class="day-arrow" data-dir="1" aria-label="更晚的日期" hidden>
+                        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.4 2.2 8 6l-3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                </div>
+                <div class="day-summary" id="daySummary"></div>
+                <ol class="glance" id="glance"></ol>
+                <p class="route-stat" id="routeStat">正在规划当日路线…</p>
+            </div>
+        </section>
+        <section class="detail" aria-label="当日详细安排">
+            <div class="detail-head">
+                <div class="detail-heading">
+                    <h2 id="detailTitle"></h2>
+                    <p class="detail-note" id="detailNote"></p>
+                </div>
+                <button type="button" class="detail-expand" id="detailExpand" aria-expanded="false">展开</button>
+            </div>
+            <div class="detail-scroll">
+                <ol class="timeline" id="itinerary"></ol>
+                <p class="hint">实线为步行（OSRM）。虚线为航班或打车示意。去程 ZH9401 宝安到双流，返程 ZH9410 双流回宝安。竹园火锅兔标在天仁北二街和平瑞苑。青城山标在前山建福宫，都江堰标在鱼嘴。</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const days = TripModel.prepareDays([
+            {
+                date: "4/21",
+                weekday: "周五",
+                title: "ZH9401 飞抵成都，宽窄巷子和锦里",
+                meta: "宝安到双流 · 四川火锅后入住 W · 宽窄巷子、锦里 · 冷锅串串后去兰桂坊",
+                color: "var(--route-1)",
+                zoom: 14,
+                flightStat: "ZH9401 宝安 → 双流",
+                stops: [
+                    {
+                        name: "深圳宝安国际机场",
+                        time: "出发",
+                        lat: 22.6393, lng: 113.8107,
+                        activities: [
+                            { time: "出发", text: "乘坐 ZH9401 飞往成都" }
+                        ]
+                    },
+                    {
+                        name: "成都双流国际机场",
+                        time: "抵达",
+                        drive: "ZH9401",
+                        leg: "flight",
+                        lat: 30.55478, lng: 103.94791,
+                        activities: [
+                            { time: "抵达", text: "ZH9401 抵达双流" }
+                        ]
+                    },
+                    {
+                        name: "四川火锅",
+                        time: "午饭",
+                        drive: "打车进城",
+                        leg: "taxi",
+                        lat: 30.59320, lng: 104.05680,
+                        activities: [
+                            { time: "抵达后", text: "到了之后直接去吃四川火锅" }
+                        ]
+                    },
+                    {
+                        name: "成都 W 酒店",
+                        time: "入住",
+                        drive: "打车回酒店",
+                        leg: "taxi",
+                        kind: "stay",
+                        lat: 30.58574, lng: 104.05255,
+                        activities: [
+                            { time: "中午", text: "入住，放行李休息" }
+                        ],
+                        note: "高新区交子大道300号"
+                    },
+                    {
+                        name: "宽窄巷子",
+                        time: "下午",
+                        drive: "打车",
+                        leg: "taxi",
+                        kind: "highlight",
+                        lat: 30.66777, lng: 104.04792,
+                        activities: [
+                            { time: "下午", text: "去宽窄巷子逛逛" }
+                        ]
+                    },
+                    {
+                        name: "锦里",
+                        time: "下午",
+                        drive: "打车",
+                        leg: "taxi",
+                        kind: "highlight",
+                        lat: 30.64880, lng: 104.04751,
+                        activities: [
+                            { time: "下午", text: "接着去锦里逛逛" }
+                        ]
+                    },
+                    {
+                        name: "冷锅串串",
+                        time: "晚饭",
+                        drive: "打车",
+                        leg: "taxi",
+                        lat: 30.65120, lng: 104.08180,
+                        activities: [
+                            { time: "晚上", text: "吃冷锅串串" }
+                        ]
+                    },
+                    {
+                        name: "兰桂坊",
+                        time: "饭后",
+                        drive: "步行",
+                        kind: "highlight",
+                        lat: 30.64698, lng: 104.08261,
+                        activities: [
+                            { time: "饭后", text: "去兰桂坊" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "4/22",
+                weekday: "周六",
+                title: "武侯祠、杜甫草堂，下午青城山",
+                meta: "酒店早餐 · 武侯祠和杜甫草堂 · 附近午饭 · 青城山 · 竹园火锅兔 · 回酒店打德州扑克",
+                color: "var(--route-2)",
+                zoom: 14,
+                stops: [
+                    {
+                        name: "成都 W 酒店",
+                        time: "早餐",
+                        kind: "stay",
+                        lat: 30.58574, lng: 104.05255,
+                        activities: [
+                            { time: "早上", text: "酒店早餐后出发" }
+                        ],
+                        note: "高新区交子大道300号"
+                    },
+                    {
+                        name: "武侯祠",
+                        time: "上午",
+                        drive: "打车",
+                        leg: "taxi",
+                        kind: "highlight",
+                        lat: 30.64784, lng: 104.04566,
+                        activities: [
+                            { time: "上午", text: "去武侯祠" }
+                        ]
+                    },
+                    {
+                        name: "杜甫草堂",
+                        time: "上午",
+                        drive: "打车",
+                        leg: "taxi",
+                        kind: "highlight",
+                        lat: 30.66285, lng: 104.02623,
+                        activities: [
+                            { time: "上午", text: "接着去杜甫草堂" }
+                        ]
+                    },
+                    {
+                        name: "草堂路",
+                        time: "午饭",
+                        drive: "步行",
+                        lat: 30.65980, lng: 104.03250,
+                        activities: [
+                            { time: "中午", text: "在附近吃点东西" }
+                        ]
+                    },
+                    {
+                        name: "青城山",
+                        time: "下午",
+                        drive: "打车",
+                        leg: "taxi",
+                        kind: "highlight",
+                        lat: 30.90034, lng: 103.57076,
+                        activities: [
+                            { time: "下午", text: "去青城山" }
+                        ],
+                        note: "前山建福宫"
+                    },
+                    {
+                        name: "竹园火锅兔",
+                        time: "晚饭",
+                        drive: "下山后打车回城",
+                        leg: "taxi",
+                        kind: "highlight",
+                        lat: 30.60638, lng: 104.07274,
+                        activities: [
+                            { time: "晚上", text: "回酒店附近吃竹园火锅兔" }
+                        ],
+                        note: "武侯区天仁北二街1号，和平瑞苑"
+                    },
+                    {
+                        name: "成都 W 酒店",
+                        time: "晚上",
+                        drive: "打车",
+                        leg: "taxi",
+                        kind: "stay",
+                        lat: 30.58574, lng: 104.05255,
+                        activities: [
+                            { time: "饭后", text: "回酒店打德州扑克" }
+                        ],
+                        note: "高新区交子大道300号"
+                    }
+                ]
+            },
+            {
+                date: "4/23",
+                weekday: "周日",
+                title: "熊猫基地，太古里逛街",
+                meta: "大熊猫繁育基地 · 太古里午饭和逛街 · 钵钵鸡、担担面 · 附近继续购物",
+                color: "var(--route-3)",
+                zoom: 14,
+                stops: [
+                    {
+                        name: "成都 W 酒店",
+                        time: "早上出发",
+                        kind: "stay",
+                        lat: 30.58574, lng: 104.05255,
+                        activities: [
+                            { time: "早上", text: "从酒店出发" }
+                        ],
+                        note: "高新区交子大道300号"
+                    },
+                    {
+                        name: "大熊猫繁育基地",
+                        time: "上午",
+                        drive: "打车",
+                        leg: "taxi",
+                        kind: "highlight",
+                        lat: 30.74323, lng: 104.13293,
+                        activities: [
+                            { time: "上午", text: "去大熊猫繁育基地" }
+                        ],
+                        note: "熊猫大道1375号"
+                    },
+                    {
+                        name: "太古里",
+                        time: "中午",
+                        drive: "打车",
+                        leg: "taxi",
+                        kind: "highlight",
+                        lat: 30.65582, lng: 104.08097,
+                        activities: [
+                            { time: "中午", text: "在商场随便吃一些" },
+                            { time: "下午", text: "逛街" }
+                        ]
+                    },
+                    {
+                        name: "钵钵鸡和担担面",
+                        time: "晚饭",
+                        drive: "步行",
+                        lat: 30.65740, lng: 104.07780,
+                        activities: [
+                            { time: "晚上", text: "吃钵钵鸡和担担面" }
+                        ]
+                    },
+                    {
+                        name: "春熙路",
+                        time: "晚饭后",
+                        drive: "步行",
+                        lat: 30.65919, lng: 104.07530,
+                        activities: [
+                            { time: "晚饭后", text: "继续在附近逛逛购物" }
+                        ]
+                    },
+                    {
+                        name: "成都 W 酒店",
+                        time: "回酒店",
+                        drive: "打车",
+                        leg: "taxi",
+                        kind: "stay",
+                        lat: 30.58574, lng: 104.05255,
+                        activities: [
+                            { time: "晚上", text: "回酒店休息" }
+                        ],
+                        note: "高新区交子大道300号"
+                    }
+                ]
+            },
+            {
+                date: "4/24",
+                weekday: "周一",
+                title: "都江堰，晚上 ZH9410 飞回深圳",
+                meta: "早餐后去都江堰 · 当地午饭 · 晚上双流 ZH9410 回宝安",
+                color: "var(--route-4)",
+                zoom: 13,
+                flightStat: "ZH9410 双流 → 宝安",
+                stops: [
+                    {
+                        name: "成都 W 酒店",
+                        time: "早餐",
+                        kind: "stay",
+                        lat: 30.58574, lng: 104.05255,
+                        activities: [
+                            { time: "早上", text: "吃过早饭后出发" }
+                        ],
+                        note: "高新区交子大道300号"
+                    },
+                    {
+                        name: "都江堰",
+                        time: "上午",
+                        drive: "打车",
+                        leg: "taxi",
+                        kind: "highlight",
+                        lat: 31.00922, lng: 103.60429,
+                        activities: [
+                            { time: "上午", text: "去都江堰" }
+                        ],
+                        note: "鱼嘴"
+                    },
+                    {
+                        name: "都江堰午饭",
+                        time: "午饭",
+                        drive: "步行",
+                        lat: 31.00380, lng: 103.60950,
+                        activities: [
+                            { time: "中午", text: "在那边随便吃点" }
+                        ]
+                    },
+                    {
+                        name: "成都双流国际机场",
+                        time: "晚上",
+                        drive: "打车去机场",
+                        leg: "taxi",
+                        lat: 30.55478, lng: 103.94791,
+                        activities: [
+                            { time: "晚上", text: "去机场，乘坐 ZH9410" }
+                        ]
+                    },
+                    {
+                        name: "深圳宝安国际机场",
+                        time: "抵达",
+                        drive: "ZH9410",
+                        leg: "flight",
+                        lat: 22.6393, lng: 113.8107,
+                        activities: [
+                            { time: "抵达", text: "ZH9410 抵达宝安，行程结束" }
+                        ]
+                    }
+                ]
+            }
+        ]);
+
+        const map = TripRender.createMap("map", [30.67, 104.06], 11);
+
+        const tabsEl = document.getElementById("dayTabs");
+        const summaryEl = document.getElementById("daySummary");
+        const glanceEl = document.getElementById("glance");
+        const itineraryEl = document.getElementById("itinerary");
+        const detailTitleEl = document.getElementById("detailTitle");
+        const detailNoteEl = document.getElementById("detailNote");
+        const routeStatEl = document.getElementById("routeStat");
+        let routeLines = [];
+        let markers = [];
+        let activeDay = 0;
+
+        TripRender.createDayTabs(tabsEl, days, renderDay);
+
+        function focusStop(index, { scroll = false } = {}) {
+            TripRender.focusStop({
+                map,
+                markers,
+                itineraryEl,
+                index,
+                zoom: days[activeDay].zoom || 14,
+                scroll
+            });
+        }
+
+        TripRender.bindStopClicks([glanceEl, itineraryEl], focusStop);
+
+        async function renderDay(dayIndex) {
+            activeDay = dayIndex;
+            const day = days[dayIndex];
+            TripRender.selectDayTab(tabsEl, dayIndex);
+            summaryEl.innerHTML = "";
+            detailTitleEl.textContent = day.title || "";
+            detailNoteEl.textContent = "";
+            glanceEl.innerHTML = "";
+            itineraryEl.innerHTML = "";
+            markers.forEach((marker) => marker.remove());
+            markers = [];
+            routeLines.forEach((line) => line.remove());
+            routeLines = [];
+
+            const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
+
+            markers = TripRender.renderStops({
+                map,
+                stops: day.stops,
+                color: day.color,
+                glanceEl,
+                itineraryEl
+            });
+
+            const fallback = L.polyline(coords, {
+                color: day.color,
+                weight: 4,
+                opacity: 0.82,
+                dashArray: "8, 8"
+            }).addTo(map);
+            routeLines.push(fallback);
+            map.fitBounds(fallback.getBounds().pad(0.18));
+            await TripRouting.city({
+                map,
+                day,
+                coords,
+                lines: routeLines,
+                fallback,
+                isCurrent: () => activeDay === dayIndex,
+                statEl: routeStatEl
+            });
+        }
+
+        renderDay(0);
+    </script>
+    <script src="../../js/trip-chrome.js"></script>
+</body>
+</html>
