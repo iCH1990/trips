@@ -20,7 +20,7 @@ button { font: inherit; }
 .trip-head {
     display: flex;
     align-items: stretch;
-    gap: 14px;
+    gap: 24px;
     flex: none;
 }
 .trip-head-main { flex: 1; min-width: 0; }
