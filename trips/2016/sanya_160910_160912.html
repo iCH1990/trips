@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <script src="../../js/trip-route.js"></script>
+    <title>三亚 2016/09/10–2016/09/12</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="../../css/tokens.css">
+    <link rel="stylesheet" href="../../css/tags.css">
+    <link rel="stylesheet" href="../../css/trip.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="../../js/color.js"></script>
+    <script src="../../js/trip-model.js"></script>
+    <script src="../../js/trip-render.js"></script>
+    <script src="../../js/trip-routing.js"></script>
+</head>
+<body>
+    <div class="page">
+        <header class="trip-head">
+            <nav class="site-nav" aria-label="站点导航">
+                <a class="back-home" href="../../index.html" target="_top" title="返回主页"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.4 2.2 7.2V13.4h4.1V9.3h3.4v4.1h4.1V7.2L8 2.4Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg><span class="back-home-label">返回主页</span></a>
+            </nav>
+            <div class="trip-head-main">
+                <div class="trip-line">
+                    <h1>三亚 2016/09/10–2016/09/12</h1>
+                    <p class="kicker"><span class="kicker-place">
+                    <span class="trip-tag trip-tag--flag">🇨🇳</span>
+                    <span class="kicker-label">2016 · 中国</span>
+                </span>
+                <span class="trip-tag">短途</span>
+                <span class="trip-tag">度假</span>
+                    </p>
+                </div>
+                <div class="stat-scroller">
+                    <button type="button" class="stat-arrow" data-dir="-1" aria-label="更靠前的特色" hidden><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M7.6 2.2 4 6l3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                    <div class="stats"><span class="stat">亚龙湾</span>
+                <span class="stat">桨板</span>
+                <span class="stat">水上篮球</span>
+                <span class="stat">狼人杀</span>
+                <span class="stat">蜈支洲潜水</span>
+                <span class="stat">免税店</span>
+                <span class="stat">玻璃香蕉船</span>
+                <span class="stat">赶海</span>
+                    </div>
+                    <button type="button" class="stat-arrow" data-dir="1" aria-label="更靠后的特色" hidden><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.4 2.2 8 6l-3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                </div>
+            </div>
+        </header>
+        <section class="overview" aria-label="行程总览">
+            <div class="card map-card">
+                <div id="map" role="application" aria-label="三亚行程地图"></div>
+            </div>
+            <div class="card side">
+                <div class="day-scroller">
+                    <button type="button" class="day-arrow" data-dir="-1" aria-label="更早的日期" hidden>
+                        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M7.6 2.2 4 6l3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <nav class="day-tabs" id="dayTabs" aria-label="选择日期"></nav>
+                    <button type="button" class="day-arrow" data-dir="1" aria-label="更晚的日期" hidden>
+                        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.4 2.2 8 6l-3.6 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                </div>
+                <div class="day-summary" id="daySummary"></div>
+                <ol class="glance" id="glance"></ol>
+                <p class="route-stat" id="routeStat">正在规划当日路线…</p>
+            </div>
+        </section>
+        <section class="detail" aria-label="当日详细安排">
+            <div class="detail-head">
+                <div class="detail-heading">
+                    <h2 id="detailTitle"></h2>
+                    <p class="detail-note" id="detailNote"></p>
+                </div>
+                <button type="button" class="detail-expand" id="detailExpand" aria-expanded="false">展开</button>
+            </div>
+            <div class="detail-scroll">
+                <ol class="timeline" id="itinerary"></ol>
+                <p class="hint">去程 CZ3978 宝安到凤凰，返程 CZ6498 凤凰回宝安。虚线是航班和上岛的船。10 日美食街标在亚泰商业中心，11 日步行街标在百花谷。87 号渔船标在亚龙湾路 115 号亚泰店。陆路按 OSRM 驾驶估算。</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const days = TripModel.prepareDays([
+            {
+                date: "9/10",
+                weekday: "周六",
+                title: "CZ3978 飞抵三亚，亚龙湾入住",
+                meta: "宝安到凤凰 · 维景入住 · 美食街午餐 · 海滩游泳和桨板 · 酒店泳池与烧烤",
+                color: "var(--route-1)",
+                zoom: 14,
+                flightStat: "CZ3978 宝安 → 凤凰",
+                stops: [
+                    {
+                        name: "深圳宝安国际机场",
+                        time: "出发",
+                        lat: 22.6393, lng: 113.8107,
+                        activities: [
+                            { time: "出发", text: "乘坐 CZ3978 飞往三亚" }
+                        ]
+                    },
+                    {
+                        name: "三亚凤凰国际机场",
+                        time: "抵达",
+                        drive: "CZ3978",
+                        leg: "flight",
+                        lat: 18.30515, lng: 109.41254,
+                        activities: [
+                            { time: "抵达", text: "CZ3978 抵达凤凰机场，打车前往亚龙湾" }
+                        ]
+                    },
+                    {
+                        name: "亚龙湾维景",
+                        time: "入住",
+                        kind: "stay",
+                        drive: "打车约 1 小时",
+                        lat: 18.23684, lng: 109.62961,
+                        activities: [
+                            { time: "抵达后", text: "入住亚龙湾维景酒店" }
+                        ],
+                        note: "亚龙湾国家旅游度假区龙海路 · 连住两晚"
+                    },
+                    {
+                        name: "亚泰美食街",
+                        time: "午餐",
+                        drive: "酒店周边",
+                        lat: 18.23627, lng: 109.64095,
+                        activities: [
+                            { time: "午餐", text: "在酒店周边的美食街吃饭" }
+                        ],
+                        note: "亚龙湾路 115 号亚泰商业中心"
+                    },
+                    {
+                        name: "亚龙湾海滩",
+                        time: "下午",
+                        kind: "highlight",
+                        drive: "去附近沙滩",
+                        lat: 18.22438, lng: 109.63476,
+                        activities: [
+                            { time: "下午", text: "在附近沙滩游泳，玩桨板" }
+                        ]
+                    },
+                    {
+                        name: "亚龙湾维景",
+                        time: "傍晚",
+                        kind: "stay",
+                        drive: "回到酒店",
+                        lat: 18.23710, lng: 109.62920,
+                        activities: [
+                            { time: "傍晚", text: "在酒店泳池玩水上篮球" },
+                            { time: "晚餐", text: "在酒店吃露天烧烤" },
+                            { time: "晚餐后", text: "在游戏室玩狼人杀" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "9/11",
+                weekday: "周日",
+                title: "百花谷逛街，蜈支洲岛潜水",
+                meta: "早餐后逛步行街 · 中午上岛潜水 · 酒店自助与麻将",
+                color: "var(--route-2)",
+                zoom: 13,
+                flightStat: "上岛乘船示意线",
+                stops: [
+                    {
+                        name: "亚龙湾维景",
+                        time: "早餐",
+                        kind: "stay",
+                        lat: 18.23684, lng: 109.62961,
+                        activities: [
+                            { time: "上午", text: "吃过早餐后出门" }
+                        ]
+                    },
+                    {
+                        name: "百花谷",
+                        time: "上午",
+                        kind: "highlight",
+                        drive: "酒店附近",
+                        lat: 18.23386, lng: 109.63974,
+                        activities: [
+                            { time: "上午", text: "在附近的步行街逛街，吃当地甜品，买一些小纪念品" }
+                        ],
+                        note: "亚龙湾百花谷商业街"
+                    },
+                    {
+                        name: "蜈支洲岛码头",
+                        time: "中午",
+                        drive: "打车",
+                        lat: 18.27704, lng: 109.72404,
+                        activities: [
+                            { time: "中午", text: "前往蜈支洲岛码头，乘船上岛" }
+                        ]
+                    },
+                    {
+                        name: "蜈支洲岛",
+                        time: "下午",
+                        kind: "highlight",
+                        drive: "乘船",
+                        leg: "flight",
+                        lat: 18.31135, lng: 109.76185,
+                        activities: [
+                            { time: "下午", text: "在蜈支洲岛潜水" }
+                        ]
+                    },
+                    {
+                        name: "蜈支洲岛码头",
+                        time: "傍晚",
+                        drive: "乘船回码头",
+                        leg: "flight",
+                        lat: 18.27704, lng: 109.72404,
+                        activities: [
+                            { time: "傍晚", text: "乘船回到码头，返回酒店" }
+                        ]
+                    },
+                    {
+                        name: "亚龙湾维景",
+                        time: "晚上",
+                        kind: "stay",
+                        drive: "打车回酒店",
+                        lat: 18.23710, lng: 109.62920,
+                        activities: [
+                            { time: "晚上", text: "在酒店餐厅吃自助餐" },
+                            { time: "饭后", text: "在酒店娱乐室打麻将" }
+                        ]
+                    }
+                ]
+            },
+            {
+                date: "9/12",
+                weekday: "周一",
+                title: "免税店与亚龙湾海滩，CZ6498 返程",
+                meta: "清补凉 · 海棠湾免税 · 海滩排球和赶海 · 87 号渔船后回宝安",
+                color: "var(--route-3)",
+                zoom: 12,
+                flightStat: "CZ6498 凤凰 → 宝安",
+                stops: [
+                    {
+                        name: "亚龙湾维景",
+                        time: "早上",
+                        kind: "stay",
+                        lat: 18.23684, lng: 109.62961,
+                        activities: [
+                            { time: "早上", text: "睡醒后出门吃清补凉" }
+                        ]
+                    },
+                    {
+                        name: "清补凉",
+                        time: "早上",
+                        drive: "酒店附近",
+                        lat: 18.23410, lng: 109.63930,
+                        activities: [
+                            { time: "早上", text: "去吃清补凉" }
+                        ]
+                    },
+                    {
+                        name: "三亚国际免税城",
+                        time: "上午",
+                        kind: "highlight",
+                        drive: "打车去海棠湾",
+                        lat: 18.37349, lng: 109.74653,
+                        activities: [
+                            { time: "上午", text: "在免税店购物" },
+                            { time: "中午", text: "在附近随便吃些简餐" }
+                        ],
+                        note: "海棠北路"
+                    },
+                    {
+                        name: "亚龙湾海滩",
+                        time: "下午",
+                        kind: "highlight",
+                        drive: "回到酒店海滩",
+                        lat: 18.22438, lng: 109.63476,
+                        activities: [
+                            { time: "下午", text: "回到酒店，在海滩打沙滩排球，划玻璃香蕉船，赶海" }
+                        ]
+                    },
+                    {
+                        name: "87号渔船",
+                        time: "晚上",
+                        kind: "highlight",
+                        drive: "亚龙湾",
+                        lat: 18.23640, lng: 109.64120,
+                        activities: [
+                            { time: "晚上", text: "在 87 号渔船海鲜大排档吃晚饭" }
+                        ],
+                        note: "亚龙湾路 115 号亚泰商业中心"
+                    },
+                    {
+                        name: "三亚凤凰国际机场",
+                        time: "饭后",
+                        drive: "打车去机场",
+                        lat: 18.30515, lng: 109.41254,
+                        activities: [
+                            { time: "饭后", text: "前往凤凰机场，乘坐 CZ6498 返程" }
+                        ]
+                    },
+                    {
+                        name: "深圳宝安国际机场",
+                        time: "抵达",
+                        drive: "CZ6498",
+                        leg: "flight",
+                        lat: 22.6393, lng: 113.8107,
+                        activities: [
+                            { time: "抵达", text: "CZ6498 抵达宝安，行程结束" }
+                        ]
+                    }
+                ]
+            }
+        ]);
+
+        const map = TripRender.createMap("map", [18.30, 109.55], 11);
+
+        const tabsEl = document.getElementById("dayTabs");
+        const summaryEl = document.getElementById("daySummary");
+        const glanceEl = document.getElementById("glance");
+        const itineraryEl = document.getElementById("itinerary");
+        const detailTitleEl = document.getElementById("detailTitle");
+        const detailNoteEl = document.getElementById("detailNote");
+        const routeStatEl = document.getElementById("routeStat");
+        let routeLines = [];
+        let markers = [];
+        let activeDay = 0;
+
+        TripRender.createDayTabs(tabsEl, days, renderDay);
+
+        function focusStop(index, { scroll = false } = {}) {
+            TripRender.focusStop({
+                map,
+                markers,
+                itineraryEl,
+                index,
+                zoom: days[activeDay].zoom || 13,
+                scroll
+            });
+        }
+
+        TripRender.bindStopClicks([glanceEl, itineraryEl], focusStop);
+
+        async function renderDay(dayIndex) {
+            activeDay = dayIndex;
+            const day = days[dayIndex];
+            TripRender.selectDayTab(tabsEl, dayIndex);
+            summaryEl.innerHTML = "";
+            detailTitleEl.textContent = day.title || "";
+            detailNoteEl.textContent = day.meta || "";
+            glanceEl.innerHTML = "";
+            itineraryEl.innerHTML = "";
+            markers.forEach((marker) => marker.remove());
+            markers = [];
+            routeLines.forEach((line) => line.remove());
+            routeLines = [];
+
+            const coords = day.stops.map((stop) => [stop.lat, stop.lng]);
+
+            markers = TripRender.renderStops({
+                map,
+                stops: day.stops,
+                color: day.color,
+                glanceEl,
+                itineraryEl
+            });
+
+            const fallback = L.polyline(coords, {
+                color: day.color,
+                weight: 4,
+                opacity: 0.82,
+                dashArray: "8, 8"
+            }).addTo(map);
+            routeLines.push(fallback);
+            map.fitBounds(fallback.getBounds().pad(0.18));
+            await TripRouting.road({
+                map,
+                day,
+                coords,
+                lines: routeLines,
+                fallback,
+                isCurrent: () => activeDay === dayIndex,
+                statEl: routeStatEl
+            });
+        }
+
+        renderDay(0);
+    </script>
+    <script src="../../js/trip-chrome.js"></script>
+</body>
+</html>
