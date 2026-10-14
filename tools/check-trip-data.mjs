@@ -60,7 +60,7 @@ for (const year of years) {
     }
 }
 
-const DURATIONS = ["一日游", "两天一晚", "常规", "深度"];
+const DURATIONS = ["一日游", "两天一晚", "短途", "旅居"];
 const TYPES = ["度假", "旅行", "自驾", "露营"];
 
 function parseYYMMDD(value, href) {
@@ -86,8 +86,8 @@ function durationFromHref(href) {
     const days = Math.round((end - start) / 86400000) + 1;
     if (days <= 1) return "一日游";
     if (days === 2) return "两天一晚";
-    if (days <= 14) return "常规";
-    return "深度";
+    if (days <= 14) return "短途";
+    return "旅居";
 }
 
 const catalog = JSON.parse(readFileSync(join(contentRoot, "data/trips.json"), "utf8"));
@@ -140,10 +140,10 @@ for (const page of pages) {
     const [flag, label, duration, type] = tags;
     const sameTags = tags.length === 4
         && flag.className === "trip-tag trip-tag--flag" && flag.text === trip.flag
-        && label.className === "kicker-label" && label.text === `${trip.country} · ${year}`
+        && label.className === "kicker-label" && label.text === `${year} · ${trip.country}`
         && duration.className === "trip-tag" && duration.text === trip.duration
         && type.className === "trip-tag" && type.text === trip.type;
-    if (!sameTags) throw new Error(`${page.href} 的眉题应为国旗、国家 · ${year}、${trip.duration}、${trip.type}`);
+    if (!sameTags) throw new Error(`${page.href} 的眉题应为国旗、${year} · ${trip.country}、${trip.duration}、${trip.type}`);
     const docTitle = decodeText((page.html.match(/<title>([^<]*)<\/title>/) || ["", ""])[1]).trim();
     const heading = decodeText((page.html.match(/<h1>([^<]*)<\/h1>/) || ["", ""])[1]).trim();
     if (docTitle !== trip.title || heading !== trip.title) throw new Error(`${page.href} 的标题、h1 和清单 title 要一致`);
