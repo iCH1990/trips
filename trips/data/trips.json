@@ -24,6 +24,16 @@
           "published": true
         },
         {
+          "href": "trips/2026/hunter_valley_261023_261025.html",
+          "flag": "🇦🇺",
+          "country": "澳大利亚",
+          "duration": "短途",
+          "type": "自驾",
+          "title": "Hunter Valley 2026/10/23–2026/10/25",
+          "summary": "周五晚饭后从 Chatswood 北上，住 voco Kirkton Park。周六上午品酒、酒庄午餐，下午 Anna Bay 沙滩后南下，住 Crowne Plaza Terrigal Pacific；周日 Glenworth Valley 骑马后下午回家。",
+          "published": true
+        },
+        {
           "href": "trips/2026/lake_st_clair_261010_261011.html",
           "flag": "🇦🇺",
           "country": "澳大利亚",
@@ -91,16 +101,6 @@
           "type": "自驾",
           "title": "Adelaide / Kangaroo Island / Mungo 2026/10/01–2026/10/07",
           "summary": "QF733 落地取车，连住 Marriott 五晚。10/1 市区 Zoo 与植物园，周五 Barossa，周六袋鼠岛当天往返，之后 Hills 与 McLaren Vale。10/6 开到 Mungo 当天看完 Walls of China，住 Lodge 一晚；7 日开回 Adelaide，Glenelg 歇脚后 QF746 晚上回 Sydney。",
-          "published": false
-        },
-        {
-          "href": "trips/2026/hunter_valley_260925_260927.html",
-          "flag": "🇦🇺",
-          "country": "澳大利亚",
-          "duration": "短途",
-          "type": "自驾",
-          "title": "Hunter Valley 2026/09/25–2026/09/27",
-          "summary": "周五晚饭后从 Chatswood 北上，住 voco Kirkton Park。周六上午品酒、酒庄午餐，下午 Anna Bay 沙滩后南下，住 Crowne Plaza Terrigal Pacific；周日 Glenworth Valley 骑马后下午回家。",
           "published": false
         }
       ]
